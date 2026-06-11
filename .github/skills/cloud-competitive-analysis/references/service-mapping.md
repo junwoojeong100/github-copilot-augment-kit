@@ -1,190 +1,73 @@
-# Azure ↔ AWS ↔ GCP Service Mapping
+# Azure ↔ AWS ↔ GCP Service Mapping — 매핑 축 & 형식
 
-서비스 카테고리별 대응 매핑 테이블입니다. "AWS의 X에 해당하는 Azure 서비스는?" 질문에 즉시 참조하세요.
+> 이 파일은 **방향(무엇을 비교/다룰지)과 형식(어떻게 정리할지)**만 정의합니다.
+> 구체 수치·기능·가격·비교 셀·서비스 매핑은 박제하지 않으며, 실행 시점에
+> `google-web-search` 스킬과 공식 소스(`learn.microsoft.com`·`azure.microsoft.com`·`docs.github.com`·각 클라우드 공식 문서)로 **최신화**합니다.
 
----
+서비스명·가용성·리브랜딩은 자주 바뀌므로, 이 파일은 매핑 카테고리와 출력 표 형식만 유지합니다.
+
+## 매핑 원칙
+- 1:1 대응이 없으면 “유사 서비스 + 조합 대안 + 차이점”으로 설명합니다.
+- 서비스명·은퇴·지역 가용성·SKU는 실행 시점에 공식 문서로 확인합니다.
+- 마이그레이션 판단에는 기능 동등성보다 운영 모델·보안·비용·데이터 이동 제약을 함께 봅니다.
 
 ## Compute
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Virtual Machines | EC2 | Compute Engine |
-| VM Scale Sets | Auto Scaling Groups | Managed Instance Groups |
-| App Service | Elastic Beanstalk / App Runner | App Engine |
-| Azure Functions | Lambda | Cloud Functions |
-| Container Apps | ECS Fargate / App Runner | Cloud Run |
-| AKS | EKS | GKE |
-| Container Instances | Fargate (standalone) | Cloud Run Jobs |
-| Azure Batch | AWS Batch | Batch on GKE |
-| Azure Spring Apps | — | — |
-| Static Web Apps | Amplify Hosting | Firebase Hosting |
-| Dev Box | WorkSpaces | — |
+| Azure | AWS | GCP | 매핑 메모 |
+|-------|-----|-----|-----------|
 
 ## Database
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Azure SQL Database | RDS SQL Server | Cloud SQL (SQL Server) |
-| Azure SQL Managed Instance | RDS Custom | — |
-| Azure Database for PostgreSQL | RDS PostgreSQL / Aurora PostgreSQL | Cloud SQL / AlloyDB |
-| Azure Database for MySQL | RDS MySQL / Aurora MySQL | Cloud SQL (MySQL) |
-| Cosmos DB | DynamoDB / DocumentDB | Firestore / Bigtable |
-| Azure Cache for Redis | ElastiCache (Redis) | Memorystore (Redis) |
-| Azure Database for MariaDB ⚠️ _(Retired 2025-09)_ | RDS MariaDB | — _(→ PostgreSQL Flexible Server 권장)_ |
+| Azure | AWS | GCP | 매핑 메모 |
+|-------|-----|-----|-----------|
 
 ## Storage
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Blob Storage | S3 | Cloud Storage |
-| Azure Files | EFS | Filestore |
-| Queue Storage | SQS | — |
-| Table Storage | DynamoDB | Bigtable |
-| Azure Data Lake Storage | S3 + Lake Formation | Cloud Storage (HDFS compat) |
-| Managed Disks | EBS | Persistent Disk |
-| Azure NetApp Files | FSx for NetApp ONTAP | NetApp Cloud Volumes |
+| Azure | AWS | GCP | 매핑 메모 |
+|-------|-----|-----|-----------|
 
 ## Networking
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Virtual Network (VNet) | VPC | VPC |
-| Load Balancer | NLB | Network Load Balancer |
-| Application Gateway | ALB | HTTP(S) Load Balancer |
-| Azure Front Door | CloudFront + WAF | Cloud CDN + Cloud Armor |
-| Azure DNS | Route 53 | Cloud DNS |
-| VPN Gateway | VPN Gateway | Cloud VPN |
-| ExpressRoute | Direct Connect | Cloud Interconnect |
-| Azure Firewall | Network Firewall | Cloud NGFW |
-| Private Link / Endpoint | PrivateLink | Private Service Connect |
-| Traffic Manager | Route 53 (DNS routing) | Traffic Director |
-| Azure DDoS Protection | Shield | Cloud Armor |
-| Network Watcher | VPC Flow Logs + Reachability Analyzer | Network Intelligence Center |
-| Azure Bastion | Systems Manager Session Manager | IAP TCP Forwarding |
-| NAT Gateway | NAT Gateway | Cloud NAT |
+| Azure | AWS | GCP | 매핑 메모 |
+|-------|-----|-----|-----------|
 
 ## Identity & Security
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Entra ID (Azure AD) | IAM + Cognito | Cloud Identity + IAM |
-| Managed Identity | IAM Roles (for services) | Service Accounts |
-| Key Vault | Secrets Manager + KMS | Secret Manager + Cloud KMS |
-| Defender for Cloud | Security Hub + GuardDuty | Security Command Center |
-| Microsoft Sentinel | Security Lake + OpenSearch | Chronicle |
-| Azure Policy | AWS Config + SCPs | Organization Policy |
-| Purview | Macie + Glue Catalog | Dataplex + DLP |
-| DDoS Protection | Shield Advanced | Cloud Armor |
-| Entra External ID | Cognito User Pools | Identity Platform |
+| Azure/Microsoft | AWS | GCP | 매핑 메모 |
+|-----------------|-----|-----|-----------|
 
 ## AI & Machine Learning
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Azure OpenAI Service | Bedrock (Claude, Titan) | Vertex AI (Gemini) |
-| Azure AI Foundry | Bedrock + SageMaker | Vertex AI |
-| Azure Machine Learning | SageMaker | Vertex AI |
-| Azure AI Search | OpenSearch + Kendra | Vertex AI Search |
-| Azure AI Document Intelligence | Textract | Document AI |
-| Azure AI Speech | Transcribe + Polly | Speech-to-Text/Text-to-Speech |
-| Azure AI Vision | Rekognition | Vision AI |
-| Azure AI Language | Comprehend | Natural Language API |
-| Azure AI Translator | Translate | Translation AI |
-| Azure Bot Service | Lex | Dialogflow |
-| GitHub Copilot | Amazon Q Developer | Gemini Code Assist |
+| Azure/Microsoft | AWS | GCP | 매핑 메모 |
+|-----------------|-----|-----|-----------|
 
 ## Messaging & Events
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Service Bus | SQS + SNS | Pub/Sub |
-| Event Hubs | Kinesis Data Streams | Pub/Sub |
-| Event Grid | EventBridge | Eventarc |
-| Queue Storage | SQS | Cloud Tasks |
-| Notification Hubs | SNS (Mobile Push) | Firebase Cloud Messaging |
+| Azure | AWS | GCP | 매핑 메모 |
+|-------|-----|-----|-----------|
 
 ## Analytics & Big Data
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Synapse Analytics | Redshift + Athena + Glue | BigQuery |
-| Data Factory | Glue | Dataflow |
-| Stream Analytics | Kinesis Data Analytics | Dataflow (streaming) |
-| Azure Databricks | EMR + Databricks on AWS | Dataproc + Databricks on GCP |
-| Data Explorer (Kusto) | Timestream + OpenSearch | — |
-| Power BI | QuickSight | Looker |
-| HDInsight | EMR | Dataproc |
+| Azure | AWS | GCP | 매핑 메모 |
+|-------|-----|-----|-----------|
 
 ## DevOps & Management
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Azure DevOps | CodePipeline + CodeBuild | Cloud Build |
-| GitHub Actions | CodePipeline + CodeBuild | Cloud Build |
-| Azure Monitor | CloudWatch | Cloud Monitoring |
-| Application Insights | X-Ray + CloudWatch RUM | Cloud Trace + Cloud Profiler |
-| Log Analytics | CloudWatch Logs Insights | Cloud Logging |
-| Azure Resource Manager | CloudFormation | Deployment Manager / Config Connector |
-| Bicep | CloudFormation / CDK | — |
-| Azure Advisor | Trusted Advisor | Recommender |
-| Cost Management | Cost Explorer | Cost Management |
-| Azure Arc | — (AWS 전용) | Anthos |
+| Azure/Microsoft | AWS | GCP | 매핑 메모 |
+|-----------------|-----|-----|-----------|
 
 ## IoT
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| IoT Hub | IoT Core | IoT Core (deprecated → Pub/Sub) |
-| IoT Central | IoT SiteWise | — |
-| IoT Edge | Greengrass | — |
-| Digital Twins | IoT TwinMaker | Supply Chain Twin |
-| Azure Sphere | — | — |
+| Azure | AWS | GCP | 매핑 메모 |
+|-------|-----|-----|-----------|
 
 ## Integration
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Logic Apps | Step Functions | Workflows |
-| API Management | API Gateway | Apigee |
-| Service Bus | MQ + SQS | — |
-| Azure SignalR | AppSync (WebSocket) | — |
+| Azure | AWS | GCP | 매핑 메모 |
+|-------|-----|-----|-----------|
 
 ## Containers & Registry
-
-| Azure | AWS | GCP |
-|-------|-----|-----|
-| Azure Container Registry | ECR | Artifact Registry |
-| Container Apps | ECS Fargate / App Runner | Cloud Run |
-| AKS | EKS | GKE |
-| Container Instances | Fargate (standalone task) | Cloud Run Jobs |
-
----
+| Azure | AWS | GCP | 매핑 메모 |
+|-------|-----|-----|-----------|
 
 ## GitHub ↔ GitLab ↔ Bitbucket Mapping
+| GitHub | GitLab | Bitbucket | 매핑 메모 |
+|--------|--------|-----------|-----------|
 
-| GitHub | GitLab | Bitbucket |
-|--------|--------|-----------|
-| Repositories | Projects/Repos | Repositories |
-| Pull Requests | Merge Requests | Pull Requests |
-| GitHub Actions | GitLab CI/CD | Bitbucket Pipelines |
-| Issues | Issues | Jira Issues |
-| Projects (v2) | Issue Boards | Jira Boards |
-| GitHub Pages | GitLab Pages | — |
-| GitHub Packages | GitLab Packages | — |
-| GHCR (Container Registry) | GitLab Container Registry | — |
-| GitHub Discussions | — | — |
-| GitHub Copilot | GitLab Duo | — |
-| GitHub Advanced Security | GitLab Ultimate Security | Snyk 연동 |
-| Dependabot | Dependency Scanning | — |
-| CodeQL (SAST) | GitLab SAST | — |
-| Secret Scanning | Secret Detection | — |
-| GitHub Codespaces | Web IDE / Remote Dev | — |
-| GitHub Wiki | GitLab Wiki | Bitbucket Wiki |
-| GitHub Sponsors | — | — |
-
----
-
-## 참고 링크
-
+## 공식 참고 링크
 - [Microsoft: Azure ↔ AWS 서비스 비교 공식 문서](https://learn.microsoft.com/azure/architecture/aws-professional/services)
 - [Microsoft: Azure ↔ GCP 서비스 비교 공식 문서](https://learn.microsoft.com/azure/architecture/gcp-professional/services)
+- [AWS Documentation](https://docs.aws.amazon.com/)
+- [Google Cloud documentation](https://cloud.google.com/docs)
+- [GitHub Docs](https://docs.github.com/)
+
+> 상세 비교 보고서는 `azure-vs-aws-gcp.md`, GitHub 경쟁 비교는 `github-vs-competitors.md`와 교차 확인.

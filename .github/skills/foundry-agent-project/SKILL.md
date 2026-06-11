@@ -80,148 +80,136 @@ name = "<project-name>"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
-    "microsoft-agents-core",
-    "microsoft-agents-ai-agents",
-    "aiohttp",
+    "agent-framework",   # 전체 통합 설치 (경량 대안: agent-framework-core + agent-framework-foundry)
+    "azure-identity",    # AzureCliCredential / DefaultAzureCredential
+    "aiohttp",           # HTTP 서버 엔트리포인트(선택)
 ]
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-asyncio"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 ```
 
-> ⚠️ 반드시 `aitk-get_agent_code_gen_best_practices` 도구를 호출하여 최신 SDK 버전과 패턴을 확인합니다.
+> 📌 패키지·API는 계속 진화하므로, 최신 버전·패턴은 공식 [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) 문서/샘플에서 확인하세요. (AI Toolkit의 `aitk-*` 도구가 있는 환경에서는 함께 활용)
 
 **Dockerfile** — Foundry 호스팅 호환:
 ```dockerfile
 FROM python:3.12-slim
 WORKDIR /app
 COPY pyproject.toml .
-RUN pip install --no-cache-dir .
 COPY src/ src/
+RUN pip install --no-cache-dir .
 EXPOSE 8080
-CMD ["python", "-m", "src.<project_name>.app"]
+CMD ["python", "-m", "<project_name>.app"]
 ```
 
 **.env.example** — 필수 환경변수 문서화:
 ```env
-# Azure AI Foundry
-AZURE_AI_PROJECT_CONNECTION_STRING=
-AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME=
+# Microsoft Foundry (Azure AI Foundry) 프로젝트
+FOUNDRY_PROJECT_ENDPOINT=
+FOUNDRY_MODEL=gpt-4o
 
-# Optional: Custom tool endpoints
-# SEARCH_ENDPOINT=
-# SEARCH_API_KEY=
+# 대안: Azure OpenAI 직접 사용
+# AZURE_OPENAI_ENDPOINT=
+# AZURE_OPENAI_MODEL=
+# 인증: az login 기반 AzureCliCredential 권장 (키 사용 시에만 AZURE_OPENAI_API_KEY)
 ```
 
 #### Step 3: 에이전트 정의
 
-> ⚠️ 아래는 구조 참고용 의사코드입니다. 실제 생성 시 반드시 `aitk-get_agent_code_gen_best_practices` 결과의 최신 SDK 패턴을 우선 적용합니다.
+Microsoft Foundry 프로젝트의 모델에 `FoundryChatClient`로 연결하여 에이전트를 정의합니다.
 
 단일 에이전트 패턴:
-```text
+```python
 # src/<project_name>/agents/<agent_name>.py
-# ⚠️ PSEUDO-CODE — 실제 import 경로는 SDK 문서 확인 필요
-from microsoft.agents.core import Agent, AgentContext
-from microsoft.agents.ai_agents import AIAgent
+import os
+from agent_framework import Agent
+from agent_framework.foundry import FoundryChatClient
+from azure.identity.aio import AzureCliCredential
 
-async def create_agent(context: AgentContext) -> AIAgent:
-    agent = AIAgent(
+
+def create_agent() -> Agent:
+    return Agent(
+        client=FoundryChatClient(
+            project_endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
+            model=os.environ.get("FOUNDRY_MODEL", "gpt-4o"),
+            credential=AzureCliCredential(),
+        ),
         name="<agent-name>",
         instructions="""
         <에이전트 역할과 지침을 여기에 정의>
         """,
-        model=context.config.model_deployment_name,
-        tools=[...],  # Phase 1에서 결정한 도구
+        tools=[
+            # Foundry 호스티드 도구 팩토리
+            FoundryChatClient.get_web_search_tool(),
+            FoundryChatClient.get_code_interpreter_tool(),
+            # 커스텀 함수 도구는 @tool 데코레이터 함수를 직접 전달
+            # 지식 검색: FoundryChatClient.get_azure_ai_search_tool(index_connection_id=..., index_name=...)
+        ],
     )
-    return agent
 ```
 
 #### Step 4: 워크플로우 구성 (멀티에이전트 시)
 
-> ⚠️ 아래는 워크플로우 패턴별 구조 참고용 의사코드입니다. 실제 생성 시 반드시 `aitk-get_agent_code_gen_best_practices` 결과의 최신 SDK 패턴을 우선 적용합니다.
+여러 에이전트를 조합할 때는 `agent_framework.orchestrations`의 빌더를 사용합니다.
 
-워크플로우 패턴별 코드 생성:
-
-| 패턴 | 설명 | 사용 시기 |
+| 패턴 | 빌더 | 사용 시기 |
 |------|------|----------|
-| **Sequential** | A → B → C 순차 실행 | 단계별 처리가 필요한 파이프라인 |
-| **Parallel** | A, B, C 동시 실행 후 집계 | 독립적 하위 작업 병렬 처리 |
-| **Router** | 입력에 따라 적절한 에이전트 선택 | 의도 분류 후 라우팅 |
-| **Handoff** | 에이전트 간 대화 컨텍스트 전달 | 에스컬레이션, 전문가 위임 |
+| **Sequential** | `SequentialBuilder` | A → B → C 순차 처리 파이프라인 |
+| **Concurrent** | `ConcurrentBuilder` | 독립 하위 작업 병렬 처리 후 집계 |
+| **Group Chat** | `GroupChatBuilder` | 여러 에이전트의 협업 대화 |
+| **Handoff / Magentic** | (고급 패턴) | 동적 위임·플래너 기반 오케스트레이션 |
 
 **Sequential 워크플로우 예시:**
 ```python
 # src/<project_name>/workflows/sequential.py
-from microsoft.agents.ai_agents import SequentialWorkflow
+from agent_framework.orchestrations import SequentialBuilder
 
-async def run_pipeline(context, user_input: str):
-    """A → B → C 순차 파이프라인"""
-    researcher = await create_researcher_agent(context)
-    writer = await create_writer_agent(context)
-    reviewer = await create_reviewer_agent(context)
+async def run_pipeline(user_input: str):
+    """Writer → Reviewer 순차 파이프라인"""
+    writer = create_writer_agent()
+    reviewer = create_reviewer_agent()
 
-    workflow = SequentialWorkflow(
-        agents=[researcher, writer, reviewer],
-    )
+    workflow = SequentialBuilder(participants=[writer, reviewer]).build()
     result = await workflow.run(user_input)
     return result
 ```
 
-**Router 워크플로우 예시:**
+**Concurrent(병렬) 워크플로우 예시:**
 ```python
-# src/<project_name>/workflows/router.py
-from microsoft.agents.ai_agents import RouterWorkflow
+# src/<project_name>/workflows/concurrent.py
+from agent_framework.orchestrations import ConcurrentBuilder
 
-async def run_router(context, user_input: str):
-    """입력 의도에 따라 적절한 에이전트로 라우팅"""
-    faq_agent = await create_faq_agent(context)
-    billing_agent = await create_billing_agent(context)
-    tech_agent = await create_tech_support_agent(context)
-
-    workflow = RouterWorkflow(
-        router_instructions="사용자 질문의 의도를 분류하여 적절한 에이전트로 전달합니다.",
-        agents={
-            "faq": faq_agent,
-            "billing": billing_agent,
-            "tech_support": tech_agent,
-        },
-    )
+async def run_parallel(user_input: str):
+    """여러 전문가 에이전트를 병렬 실행 후 집계"""
+    workflow = ConcurrentBuilder(
+        participants=[create_research_agent(), create_market_agent(), create_legal_agent()],
+    ).build()
     result = await workflow.run(user_input)
     return result
 ```
 
-**Handoff 워크플로우 예시:**
-```python
-# src/<project_name>/workflows/handoff.py
-from microsoft.agents.ai_agents import HandoffWorkflow
-
-async def run_handoff(context, user_input: str):
-    """에이전트 간 대화 컨텍스트를 유지하며 전달"""
-    triage_agent = await create_triage_agent(context)
-    specialist_agent = await create_specialist_agent(context)
-
-    workflow = HandoffWorkflow(
-        entry_agent=triage_agent,
-        handoff_targets={
-            "escalate": specialist_agent,
-        },
-    )
-    result = await workflow.run(user_input)
-    return result
-```
-
-> 📌 `workflows/` 디렉토리는 에이전트 간 오케스트레이션 로직을 담당합니다. 각 파일은 Agent Framework의 워크플로우 API를 사용하여 `agents/`에 정의된 에이전트들을 조합합니다.
+> 📌 Group Chat·Handoff·Magentic 등 고급 패턴과 커스텀 그래프(`WorkflowBuilder`)는 공식 [Agent Framework 샘플](https://github.com/microsoft/agent-framework/tree/main/python/samples)을 참조하세요. `workflows/` 디렉토리는 `agents/`에 정의된 에이전트를 조합하는 오케스트레이션 로직을 담습니다.
 
 #### Step 5: HTTP 서버 엔트리포인트
 
 ```python
 # src/<project_name>/app.py
 from aiohttp import web
-from microsoft.agents.core import AgentRuntime
+from .agents.<agent_name> import create_agent
+
+agent = create_agent()
 
 async def handle_message(request: web.Request) -> web.Response:
-    # 메시지 수신 → 에이전트 실행 → 응답 반환
-    ...
+    body = await request.json()
+    result = await agent.run(body.get("message", ""))
+    return web.json_response({"reply": result.text})
 
 app = web.Application()
 app.router.add_post("/api/messages", handle_message)
@@ -229,6 +217,8 @@ app.router.add_post("/api/messages", handle_message)
 if __name__ == "__main__":
     web.run_app(app, host="0.0.0.0", port=8080)
 ```
+
+> 호스팅 대안: 로컬 디버깅 UI는 `agent-framework-devui`, Foundry 호스팅은 `agent-framework-foundry-hosting`(foundry_hosting) 패키지를 검토하세요.
 
 ### Phase 3: 로컬 개발 및 테스트
 
@@ -248,7 +238,7 @@ cp .env.example .env
 #### Step 2: 로컬 실행
 
 ```bash
-python -m src.<project_name>.app
+python -m <project_name>.app
 ```
 
 #### Step 3: 테스트
@@ -310,7 +300,7 @@ registry:
 
 | 상황 | 처리 방법 |
 |------|----------|
-| `aitk-*` 도구 사용 불가 | SKILL.md의 의사코드 기반으로 생성하되, "최신 SDK 패턴은 `aitk-get_agent_code_gen_best_practices` 도구로 확인하세요"라고 안내 |
+| `aitk-*` 도구 사용 불가 | 공식 Agent Framework 문서/샘플(github.com/microsoft/agent-framework) 기준으로 코드를 생성·검증하고, 그대로 진행 |
 | Foundry 프로젝트 접근 불가 | 로컬 개발 환경(pyproject.toml, src/, tests/)까지만 구성하고, 배포 단계는 Foundry 접근 확보 후 진행하도록 안내 |
 | Docker 미설치 | Dockerfile은 생성하되, 로컬 실행(`python -m`)까지만 안내. 컨테이너 빌드·배포는 Docker 설치 후 진행 |
 | SDK 호환성 문제 | pyproject.toml에 버전을 핀하지 않고, 사용자에게 최신 호환 버전 확인을 요청 |
@@ -335,7 +325,7 @@ registry:
 - `.foundry/agent-metadata.yaml` — Foundry 메타데이터
 
 ### 다음 단계
-1. `.env` 파일에 Azure AI Foundry 연결 정보 입력
+1. `.env`에 `FOUNDRY_PROJECT_ENDPOINT` 등 Microsoft Foundry 연결 정보 입력
 2. `pip install -e ".[dev]"` 로 의존성 설치
 3. 로컬에서 테스트 후 Foundry 배포
 ```
@@ -345,6 +335,6 @@ registry:
 | 항목 | 설명 |
 |------|------|
 | Python | 3.10 이상 |
-| Azure 구독 | Azure AI Foundry 프로젝트 접근 가능 |
+| Azure 구독 | Microsoft Foundry(Azure AI Foundry) 프로젝트 접근 가능 |
 | Docker | 컨테이너 빌드용 (배포 시 필요) |
 | Azure CLI | `az login` 완료 상태 |

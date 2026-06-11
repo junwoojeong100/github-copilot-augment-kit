@@ -1,129 +1,58 @@
-# Azure Service Selection Guide
+# Azure Service Selection Guide — 선택 축 & 형식
 
-워크로드 특성에 따른 Azure 서비스 선택 가이드입니다.
+> 이 파일은 **방향(무엇을 점검/선택/진단할지)과 형식(어떻게 정리할지)**만 정의합니다.
+> 구체 수치·기능·SKU·가격·설정값·트러블슈팅 절차는 박제하지 않으며, 실행 시점에
+> `microsoft_docs_search`/`microsoft_docs_fetch`(learn.microsoft.com) · `google-web-search`로 **최신화**합니다.
+
+워크로드 요구사항을 분류하고 Azure 서비스 후보를 비교하는 형식입니다. 최종 선택은 리전 가용성·SKU·SLA·가격·제약을 공식 문서로 확인합니다.
+
+## Requirement → Service Quick Map
+| 고객 요구사항 | 1차 후보 서비스/패턴 | 선택 근거 관점 | 확인 포인트 | 최신 확인 소스 |
+|---------------|----------------------|----------------|-------------|----------------|
+→ 실행 시점 MS Learn/웹으로 최신 조사
 
 ## Compute
+| 서비스 후보 | 적합한 경우 | 비적합한 경우 | 확인 포인트 |
+|-------------|-------------|----------------|-------------|
+→ 실행 시점 MS Learn/웹으로 최신 조사
 
-| 서비스 | 적합한 경우 | 비적합한 경우 |
-|--------|------------|--------------|
-| **App Service** | 웹 앱/API, 관리형 원함, .NET/Java/Node/Python | GPU 필요, 커스텀 OS |
-| **Container Apps** | 컨테이너 워크로드, 서버리스 원함, Dapr 활용 | K8s 전체 기능 필요 |
-| **AKS** | 대규모 마이크로서비스, K8s 전문성 보유 | 소규모, K8s 경험 없음 |
-| **Functions** | 이벤트 트리거, 짧은 실행, 간헐적 워크로드 | 장시간 실행, 상시 가동 |
-| **Virtual Machines** | 레거시 앱, 특수 소프트웨어, OS 수준 제어 | 클라우드 네이티브 앱 |
-| **Static Web Apps** | SPA, JAMstack, 정적 사이트 | 서버 사이드 렌더링 |
-
-### Compute Decision Matrix
-
-```
-컨테이너 사용?
-├── No
-│   ├── 이벤트 기반? → Functions
-│   ├── 정적 콘텐츠? → Static Web Apps
-│   ├── OS 제어 필요? → VM
-│   └── 웹 앱/API → App Service
-└── Yes
-    ├── K8s 필수 기능 필요? → AKS
-    └── 관리형 원함? → Container Apps
-```
+### Compute Decision Matrix (형식)
+1. 컨테이너 여부 → 2. 이벤트 기반 여부 → 3. OS/Kubernetes 제어 필요성 → 4. 관리형 선호도 → 5. 비용·운영 역량 검증
 
 ## Database
+| 서비스 후보 | 데이터 모델 | 적합한 워크로드 | 가용성·SLA 확인 소스 |
+|-------------|-------------|-----------------|----------------------|
+→ 실행 시점 MS Learn/웹으로 최신 조사
 
-| 서비스 | 데이터 모델 | 적합한 워크로드 | SLA |
-|--------|-----------|---------------|-----|
-| **Azure SQL** | Relational | OLTP, 기존 SQL Server 앱 | 99.99% |
-| **Cosmos DB** | Multi-model | 글로벌 분산, 낮은 지연시간 | 99.999% |
-| **PostgreSQL Flexible** | Relational | 오픈소스 선호, PostGIS | 99.99% |
-| **MySQL Flexible** | Relational | 오픈소스, WordPress 등 | 99.99% |
-| **Redis Cache** | Key-Value | 캐싱, 세션 스토어 | 99.9% |
-| **Cosmos DB for MongoDB** | Document | MongoDB 호환 필요 | 99.999% |
-
-### Database Decision Matrix
-
-```
-데이터 모델?
-├── 관계형
-│   ├── SQL Server 호환 → Azure SQL
-│   ├── PostgreSQL 필요 → PostgreSQL Flexible
-│   └── MySQL 필요 → MySQL Flexible
-├── 문서형
-│   ├── 글로벌 분산 → Cosmos DB
-│   └── MongoDB 호환 → Cosmos DB for MongoDB
-├── Key-Value → Redis Cache
-└── 분석용 → Synapse / Data Explorer
-```
+### Database Decision Matrix (형식)
+1. 데이터 모델 → 2. 일관성·분산 요구 → 3. 호환성 요구 → 4. 성능·비용 모델 → 5. 공식 SLA·제한 확인
 
 ## Messaging & Events
-
-| 서비스 | 용도 | 메시지 크기 | 처리량 |
-|--------|------|-----------|--------|
-| **Service Bus** | 엔터프라이즈 메시징, 트랜잭션 | 256KB~100MB | 중간 |
-| **Event Hub** | 대량 이벤트 스트리밍 | 1MB | 매우 높음 |
-| **Event Grid** | 이벤트 라우팅, 리액티브 | 1MB | 높음 |
-| **Queue Storage** | 단순 큐, 저비용 | 64KB | 중간 |
-
-### Messaging Decision Matrix
-
-```
-요구사항?
-├── 대량 스트리밍 (IoT, 로그) → Event Hub
-├── 이벤트 알림/라우팅 → Event Grid
-├── 엔터프라이즈 메시징 (순서, 트랜잭션) → Service Bus
-└── 단순 큐, 저비용 → Queue Storage
-```
+| 서비스 후보 | 용도 | 순서·트랜잭션 관점 | 처리량·크기 확인 소스 |
+|-------------|------|--------------------|-----------------------|
+→ 실행 시점 MS Learn/웹으로 최신 조사
 
 ## Networking
-
-| 서비스 | 용도 |
-|--------|------|
-| **Front Door** | 글로벌 로드밸런싱, WAF, CDN | 
-| **Application Gateway** | 리전 L7 로드밸런싱, WAF |
-| **Load Balancer** | L4 로드밸런싱 |
-| **Traffic Manager** | DNS 기반 글로벌 라우팅 |
-| **VPN Gateway** | Site-to-Site / Point-to-Site VPN |
-| **ExpressRoute** | 전용 프라이빗 연결 |
-| **Private Link** | 프라이빗 엔드포인트 |
-| **Azure Firewall** | 중앙 집중 네트워크 보안 |
-
-### Load Balancer Decision Matrix
-
-```
-글로벌 분산?
-├── Yes
-│   ├── HTTP(S)? → Front Door
-│   └── Non-HTTP? → Traffic Manager
-└── No (리전 내)
-    ├── HTTP(S)? → Application Gateway
-    └── TCP/UDP? → Load Balancer
-```
+| 서비스 후보 | 용도 | 글로벌/리전 관점 | 보안·연결 확인 포인트 |
+|-------------|------|-------------------|-----------------------|
+→ 실행 시점 MS Learn/웹으로 최신 조사
 
 ## Security & Identity
-
-| 서비스 | 용도 |
-|--------|------|
-| **Entra ID** | 인증, SSO, 조건부 액세스 |
-| **Key Vault** | 비밀, 키, 인증서 관리 |
-| **Managed Identity** | 서비스 간 비밀번호 없는 인증 |
-| **Defender for Cloud** | CSPM, 위협 탐지 |
-| **DDoS Protection** | DDoS 공격 방어 |
+| 서비스 후보 | 용도 | 확인 포인트 |
+|-------------|------|-------------|
+→ 실행 시점 MS Learn/웹으로 최신 조사
 
 ## Monitoring & Operations
-
-| 서비스 | 용도 |
-|--------|------|
-| **Application Insights** | APM, 분산 추적, 성능 모니터링 |
-| **Log Analytics** | 중앙 로그 수집/분석 |
-| **Azure Monitor** | 메트릭, 경고, 대시보드 |
-| **Azure Advisor** | 모범 사례 권고 |
+| 서비스 후보 | 용도 | 확인 포인트 |
+|-------------|------|-------------|
+→ 실행 시점 MS Learn/웹으로 최신 조사
 
 ## SKU/Tier 선택 가이드
+| 서비스 | Dev/Test 관점 | Production 관점 | Enterprise 관점 | 공식 확인 소스 |
+|--------|---------------|------------------|------------------|----------------|
+→ SKU·가격·SLA·리전 가용성은 실행 시점 MS Learn/가격 계산기/SLA 문서로 최신 조사
 
-### 환경별 권장 SKU
-
-| 서비스 | Dev/Test | Production | Enterprise |
-|--------|----------|------------|------------|
-| App Service | B1 | S1/P1v3 | P2v3/P3v3 |
-| Azure SQL | Basic/S0 | S3/P1 | P4+/BC |
-| Redis Cache | Basic C0 | Standard C1 | Premium P1+ |
-| Container Apps | Consumption | Consumption/Dedicated | Dedicated |
-| AKS | Standard_B2s | Standard_D4s_v5 | Standard_D8s_v5+ |
+### 공식 소스
+- https://learn.microsoft.com/azure/
+- https://azure.microsoft.com/pricing/calculator/
+- https://www.microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services

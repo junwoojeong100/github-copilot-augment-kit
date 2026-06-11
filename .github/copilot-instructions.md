@@ -15,9 +15,9 @@
 
 > 전체 디렉토리 구조와 각 구성 요소의 상세 설명은 [README.md](../README.md)를 참조하세요.
 
-- **`instructions/`** — `applyTo` 패턴에 따라 자동 로드되는 지침 (coding, safety, persona, thinking, communication)
+- **`instructions/`** — `applyTo` 패턴에 따라 자동 로드되는 지침 (coding, safety, persona, thinking, communication, git-workflow)
 - **`prompts/`** — VS Code 프롬프트 선택기에서 사용하는 재사용 프롬프트 (code-review, debug, architecture, explain, refactor)
-- **`skills/`** — 온디맨드 전문 워크플로우 (azure-architecture-review, azure-support-guide, cloud-competitive-analysis, google-web-search, fact-check(항상 적용), foundry-agent-project)
+- **`skills/`** — 온디맨드 전문 워크플로우 (azure-architecture-review, azure-support-guide, cloud-competitive-analysis, google-web-search, it-ai-strategy-advisory, slide-generator, fact-check(항상 적용), foundry-agent-project)
 - **`agents/`** — 특정 워크플로우 특화 에이전트 (instruction-reviewer, skill-scaffolder)
 
 ## 팩트체크 규칙

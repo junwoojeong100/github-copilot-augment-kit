@@ -1,154 +1,69 @@
-# Azure Architecture Patterns Reference
+# Azure Architecture Patterns Reference — 선택 축 & 형식
 
-아키텍처 패턴별 적용 가이드입니다. 요구사항에 따라 적절한 패턴을 선택하세요.
+> 이 파일은 **방향(무엇을 점검/선택/진단할지)과 형식(어떻게 정리할지)**만 정의합니다.
+> 구체 수치·기능·SKU·가격·설정값·트러블슈팅 절차는 박제하지 않으며, 실행 시점에
+> `microsoft_docs_search`/`microsoft_docs_fetch`(learn.microsoft.com) · `google-web-search`로 **최신화**합니다.
+
+아키텍처 패턴 선택 시 확인할 축과 정리 형식입니다. 실제 서비스 조합은 실행 시점 공식 문서로 검증합니다.
 
 ## N-Tier Architecture
+- **선택 축**: 웹/API 계층 분리, 기존 애플리케이션 이전, 운영 단순성, 데이터 계층 경계
+- **확인 항목**: 계층 간 결합도 / 확장 단위 / 배포 경계 / 장애 격리
 
-**적합한 경우**: 전통적 웹 애플리케이션, 기존 On-premise 앱 마이그레이션
-**Azure 서비스**: App Service + Azure SQL + Redis Cache
-
-```
-Client → Front Door → App Service (Web) → App Service (API) → SQL Database
-                                                             → Redis Cache
-```
-
-| 장점 | 단점 |
-|------|------|
-| 단순하고 이해하기 쉬움 | 계층 간 강결합 |
-| 팀 역할 분리 용이 | 수평 확장 제한적 |
-| 기존 팀 역량 활용 | 배포 단위가 큼 |
+| 장점 관점 | 단점·리스크 관점 | 최신 확인 소스 |
+|-----------|------------------|----------------|
+→ 실행 시점 MS Learn/웹으로 최신 조사
 
 ---
 
 ## Microservices Architecture
+- **선택 축**: 도메인 분리, 독립 배포, 팀 경계, 서비스 간 통신, 데이터 소유권
+- **확인 항목**: 운영 복잡도 / 관측성 / 분산 트랜잭션 / 플랫폼 역량
 
-**적합한 경우**: 대규모 팀, 독립 배포 필요, 복잡한 도메인
-**Azure 서비스**: Container Apps / AKS + Service Bus + Cosmos DB
-
-```
-API Gateway → Service A → DB A
-            → Service B → DB B
-            → Service C ←→ Event Bus
-```
-
-| 장점 | 단점 |
-|------|------|
-| 독립 배포/확장 | 운영 복잡도 높음 |
-| 기술 다양성 허용 | 분산 트랜잭션 어려움 |
-| 장애 격리 | 서비스 간 통신 오버헤드 |
-
-**선택 기준: Container Apps vs AKS**
-
-| 기준 | Container Apps | AKS |
-|------|---------------|-----|
-| 운영 오버헤드 | 낮음 (서버리스) | 높음 (클러스터 관리) |
-| Kubernetes 전문성 | 불필요 | 필요 |
-| 커스터마이징 | 제한적 | 완전한 제어 |
-| 비용 (소규모) | 낮음 | 높음 |
-| 비용 (대규모) | 중간 | 최적화 가능 |
+### Container Apps vs AKS 선택 형식
+| 기준 | Container Apps 관점 | AKS 관점 | 최신 확인 소스 |
+|------|---------------------|----------|----------------|
+→ 실행 시점 MS Learn/웹으로 최신 조사
 
 ---
 
 ## Event-Driven Architecture
+- **선택 축**: 비동기 처리, 느슨한 결합, 이벤트 라우팅, 스트리밍, 엔터프라이즈 메시징
+- **확인 항목**: 이벤트 순서 / 멱등성 / 재처리 / DLQ·오류 처리 / 추적성
 
-**적합한 경우**: 비동기 처리, 느슨한 결합, 실시간 데이터 처리
-**Azure 서비스**: Event Grid + Functions + Service Bus
-
-```
-Producer → Event Grid → Function A → Storage
-                      → Function B → Database
-         → Service Bus → Consumer Service
-```
-
-| 장점 | 단점 |
-|------|------|
-| 느슨한 결합 | 디버깅 어려움 |
-| 높은 확장성 | 이벤트 순서 보장 복잡 |
-| 실시간 반응 | 멱등성 보장 필요 |
+| 이벤트 유형 | 후보 서비스 | 선택 근거 | 최신 확인 소스 |
+|-------------|-------------|-----------|----------------|
+→ 실행 시점 MS Learn/웹으로 최신 조사
 
 ---
 
 ## Serverless Architecture
-
-**적합한 경우**: 이벤트 기반 워크로드, 가변적 트래픽, 빠른 개발
-**Azure 서비스**: Functions + Logic Apps + API Management + Cosmos DB
-
-```
-Client → API Management → Functions → Cosmos DB
-                                    → Blob Storage
-       → Logic Apps → External APIs
-```
-
-| 장점 | 단점 |
-|------|------|
-| 인프라 관리 없음 | Cold start 지연 |
-| 사용량 기반 과금 | 실행 시간 제한 |
-| 빠른 개발/배포 | 벤더 종속성 |
+- **선택 축**: 이벤트 기반 실행, 가변 트래픽, 운영 부담 최소화, 통합 워크플로우
+- **확인 항목**: 실행 모델 / 네트워크 통합 / 콜드 스타트 허용도 / 상태 관리
 
 ---
 
 ## Hub-Spoke Network Topology
-
-**적합한 경우**: 엔터프라이즈 네트워킹, 멀티 워크로드, 중앙 집중 보안
-**Azure 서비스**: VNet + Azure Firewall + VPN Gateway + Private DNS
-
-```
-On-Premise ←→ VPN Gateway
-                  ↓
-            Hub VNet (Firewall, DNS, Bastion)
-           /    |    \
-     Spoke1  Spoke2  Spoke3
-     (Web)   (API)   (Data)
-```
-
-| 장점 | 단점 |
-|------|------|
-| 중앙 집중 보안 | 네트워크 복잡도 |
-| 워크로드 격리 | Hub 단일 장애점 가능 |
-| 정책 일관성 | 추가 비용 (Firewall) |
+- **선택 축**: 중앙 보안, 워크로드 격리, 온프레미스 연결, DNS·라우팅·방화벽 거버넌스
+- **확인 항목**: Hub 병목 / 단일 장애점 / 리전·AZ 설계 / 운영 책임 경계
 
 ---
 
 ## CQRS + Event Sourcing
-
-**적합한 경우**: 높은 읽기/쓰기 비율 차이, 이벤트 히스토리 필요, 복잡한 도메인
-**Azure 서비스**: Cosmos DB (Event Store) + SQL/Redis (Read Store) + Service Bus
-
-```
-Command → API → Event Store (Cosmos DB) → Event Bus
-                                         → Projection → Read Store (SQL/Redis)
-Query → API → Read Store
-```
+- **선택 축**: 읽기·쓰기 모델 분리, 이벤트 이력, 복잡 도메인, 감사 추적
+- **확인 항목**: 일관성 모델 / Projection 지연 / 이벤트 스키마 변경 / 재생 전략
 
 ---
 
 ## Big Data / Analytics
-
-**적합한 경우**: 대량 데이터 처리, BI/리포팅, 데이터 레이크
-**Azure 서비스**: Data Factory + Data Lake + Synapse + Power BI
-
-```
-Sources → Data Factory → Data Lake (Raw)
-                       → Synapse (Curated)
-                       → Power BI (Serve)
-```
+- **선택 축**: 데이터 레이크, 배치·실시간 처리, BI 서빙, 거버넌스, 기존 플랫폼 연계
+- **확인 항목**: 수집 / 저장 / 변환 / 웨어하우스·레이크하우스 / 시각화
 
 ---
 
-## Pattern Selection Decision Tree
+## Pattern Selection Decision Tree (형식)
+1. 워크로드 유형 식별 → 2. 데이터·통신 패턴 확인 → 3. 운영 역량·규제 제약 확인 → 4. 후보 패턴 비교 → 5. MS Learn로 서비스 조합 최신 검증
 
-```
-워크로드 유형?
-├── 웹 앱/API
-│   ├── 단순, 소규모 팀 → N-Tier
-│   ├── 복잡 도메인, 대규모 팀 → Microservices
-│   └── 가변 트래픽, 빠른 개발 → Serverless
-├── 데이터 처리
-│   ├── 실시간 → Event-Driven
-│   ├── 배치 → Big Data
-│   └── 혼합 → Event-Driven + Big Data 조합 (Lambda Architecture 패턴)
-├── IoT
-│   └── IoT Hub → Stream Analytics → Event-Driven
-└── 엔터프라이즈 네트워킹
-    └── Hub-Spoke
-```
+### 공식 소스
+- https://learn.microsoft.com/azure/architecture/
+- https://learn.microsoft.com/azure/architecture/patterns/
