@@ -1,6 +1,6 @@
 ---
 name: google-web-search
-description: "최신 정보가 필요할 때 Google 웹 검색을 수행하여 실시간 정보를 수집하고 요약합니다. 학습 데이터 이후의 최신 뉴스, 기술 업데이트, 릴리스 정보, 가격 변경, 이벤트, 규제 동향, 전략 리포트 등을 검색합니다. WHEN: 최신 정보 검색, 실시간 검색, Google 검색, 최신 뉴스, 최근 업데이트, 릴리스 노트, 최신 버전, 현재 가격, 현재 상태, latest news, recent updates, current price, what's new, release notes, changelog, web search, search the web, look up online, 오늘 날짜 기준 정보, 2024년 이후 정보, 최신 트렌드, 기술 동향, 최근 발표, 공식 발표, 최신 문서, AI 규제 동향, EU AI Act, GDPR, 컴플라이언스 요구사항, 규정 준수, 개인정보보호법, ISO 27001, NIST, 최신 IT 전략 동향, AX 전략 리포트 검색, 클라우드 전략 동향, AI 도입 사례, 시장 동향 분석, 산업 전략 리포트."
+description: "최신 정보가 필요할 때 Google 웹 검색으로 실시간 정보를 수집·요약합니다. 학습 데이터 이후의 뉴스·기술 업데이트·릴리스·가격 변경·규제 동향·전략 리포트 등. WHEN: 최신 정보 검색, 실시간 검색, Google 검색, web search, 최신 뉴스, latest news, 최근 업데이트, 릴리스 노트, release notes, changelog, 최신 버전, 현재 가격, current price, 현재 상태, what's new, 오늘/최근 연도 정보, 최신 트렌드, 기술·시장·산업 동향, 전략 리포트, 공식 발표, 최신 문서, AI 규제 동향, EU AI Act, GDPR, 개인정보보호법, 컴플라이언스, ISO 27001, NIST, 클라우드·AI 도입 사례."
 argument-hint: "검색하고 싶은 주제나 질문을 입력하세요"
 ---
 

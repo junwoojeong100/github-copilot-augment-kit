@@ -10,7 +10,7 @@
 - Git: 영어 Conventional Commits + `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`. main 직접 푸시 금지 → 브랜치+PR(`gh pr create --base main`).
 
 ## MS · GitHub 가치
-추상적 "AI"가 아니라 구체 서비스로 통제·가치 매핑: Foundry(모델·에이전트·평가) · AI Search(RAG) · AI Content Safety · Entra(ID·최소권한) · Purview(거버넌스) · Defender · GitHub Copilot/Advanced Security. 사실 기반 · 과장 금지.
+추상 "AI" 대신 구체 서비스로 통제·가치 매핑: Foundry · AI Search · Content Safety · Entra · Purview · Defender · GitHub Copilot/Advanced Security. 기능·가격 등 세부는 박제 말고 검색 확인. 사실 기반 · 과장 금지.
 
 ## 팩트체크 (항상)
 답변 끝 핵심주장 3~7개 → `### 🔍 팩트체크` 표(✅확실/🟡대체로/⚠️불확실/❌수정). 사실 주장 없으면 생략.
