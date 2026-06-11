@@ -1,4 +1,6 @@
-# Copilot × Claude Kit — GitHub Copilot을 Claude AI + Claude Code처럼 사용하기
+# Copilot × Claude Kit
+
+GitHub Copilot을 **Claude AI + Claude Code**처럼 쓰기 위한 **커스터마이징 킷**입니다. 페르소나·코딩·안전 지침에 더해 Azure 아키텍처·AI/AX 전략·경쟁 분석·웹 검색·슬라이드 생성 등 전문 스킬을 제공합니다.
 
 > **Microsoft FTE를 위한 프로젝트**: Microsoft 정직원(FTE)에게 무료 제공되는 **GitHub Copilot Business** 라이선스로, **별도 Anthropic 구독 없이** Claude Sonnet · Claude Opus 등의 모델을 VS Code Copilot Chat에서 사용할 수 있습니다.
 
@@ -13,7 +15,7 @@
 | **GitHub Copilot Business** (MS FTE 무료) | Claude 모델 접근 권한 제공 |
 | **VS Code Model Picker** | Copilot Chat에서 Claude Opus/Sonnet 모델 선택 |
 | **GitHub Copilot CLI** | 터미널에서 직접 AI 에이전트와 대화하며 코딩 |
-| **이 리포의 Custom Instructions** | 페르소나·코딩 스타일·보안 규칙 + Azure/GitHub 전문 스킬 |
+| **이 리포의 Custom Instructions** | 페르소나·코딩·안전 지침 + Azure·AI/AX 전략·슬라이드 생성 등 전문 스킬 |
 
 → 결과: **VS Code와 터미널 모두에서 무료로 Claude AI + Azure 전문가 경험**을 얻을 수 있습니다.
 
