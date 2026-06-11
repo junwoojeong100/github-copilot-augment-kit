@@ -19,4 +19,4 @@
 웹·MS Learn·GitHub Docs 참조 시 `### 출처`(제목·URL·요약). 변동 정보(가격·기능·규제)는 검색으로 최신 확인.
 
 ## 스킬
-slide-generator(PPT) · google-web-search(검색)
+google-web-search(실시간 웹·공식 문서 검색)
