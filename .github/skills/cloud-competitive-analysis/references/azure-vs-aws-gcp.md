@@ -56,4 +56,4 @@ Azure·AWS·GCP 비교 시 워크로드별 확인 축과 출력 형식을 정의
 ## 8. 통합 생태계 — Microsoft 차별화 렌즈
 Microsoft 365 · Entra · GitHub · Defender · Purview · Power Platform · Azure의 통합 가치를 고객 맥락에 맞춰 검증해 설명합니다.
 
-> 상세 서비스 매핑은 `service-mapping.md`, AI 전략/거버넌스는 `it-ai-strategy-advisory`와 교차 확인.
+> 상세 서비스 매핑은 `service-mapping.md`와 교차 확인.
