@@ -17,6 +17,7 @@ from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.oxml import parse_xml
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
@@ -372,9 +373,8 @@ def _add_architecture_slide(prs, slide_spec, theme, index, total):
 
     if isinstance(sidebar, Mapping):
         sb_w = Inches(2.7)
-        sb = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, MARGIN_X, top, sb_w, stack_h)
-        _fill(sb, theme, "primary")
-        _line_none(sb)
+        _panel(slide, MARGIN_X, top, sb_w, stack_h, theme, "primary",
+               line_color=None, shadow=True, radius=0.11)
         sx = MARGIN_X + Inches(0.28)
         sw = sb_w - Inches(0.56)
         _add_text(slide, str(sidebar.get("eyebrow") or sidebar.get("title", "")),
@@ -399,19 +399,31 @@ def _add_architecture_slide(prs, slide_spec, theme, index, total):
         fill_name = "accent" if highlight else "card_alt"
         title_color = "white" if highlight else "primary"
         desc_color = "white" if highlight else "muted_text"
-        box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, layers_x, ly, layers_w, lh)
-        _fill(box, theme, fill_name)
-        _line(box, theme, "border")
+        _panel(slide, layers_x, ly, layers_w, lh, theme, fill_name,
+               line_color=None if highlight else "border", shadow=True, radius=0.09)
         if isinstance(layer, Mapping):
             title = str(layer.get("title", ""))
             desc = str(layer.get("text") or layer.get("desc") or "")
         else:
             title, desc = str(layer), ""
-        _add_text(slide, title, layers_x + Inches(0.32), ly + Inches(0.12), layers_w - Inches(0.6),
-                  Inches(0.42), theme, title_color, 15, bold=True)
-        if desc:
-            _add_text(slide, desc, layers_x + Inches(0.32), ly + Inches(0.52), layers_w - Inches(0.6),
-                      lh - Inches(0.6), theme, desc_color, 12)
+        pad = Inches(0.32)
+        text_w = layers_w - Inches(0.64)
+        if not desc:
+            _add_text(slide, title, layers_x + pad, ly, text_w, lh, theme, title_color,
+                      15, bold=True, anchor=MSO_ANCHOR.MIDDLE)
+        elif lh >= Inches(0.82):
+            # tall layer: stack title over description
+            _add_text(slide, title, layers_x + pad, ly + Inches(0.12), text_w, Inches(0.4),
+                      theme, title_color, 15, bold=True)
+            _add_text(slide, desc, layers_x + pad, ly + Inches(0.52), text_w, lh - Inches(0.58),
+                      theme, desc_color, 12)
+        else:
+            # short layer: title left, description right, both vertically centered
+            title_w = int(layers_w * 0.42)
+            _add_text(slide, title, layers_x + pad, ly, title_w, lh, theme, title_color,
+                      15, bold=True, anchor=MSO_ANCHOR.MIDDLE)
+            _add_text(slide, desc, layers_x + pad + title_w, ly, text_w - title_w, lh,
+                      theme, desc_color, 12, anchor=MSO_ANCHOR.MIDDLE)
         if i < n - 1:
             connector = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE,
                                                layers_x + layers_w / 2 - Inches(0.015),
@@ -422,9 +434,8 @@ def _add_architecture_slide(prs, slide_spec, theme, index, total):
 
     if isinstance(footer, Mapping):
         fy = top + stack_h + footer_gap
-        bar = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, MARGIN_X, fy, CONTENT_W, footer_h)
-        _fill(bar, theme, "primary_soft")
-        _line_none(bar)
+        _panel(slide, MARGIN_X, fy, CONTENT_W, footer_h, theme, "primary_soft",
+               line_color=None, shadow=True, radius=0.09)
         _add_text(slide, str(footer.get("title", "")), MARGIN_X + Inches(0.32), fy,
                   Inches(3.4), footer_h, theme, "gold", 13, bold=True, anchor=MSO_ANCHOR.MIDDLE)
         _add_text(slide, str(footer.get("text", "")), MARGIN_X + Inches(3.7), fy,
@@ -445,9 +456,7 @@ def _add_process_slide(prs, slide_spec, theme, index, total):
     x = MARGIN_X
     for i, step in enumerate(steps):
         color = "primary" if i % 2 == 0 else "accent_dark"
-        box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, by, bw, box_h)
-        _fill(box, theme, color)
-        _line_none(box)
+        _panel(slide, x, by, bw, box_h, theme, color, line_color=None, shadow=True, radius=0.1)
         if isinstance(step, Mapping):
             label = str(step.get("label") or step.get("title", ""))
             text = str(step.get("text", ""))
@@ -506,14 +515,9 @@ def _add_callout_slide(prs, slide_spec, theme, index, total):
         return _add_callout_dark(prs, slide_spec, theme)
     slide, top, height = _content_slide(prs, slide_spec, theme, index, total)
     accent = _series_color(theme, index)
-    card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, MARGIN_X, top + Inches(0.2),
-                                  CONTENT_W, Inches(2.7))
-    _fill(card, theme, "section_background")
-    _line(card, theme, "border")
-    bar = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, MARGIN_X + Inches(0.3), top + Inches(0.55),
-                                 Inches(0.12), Inches(2.0))
-    _fill(bar, theme, accent)
-    _line_none(bar)
+    _panel(slide, MARGIN_X, top + Inches(0.2), CONTENT_W, Inches(2.7), theme,
+           "section_background", shadow=True, radius=0.12)
+    _bar(slide, MARGIN_X + Inches(0.34), top + Inches(0.6), Inches(0.1), Inches(1.9), theme, accent)
     _add_text(slide, str(slide_spec["text"]), MARGIN_X + Inches(0.7), top + Inches(0.5),
               CONTENT_W - Inches(1.2), Inches(2.1), theme, "primary", 26, bold=True,
               anchor=MSO_ANCHOR.MIDDLE)
@@ -626,9 +630,8 @@ def _content_slide(prs, slide_spec, theme, index, total):
 def _page_badge(slide, index, total, theme, accent):
     w, h = Inches(1.0), Inches(0.42)
     x = SLIDE_WIDTH - MARGIN_X - w
-    badge = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, HEAD_TOP + Inches(0.02), w, h)
-    _fill(badge, theme, "section_background")
-    _line(badge, theme, "border")
+    _panel(slide, x, HEAD_TOP + Inches(0.02), w, h, theme, "section_background",
+           shadow=False, radius=0.07)
     _add_text(slide, f"{index:02d} / {total:02d}", x, HEAD_TOP + Inches(0.04), w, Inches(0.38),
               theme, "muted_text", 11, bold=True, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
 
@@ -647,13 +650,13 @@ def _footnote_boxes(slide, insight, source, y, theme, accent):
 
 
 def _kv_box(slide, label, value, x, y, w, h, theme, accent, muted=False):
-    card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
-    _fill(card, theme, "card_alt" if not muted else "background")
-    _line(card, theme, "border")
+    _panel(slide, x, y, w, h, theme, "card_alt" if not muted else "background",
+           shadow=True, radius=0.07)
     tag = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x + Inches(0.12), y + Inches(0.13),
                                  Inches(0.62), h - Inches(0.26))
     _fill(tag, theme, accent)
     _line_none(tag)
+    _rounded(tag, 0.05)
     _add_text(slide, label, x + Inches(0.12), y + Inches(0.13), Inches(0.62), h - Inches(0.26),
               theme, "white", 11, bold=True, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
     _add_text(slide, value, x + Inches(0.86), y, w - Inches(1.0), h, theme,
@@ -661,13 +664,8 @@ def _kv_box(slide, label, value, x, y, w, h, theme, accent, muted=False):
 
 
 def _add_bullet_card(slide, bullet, x, y, w, h, theme, accent):
-    card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
-    _fill(card, theme, "card_alt")
-    _line(card, theme, "border")
-    marker = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x + Inches(0.18),
-                                    y + Inches(0.16), Inches(0.1), h - Inches(0.32))
-    _fill(marker, theme, accent)
-    _line_none(marker)
+    _panel(slide, x, y, w, h, theme, "card_alt", shadow=True, radius=0.1)
+    _bar(slide, x + Inches(0.18), y + Inches(0.16), Inches(0.09), h - Inches(0.32), theme, accent)
 
     if isinstance(bullet, Mapping):
         text = str(bullet.get("text") or bullet.get("title") or "")
@@ -688,12 +686,9 @@ def _add_bullet_card(slide, bullet, x, y, w, h, theme, accent):
 
 
 def _add_column_card(slide, column, x, y, width, height, theme, accent):
-    card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, width, height)
-    _fill(card, theme, "card")
-    _line(card, theme, "border")
-    header = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, width, Inches(0.72))
-    _fill(header, theme, accent)
-    _line_none(header)
+    _panel(slide, x, y, width, height, theme, "card", shadow=True, radius=0.1)
+    _panel(slide, x, y, width, Inches(0.72), theme, accent,
+           line_color=None, shadow=False, radius=0.1)
     _add_text(slide, str(column.get("title", "")), x + Inches(0.3), y, width - Inches(0.6),
               Inches(0.72), theme, "white", 16, bold=True, anchor=MSO_ANCHOR.MIDDLE)
     _add_bullets(slide, column.get("bullets", []), x + Inches(0.3), y + Inches(0.92),
@@ -701,12 +696,8 @@ def _add_column_card(slide, column, x, y, width, height, theme, accent):
 
 
 def _add_feature_card(slide, card, x, y, w, h, theme, accent, number, numbered=False):
-    box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
-    _fill(box, theme, "card")
-    _line(box, theme, "border")
-    leftbar = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, Inches(0.12), h)
-    _fill(leftbar, theme, accent)
-    _line_none(leftbar)
+    _panel(slide, x, y, w, h, theme, "card", shadow=True, radius=0.1)
+    _bar(slide, x, y + Inches(0.16), Inches(0.1), h - Inches(0.32), theme, accent)
 
     if isinstance(card, Mapping):
         title = str(card.get("title", ""))
@@ -742,17 +733,12 @@ def _add_feature_card(slide, card, x, y, w, h, theme, accent, number, numbered=F
 
 
 def _add_kpi_card(slide, item, x, y, w, h, theme, accent, solid=False):
-    box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
     if solid:
-        _fill(box, theme, "primary")
-        _line_none(box)
+        _panel(slide, x, y, w, h, theme, "primary", line_color=None, shadow=True, radius=0.1)
         value_color, label_color, cap_color = "gold", "white", "mid_gray"
     else:
-        _fill(box, theme, "card")
-        _line(box, theme, "border")
-        sidebar = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, Inches(0.12), h)
-        _fill(sidebar, theme, accent)
-        _line_none(sidebar)
+        _panel(slide, x, y, w, h, theme, "card", shadow=True, radius=0.1)
+        _bar(slide, x, y + Inches(0.18), Inches(0.1), h - Inches(0.36), theme, accent)
         value_color, label_color, cap_color = accent, "primary", "muted_text"
 
     value = str(item.get("value", "")) if isinstance(item, Mapping) else str(item)
@@ -774,12 +760,12 @@ def _add_timeline_card(slide, phase, x, y, w, h, theme, accent, number):
                                  Inches(0.48), Inches(0.48))
     _fill(dot, theme, accent)
     _line_none(dot)
+    _soft_shadow(dot)
     _add_text(slide, str(number), x + Inches(0.05), y + Inches(0.12), Inches(0.48), Inches(0.48),
               theme, "white", 16, bold=True, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
 
-    card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y + Inches(0.85), w, h - Inches(0.85))
-    _fill(card, theme, "card")
-    _line(card, theme, "border")
+    _panel(slide, x, y + Inches(0.85), w, h - Inches(0.85), theme, "card",
+           shadow=True, radius=0.1)
 
     label = str(phase.get("label", "")) if isinstance(phase, Mapping) else str(phase)
     title = str(phase.get("title", "")) if isinstance(phase, Mapping) else ""
@@ -798,21 +784,16 @@ def _add_timeline_card(slide, phase, x, y, w, h, theme, accent, number):
 def _add_chip_row(slide, chips, x, y, theme, on_dark=False, center=False):
     chips = chips[:6]
     pad = Inches(0.22)
-    cx = x + (Inches(0) if not center else Inches(0))
-    if center:
-        # rough centering: spread across full width
-        total_est = sum(min(len(c), 22) for c in chips)
     cur = MARGIN_X if center else x
     for chip in chips:
         cw = Inches(0.5) + Inches(0.105) * min(len(chip), 22)
-        shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, cur, y, cw, Inches(0.46))
         if on_dark:
-            _fill(shape, theme, "primary_soft")
-            _line(shape, theme, "accent")
+            _panel(slide, cur, y, cw, Inches(0.46), theme, "primary_soft",
+                   line_color="accent", shadow=False, radius=0.08)
             tcolor = "white"
         else:
-            _fill(shape, theme, "section_background")
-            _line(shape, theme, "border")
+            _panel(slide, cur, y, cw, Inches(0.46), theme, "section_background",
+                   line_color="border", shadow=False, radius=0.08)
             tcolor = "primary"
         _add_text(slide, chip, cur, y, cw, Inches(0.46), theme, tcolor, 12, bold=True,
                   align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
@@ -991,6 +972,58 @@ def _line(shape, theme, color_name, width=1.0):
 
 def _line_none(shape):
     shape.line.fill.background()
+
+
+def _rounded(shape, radius_in=0.1):
+    """Set an absolute corner radius (in inches) on a rounded rectangle so small
+    and large panels share a consistent, subtle curvature instead of capsules."""
+    try:
+        smaller = min(int(shape.width), int(shape.height))
+        if smaller > 0:
+            shape.adjustments[0] = min(0.5, float(Inches(radius_in)) / smaller)
+    except (AttributeError, IndexError, ValueError, ZeroDivisionError):
+        pass
+
+
+def _soft_shadow(shape, *, blur=46000, dist=20000, direction=5400000,
+                 alpha=30000, color="0B1B30"):
+    """Apply a subtle Office-style outer drop shadow for card depth.
+
+    alpha is shadow opacity in 1/1000 % (30000 = 30%); direction 5400000 = down.
+    """
+    spPr = shape._element.spPr
+    for existing in spPr.findall(qn("a:effectLst")):
+        spPr.remove(existing)
+    spPr.append(parse_xml(
+        '<a:effectLst xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+        f'<a:outerShdw blurRad="{blur}" dist="{dist}" dir="{direction}" rotWithShape="0">'
+        f'<a:srgbClr val="{color}"><a:alpha val="{alpha}"/></a:srgbClr>'
+        '</a:outerShdw></a:effectLst>'
+    ))
+
+
+def _panel(slide, x, y, w, h, theme, fill_color, *, line_color="border",
+           shadow=True, radius=0.1):
+    """Create a rounded card panel: fill + optional hairline border + consistent
+    radius + optional soft shadow. The primary building block for card visuals."""
+    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
+    _fill(shape, theme, fill_color)
+    if line_color:
+        _line(shape, theme, line_color)
+    else:
+        _line_none(shape)
+    _rounded(shape, radius)
+    if shadow:
+        _soft_shadow(shape)
+    return shape
+
+
+def _bar(slide, x, y, w, h, theme, color):
+    """Create a flat (square-cornered, shadowless) accent bar or segment."""
+    shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, x, y, w, h)
+    _fill(shape, theme, color)
+    _line_none(shape)
+    return shape
 
 
 def _series_color(theme, index):
