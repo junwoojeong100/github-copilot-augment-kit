@@ -97,12 +97,18 @@ npm install -g @github/copilot
 
 ```
 .github/
-├── copilot-instructions.md          # 단일 핵심 지침 (매 대화 자동 로드)
-└── skills/                          # 전문 스킬 (온디맨드)
-    ├── slide-generator/             # PPT(.pptx) 생성 (python-pptx 빌더)
-    ├── google-web-search/           # 실시간 웹·공식 문서 검색
-    ├── fact-check/                  # 답변 팩트체크 (항상 적용)
-    └── cloud-competitive-analysis/  # Azure/GitHub 경쟁 비교·가치 강조
+├── copilot-instructions.md              # 단일 핵심 지침 (매 대화 자동 로드)
+└── skills/                              # 전문 스킬 (온디맨드)
+    ├── slide-generator/                 # PPT(.pptx) 생성
+    │   ├── SKILL.md
+    │   └── assets/                      # slide_builder.py · sample_deck.json · requirements.txt
+    ├── google-web-search/               # 실시간 웹·공식 문서 검색
+    │   └── SKILL.md
+    ├── fact-check/                      # 답변 팩트체크 (항상 적용)
+    │   └── SKILL.md
+    └── cloud-competitive-analysis/      # Azure/GitHub 경쟁 비교·가치 강조
+        ├── SKILL.md
+        └── references/                  # 비교 축·표 헤더 (형식 위주)
 ```
 
 ---
