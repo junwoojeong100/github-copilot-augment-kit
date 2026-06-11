@@ -26,6 +26,8 @@ Microsoft Azure 아키텍처 설계 및 리뷰를 위한 스킬입니다. Well-A
 | **Operational Excellence** | 운영 성숙도 | IaC, CI/CD, monitoring, incident response |
 | **Performance Efficiency** | 성능 최적화 | Scaling, caching, latency, throughput |
 
+> 📌 **AI/생성형 AI 워크로드**는 위 5개 Pillar에 더해 Responsible AI·평가·관측성을 점검합니다. [waf-review-checklist.md](./references/waf-review-checklist.md)의 'AI 워크로드 추가 점검' 섹션을 사용하고, 전략·구현은 `it-ai-strategy-advisory`·`foundry-agent-project` 스킬과 연계하세요.
+
 ## Workflow
 
 ### Mode A: Architecture Design (신규 설계)
@@ -50,10 +52,10 @@ Microsoft Azure 아키텍처 설계 및 리뷰를 위한 스킬입니다. Well-A
 주요 패턴:
 - **N-Tier**: 전통적 계층형 아키텍처
 - **Microservices**: Container Apps / AKS 기반
-- **Event-Driven**: Event Grid + Functions
+- **Event-Driven**: Event Grid / Event Hubs + Functions
 - **CQRS + Event Sourcing**: 고성능 읽기/쓰기 분리
 - **Serverless**: Functions + Logic Apps
-- **Big Data / Analytics**: Synapse + Data Factory
+- **Big Data / Analytics**: Microsoft Fabric(OneLake) / Synapse + Data Factory
 - **Hub-Spoke Network**: 엔터프라이즈 네트워킹
 
 #### Step 3: 서비스 선택 및 설계

@@ -85,7 +85,7 @@ argument-hint: "답변 완료 후 자동으로 팩트체크를 수행합니다"
 | # | 주장 | 검증 결과 | 비고 |
 |---|------|-----------|------|
 | 1 | Python 3.12에서 f-string 중첩 지원 | ✅ | PEP 701로 3.12부터 정식 지원 |
-| 2 | asyncio.TaskGroup은 3.11에서 도입 | ✅ | PEP 654, Python 3.11+ |
+| 2 | asyncio.TaskGroup은 3.11에서 도입 | ✅ | Python 3.11+ (관련: PEP 654 ExceptionGroup) |
 | 3 | Django 5.0 최소 Python 버전은 3.10 | ⚠️ | 학습 데이터 기준 정확하나 최신 릴리스 확인 권장 |
 
 > **신뢰도**: 높음 — 핵심 기술 사실이 모두 검증됨

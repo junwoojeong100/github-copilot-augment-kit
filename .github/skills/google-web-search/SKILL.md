@@ -1,6 +1,6 @@
 ---
 name: google-web-search
-description: "최신 정보가 필요할 때 Google 웹 검색을 수행하여 실시간 정보를 수집하고 요약합니다. 학습 데이터 이후의 최신 뉴스, 기술 업데이트, 릴리스 정보, 가격 변경, 이벤트 등을 검색합니다. WHEN: 최신 정보 검색, 실시간 검색, Google 검색, 최신 뉴스, 최근 업데이트, 릴리스 노트, 최신 버전, 현재 가격, 현재 상태, latest news, recent updates, current price, what's new, release notes, changelog, web search, search the web, look up online, 오늘 날짜 기준 정보, 2024년 이후 정보, 최신 트렌드, 기술 동향, 최근 발표, 공식 발표, 최신 문서."
+description: "최신 정보가 필요할 때 Google 웹 검색을 수행하여 실시간 정보를 수집하고 요약합니다. 학습 데이터 이후의 최신 뉴스, 기술 업데이트, 릴리스 정보, 가격 변경, 이벤트, 규제 동향, 전략 리포트 등을 검색합니다. WHEN: 최신 정보 검색, 실시간 검색, Google 검색, 최신 뉴스, 최근 업데이트, 릴리스 노트, 최신 버전, 현재 가격, 현재 상태, latest news, recent updates, current price, what's new, release notes, changelog, web search, search the web, look up online, 오늘 날짜 기준 정보, 2024년 이후 정보, 최신 트렌드, 기술 동향, 최근 발표, 공식 발표, 최신 문서, AI 규제 동향, EU AI Act, GDPR, 컴플라이언스 요구사항, 규정 준수, 개인정보보호법, ISO 27001, NIST, 최신 IT 전략 동향, AX 전략 리포트 검색, 클라우드 전략 동향, AI 도입 사례, 시장 동향 분석, 산업 전략 리포트."
 argument-hint: "검색하고 싶은 주제나 질문을 입력하세요"
 ---
 
@@ -17,6 +17,8 @@ AI 모델의 학습 데이터 컷오프 이후의 **최신 정보**가 필요할
 - **트렌드/동향**: 최신 기술 트렌드, 시장 동향
 - **이벤트/컨퍼런스**: 예정된 또는 최근 이벤트 정보
 - **버그/이슈 상태**: 특정 이슈의 현재 상태 확인
+- **규제/컴플라이언스**: EU AI Act, GDPR, 개인정보보호법(PIPA), ISO/NIST 표준 등 규제 요건 확인
+- **전략/시장 동향**: IT·AX·클라우드·AI 도입 전략, 산업 분석 리포트 확인
 
 ## Workflow
 
@@ -30,36 +32,63 @@ AI 모델의 학습 데이터 컷오프 이후의 **최신 정보**가 필요할
 - 구체적인 기술 용어 사용
 - 불필요한 조사/접속사 제거
 
-**도메인 정책:**
+**소스 선택 정책 (동적):**
 
-검색 결과의 신뢰성을 보장하기 위해, **신뢰 도메인 우선 정책**을 적용합니다.
+검색 소스는 **고정 허용목록으로 미리 한정하지 않습니다.** 질문 주제에 맞는 **가장 권위 있는 1차 출처를 그때그때 탐색·검증하여 선택**합니다. 이렇게 하면 기관 도메인이 바뀌거나(예: 부처 도메인 개편) 처음 다루는 주제가 나와도 유연하게 대응할 수 있습니다. 고정 목록을 계속 늘리는 대신, **신뢰도 평가 기준**으로 소스를 판단합니다.
 
-**1차 신뢰 도메인 (기본 사용):**
+### 소스 신뢰도 평가 기준
 
-| 도메인 | 포함 범위 |
-|----------|----------|
-| `microsoft.com` | Microsoft Learn, DevBlogs, Azure 문서 등 모든 서브도메인 |
-| `github.com` | GitHub Blog, Docs, 릴리스 페이지, Discussions |
-| `google.com` | Google 개발자 블로그, Google Cloud 문서 |
-| `youtube.com` | 공식 채널 영상, 데모, 튜토리얼 |
+후보 소스를 fetch하기 전에 아래 기준으로 신뢰도를 판단합니다:
 
-**2차 신뢰 도메인 (기술 공식 소스):**
+| 기준 | 판단 질문 |
+|------|----------|
+| **1차성(Primary)** | 해당 주제를 직접 만들거나 관할하는 주체인가? (벤더 공식 문서, 법령 원문, 규제기관 공식 사이트, 표준화 기구) |
+| **권위(Authority)** | 공식·공인된 기관/매체인가? 정부(`*.go.kr`, `*.gov`, `europa.eu`), 표준기구, 공식 벤더 도메인인가? |
+| **검증가능성(Verifiability)** | 작성 주체·게시일이 명확하고 출처 추적이 가능한가? |
+| **최신성(Recency)** | 게시/갱신 날짜가 주제에 비추어 충분히 최신인가? |
+| **교차검증(Corroboration)** | 독립된 다른 신뢰 소스와 일치하는가? |
 
-| 도메인 | 용도 |
-|----------|------|
-| `python.org`, `pypi.org` | Python 공식 문서, 패키지 정보 |
-| `nodejs.org`, `npmjs.com` | Node.js, npm 패키지 정보 |
-| `kubernetes.io` | Kubernetes 공식 문서 |
-| `react.dev`, `angular.dev`, `vuejs.org` | 프론트엔드 프레임워크 공식 문서 |
-| `rust-lang.org`, `go.dev`, `typescriptlang.org` | 언어 공식 문서 |
-| `docker.com` | Docker 공식 문서 |
-| `terraform.io` | Terraform 공식 문서 |
-| `stackoverflow.com` | 기술 Q&A |
-| `dev.to`, `medium.com` | 기술 블로그 (교차 검증 필수) |
+### 소스 우선순위 (동적 적용)
 
-**사용자 지정 도메인:** 사용자가 특정 도메인을 명시적으로 요청하면 해당 도메인도 검색합니다.
+1. **1차 출처** — 주제 관할 주체의 공식 문서·법령 원문·규제기관 공지·표준 문서
+2. **공신력 있는 2차 출처** — 표준기구, 주요 분석기관, 학술(arXiv 등), 주요 언론
+3. **커뮤니티/실무 소스** — 기술 Q&A, 기술 블로그 (반드시 1·2차 출처로 교차검증)
 
-**금지 도메인:** 신뢰할 수 없는 소스, 알 수 없는 개인 블로그, SEO 스팸 사이트 등에서는 정보를 가져오지 않습니다.
+### 자주 쓰는 앵커 소스 (예시 — 이에 한정하지 않음)
+
+빠른 시작을 위한 **참고 목록일 뿐**이며, 더 적합한 공식 소스를 발견하면 신뢰도 기준을 통과하는 한 자유롭게 탐색·사용합니다.
+
+- **Microsoft/Azure/GitHub**: `learn.microsoft.com`, `azure.microsoft.com`, `devblogs.microsoft.com`, `techcommunity.microsoft.com`, `servicetrust.microsoft.com`, `github.blog`, `docs.github.com`
+- **AI 벤더/연구**: `openai.com`, `anthropic.com`, `ai.google.dev`, `huggingface.co`, `arxiv.org`, `nvidia.com`
+- **비교용 클라우드/도구**: `aws.amazon.com`, `cloud.google.com`, `docs.gitlab.com`, `kubernetes.io`, `terraform.io`
+- **규제·표준 (글로벌)**: `eur-lex.europa.eu`, `digital-strategy.ec.europa.eu`, `iso.org`, `nist.gov`
+- **규제 (국내)**: `law.go.kr`(법령 원문), `pipc.go.kr`(개인정보), `kisa.or.kr`(보안·ISMS-P), `msit.go.kr`(ICT·AI), `fsc.go.kr`(금융위원회), `fss.or.kr`(금융감독원), `fsec.or.kr`(금융보안원), `motie.go.kr`(산업통상자원부·국가핵심기술), `kaits.or.kr`(산업기술보호협회)
+- **전략·분석**: `oecd.org`, `weforum.org`, `imf.org`, `worldbank.org`, `gartner.com`·`mckinsey.com`(일부 페이월)
+
+> ⚠️ 위 도메인은 **출발점**이며 닫힌 화이트리스트가 아닙니다. 정부 기관·표준 문서 등 주제별 더 권위 있는 1차 출처를 발견하면 우선 사용하고, 도메인 변경·리다이렉트 가능성(예: 부처 개편으로 기존 도메인이 새 도메인으로 이전)을 항상 고려합니다.
+
+### 동적 소스 탐색 절차
+
+1. 질문에서 **주제 영역**과 **권위 주체 유형**을 식별합니다. (예: "국가핵심기술" → 소관 부처·산업기술보호법)
+2. 검색 엔진으로 **현재 유효한 공식 소스 URL**을 발견합니다. (도메인 개편·이전 가능성 고려)
+3. 위 신뢰도 평가 기준으로 후보를 선별합니다.
+4. 1차 출처를 우선 fetch하고, 2차 출처로 교차검증합니다.
+
+**사용자 지정 도메인:** 사용자가 특정 도메인을 명시하면 해당 도메인을 우선 사용합니다.
+
+### Microsoft/Azure/GitHub 주제 — 가치·서비스 수집 가이드
+
+클라우드·AI 전략, 솔루션 조사, 경쟁 비교, 발표자료 기초 조사 등에서 주제가 Microsoft/Azure/GitHub와 관련되면, 단순 사실 확인을 넘어 **구체적인 서비스 역량과 차별화 가치**까지 함께 수집합니다.
+
+1. **공식 1차 소스 우선**: `learn.microsoft.com`, `azure.microsoft.com`, `devblogs.microsoft.com`, `techcommunity.microsoft.com`, `servicetrust.microsoft.com`, `github.blog`, `docs.github.com`을 우선 fetch합니다.
+2. **구체 서비스명으로 수집**: "AI"·"클라우드" 같은 일반어가 아니라 **정확한 서비스명**(예: Microsoft Foundry, Azure AI Search, Azure AI Content Safety, Prompt Shields, Confidential Computing, Microsoft Entra/Entra Agent ID, Microsoft Purview, Microsoft Defender for Cloud, GitHub Copilot/Advanced Security, Microsoft Fabric)으로 기능·가치·근거를 정리합니다.
+3. **가치 포인트 캡처**: 각 서비스가 주는 *통제·보안·생산성·통합·규제 대응* 가치를 한 줄로 요약해 둡니다. (전략/슬라이드 산출물에서 바로 활용)
+4. **규제 산업 보강**: 금융·공공·의료 주제면 데이터 레지던시·인증(K-ISMS, CSAP 등)·감사·기밀 컴퓨팅 관련 공식 문서를 추가로 확인합니다.
+5. **객관성 유지**: 경쟁사 대비 우열 주장은 1차 출처로 교차검증하고, 비교가 핵심이면 `cloud-competitive-analysis` 스킬과 연계합니다. 과장 없이 사실 기반으로 정리합니다.
+
+> 이 가이드는 `it-ai-strategy-advisory`·`cloud-competitive-analysis`·`slide-generator` 스킬의 기초 자료 조사를 강화하기 위한 것입니다.
+
+**제외 기준:** 작성 주체·날짜가 불명한 개인 블로그, SEO 스팸·콘텐츠팜, 출처를 추적할 수 없는 사이트 등 신뢰도 기준을 충족하지 못하는 소스는 사용하지 않습니다.
 
 **검색 쿼리 예시:**
 
@@ -71,6 +100,9 @@ AI 모델의 학습 데이터 컷오프 이후의 **최신 정보**가 필요할
 | "Azure Functions 요금 변경됐어?" | `Azure Functions pricing changes {current_year} site:microsoft.com` |
 | "Python 3.13 새 기능" | `Python 3.13 new features changelog site:python.org OR site:github.com` |
 | "Kubernetes 최신 동향" | `Kubernetes latest trends {current_year} site:kubernetes.io OR site:github.com` |
+| "EU AI Act 고위험 AI 의무" | `EU AI Act high-risk obligations site:eur-lex.europa.eu OR site:digital-strategy.ec.europa.eu` |
+| "Azure 규정 준수 인증 목록" | `Azure compliance certifications site:learn.microsoft.com OR site:servicetrust.microsoft.com` |
+| "생성형 AI 도입 전략 동향" | `generative AI adoption strategy {current_year} site:weforum.org OR site:oecd.org OR site:mckinsey.com` |
 
 ### Step 2: 웹 검색 수행
 
@@ -94,10 +126,10 @@ https://html.duckduckgo.com/html/?q={encoded_query}
 ```
 - 공식 문서, 기술 블로그, 가이드, 릴리스 노트 등 일반 웹 문서 검색에 적합
 - JavaScript가 불필요한 순수 HTML 버전이라 `fetch_webpage`와 100% 호환
-- 검색 결과에서 URL을 추출한 뒤, **1차·2차 신뢰 도메인의 링크만 상세 fetch**
+- 검색 결과에서 URL을 추출한 뒤, **신뢰도 기준을 통과한 1차·공신력 소스의 링크만 상세 fetch**
 
-**허용 도메인 직접 접근 (URL을 이미 알거나 추론 가능한 경우)**
-검색 주제에 따라 허용 도메인의 관련 페이지를 직접 fetch합니다:
+**공식 소스 직접 접근 (URL을 이미 알거나 추론 가능한 경우)**
+검색 주제에 따라 신뢰할 수 있는 공식 페이지를 직접 fetch합니다:
 - `https://github.blog/tag/{topic}/` — GitHub 관련 뉴스
 - `https://learn.microsoft.com/en-us/{path}` — Microsoft/Azure 공식 문서
 - `https://devblogs.microsoft.com/{path}` — Microsoft 개발자 블로그
@@ -111,7 +143,7 @@ https://www.google.com/search?q={encoded_query}
 
 **⚠️ 검색 엔진 vs 결과 소스 구분:**
 - **검색 엔진** (URL 발견용): Google News, DuckDuckGo HTML, Google Search 모두 사용 가능
-- **결과 소스** (상세 내용 fetch용): 반드시 1차·2차 신뢰 도메인 내 URL만 fetch (비신뢰 도메인은 fetch 금지)
+- **결과 소스** (상세 내용 fetch용): 신뢰도 평가 기준을 통과한 1차·공신력 소스만 fetch (신뢰도 미달 소스는 fetch 금지)
 
 **검색 실행 예시:**
 
@@ -177,11 +209,14 @@ fetch_webpage 도구를 사용:
 단일 쿼리로 빠르게 결과를 얻습니다.
 
 ### 심화 검색
-하나의 주제에 대해 허용 도메인 내에서 여러 각도로 검색합니다:
-1. **일반 검색**: 1차 신뢰 도메인(microsoft.com, github.com, google.com, youtube.com)에서 주제 개요 파악
-2. **Microsoft 공식 문서 검색**: `site:microsoft.com` 한정
-3. **GitHub 소스 검색**: `site:github.com` 한정 (블로그, 문서, 릴리스)
+하나의 주제에 대해 여러 각도로 검색합니다. 아래 `site:` 예시는 **고정 규칙이 아니라 출발점**이며, 주제에 더 맞는 공식 소스를 발견하면 그쪽을 우선합니다:
+1. **개요 파악**: 주제 관할 주체의 공식 도메인에서 개요 파악
+2. **공식 문서 검색**: 벤더/기관 공식 문서로 한정 (예: `site:learn.microsoft.com`, `site:docs.github.com`)
+3. **1차 출처 확인**: 법령·표준·릴리스 원문 직접 확인 (예: `site:eur-lex.europa.eu`, `site:law.go.kr`)
 4. **영상 콘텐츠 검색**: `site:youtube.com` 한정 (데모, 튜토리얼)
+5. **AI 연구 검색**: `site:arxiv.org OR site:huggingface.co` 한정
+6. **규제/컴플라이언스 검색**: 관할 기관·법령으로 동적 한정 (예: `site:digital-strategy.ec.europa.eu`, `site:pipc.go.kr`, `site:fsc.go.kr`, `site:motie.go.kr`)
+7. **전략/분석 검색**: `site:oecd.org OR site:weforum.org OR site:gartner.com OR site:mckinsey.com` 한정
 
 ### 비교 검색
 두 가지 이상의 대안을 비교할 때:
@@ -206,7 +241,7 @@ fetch_webpage 도구를 사용:
 
 | 상황 | 처리 방법 |
 |------|----------|
-| 검색 엔진 접근 불가 | Google News → DuckDuckGo HTML → 허용 도메인 직접 접근 순으로 폴백. 모두 실패 시 학습 데이터 기반으로 답변하되 "실시간 검색을 수행할 수 없어 학습 데이터 기준으로 답변합니다"라고 명시 |
+| 검색 엔진 접근 불가 | Google News → DuckDuckGo HTML → 공식 소스 직접 접근 순으로 폴백. 모두 실패 시 학습 데이터 기반으로 답변하되 "실시간 검색을 수행할 수 없어 학습 데이터 기준으로 답변합니다"라고 명시 |
 | 검색 결과 없음 | 쿼리를 재구성(키워드 변경, 범위 확대)하여 1회 재시도. 그래도 없으면 "해당 주제에 대한 최신 검색 결과를 찾지 못했습니다"라고 안내 |
 | 비신뢰 소스만 반환 | 비공식 소스의 정보를 사용하지 않고, "신뢰할 수 있는 공식 소스에서 관련 정보를 찾지 못했습니다. 공식 문서를 직접 확인하시기 바랍니다"라고 안내 |
 | JavaScript 챌린지/봇 차단 | 해당 엔드포인트를 재시도하지 않고 즉시 다른 검색 방법으로 전환 |
