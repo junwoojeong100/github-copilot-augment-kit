@@ -53,7 +53,7 @@ cp -r copilot-claude-kit/.github /path/to/my-project/
 
 ## 어디서 쓸 수 있나 — VS Code & 터미널(CLI)
 
-이 킷은 **VS Code Copilot Chat**과 터미널용 **[GitHub Copilot CLI](https://docs.github.com/copilot/concepts/agents/about-copilot-cli)** 양쪽에서 동작합니다.
+이 킷은 **VS Code Copilot Chat**과 터미널용 **[GitHub Copilot CLI](https://docs.github.com/copilot/concepts/agents/copilot-cli/about-copilot-cli)** 양쪽에서 동작합니다.
 
 ### Copilot CLI 설치
 
@@ -85,7 +85,7 @@ npm install -g @github/copilot
 
 ## 설계 원칙 — 지식은 박제하지 않고, 실시간 최신화
 
-이 킷의 **지침·스킬·references는 "방향(무엇을 다룰지)과 형식(어떻게 정리할지)"만 정의**하고, 구체적 사실(서비스 기능·가격·수치·규제 조항)은 **의도적으로 담지 않습니다.**
+이 킷의 **지침·스킬은 "방향(무엇을 다룰지)과 형식(어떻게 정리할지)"만 정의**하고, 구체적 사실(서비스 기능·가격·수치·규제 조항)은 **의도적으로 담지 않습니다.**
 
 - **왜?** 클라우드·AI·규제는 빠르게 변합니다. 박제된 내용은 금방 낡고 토큰만 소모합니다.
 - **대신** 답변 시점에 공식 문서(`learn.microsoft.com` · `docs.github.com`)와 웹 검색으로 **최신 내용을 가져와** 정리합니다.
