@@ -34,3 +34,7 @@ build/
 # Byte-compiled / Cached
 *.pyc
 pip-log.txt
+
+# PowerPoint / generated decks
+*.ppt
+*.pptx
