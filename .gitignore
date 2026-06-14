@@ -38,3 +38,6 @@ pip-log.txt
 # PowerPoint / generated decks
 *.ppt
 *.pptx
+
+# PDF / generated books
+*.pdf
