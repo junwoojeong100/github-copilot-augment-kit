@@ -41,3 +41,6 @@ pip-log.txt
 
 # PDF / generated books
 *.pdf
+
+# HTML / generated demos
+*.html
