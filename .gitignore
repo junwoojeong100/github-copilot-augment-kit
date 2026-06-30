@@ -15,7 +15,8 @@ ENV/
 !.env.example
 
 # IDE / Editor
-.vscode/
+.vscode/*
+!.vscode/mcp.json
 .idea/
 *.swp
 *.swo
