@@ -8,31 +8,43 @@
    PowerPoint 도형으로 만든다.
 4. 외부 이미지가 필요한 경우 사용권과 원본 URL을 기록한다.
 
+`reference/full-optimized.md`의 실행 규칙을 기본값으로 사용한다. 도구 탐색과 의존성 준비는 저장소
+밖 캐시에서 재사용하며, 조사·Design DNA·최종 조립은 별도의 에이전트가 중복 수행하지 않는다.
+
 ## 2. 권장 파일 구조
 
 ```text
-build_<deck>.py
-<deck>.pptx
-<deck>_generation_prompt.txt     # 사용자가 요청하거나 복잡한 덱일 때
+<output>/<deck>.pptx             # 사용자에게 보이는 기본 산출물
+
+<session>/files/<deck>-work/
+  fact-ledger.md
+  deck-spec.md
+  design-dna.md
+  build_<deck>.py
+  <deck>_generation_prompt.txt   # 필요할 때만
+  defects.md
+  metrics.json
+  qa/
+    contact-01-30.jpg
+    slide-08.jpg                 # 선택 검수 시에만
 ```
 
-검증 산출물:
-
-```text
-<session>/files/<deck>-qa/
-  contact-01-30.jpg
-  slide-08.jpg                 # 선택 검수 시에만
-```
-
-QA 산출물을 저장소 루트에 두지 않는다.
-렌더 중간 PDF는 기본 삭제하며, 사용자가 PDF 산출물을 요청한 경우에만 `--keep-pdf`를 사용한다.
+생성 스크립트·프롬프트·QA 산출물을 저장소 루트나 최종 출력 폴더에 두지 않는다. 사용자가 해당
+파일을 명시적으로 요청한 경우에만 세션 작업 폴더에서 최종 출력 위치로 복사한다.
+최초 전체 렌더의 중간 PDF는 같은 PPTX 리비전의 상세 검사가 끝날 때까지만 유지하고 최종 정리에서
+삭제한다. 사용자가 PDF 산출물을 요청한 경우에만 최종 출력 위치로 복사한다.
+Python은 `python3 -B` 또는 `PYTHONDONTWRITEBYTECODE=1`로 실행해 저장소에 `__pycache__`와
+`.pyc`가 생기지 않게 한다.
 
 ## 3. 생성 스크립트 구조
 
 ```python
+import os
+from pathlib import Path
+
 from pptx import Presentation
 
-OUT = "deck.pptx"
+OUT = Path(os.environ["PPTX_OUT"])
 
 def add_text(...): ...
 def add_shape(...): ...
@@ -189,12 +201,21 @@ Source: Organization · Document title (accessed YYYY-MM-DD)
 ## 15. 완성 직전
 
 ```bash
-python3 -m py_compile build_<deck>.py
-python3 build_<deck>.py
-python3 .github/skills/adaptive-presentation/scripts/audit_pptx.py <deck>.pptx
-python3 .github/skills/adaptive-presentation/scripts/render_pptx.py <deck>.pptx --out <qa-dir>
-# 의심 슬라이드만 개별 JPEG로 유지
-python3 .github/skills/adaptive-presentation/scripts/render_pptx.py <deck>.pptx \
-  --slides 8,16 --keep-slide-images --out <qa-detail-dir>
-unzip -t <deck>.pptx
+python3 -B -c 'import ast,pathlib; ast.parse(pathlib.Path("<work-dir>/build_<deck>.py").read_text(encoding="utf-8"))'
+PPTX_OUT="<absolute-output>/<deck>.pptx" python3 -B <work-dir>/build_<deck>.py
+# 다음 두 검사는 같은 immutable PPTX를 읽으므로 병렬 실행 가능
+python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py <absolute-output>/<deck>.pptx
+python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
+  <absolute-output>/<deck>.pptx --out <work-dir>/qa --keep-pdf
+# PPTX를 수정하기 전, 의심 슬라이드는 기존 PDF를 재사용해 개별 JPEG로 확인
+python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
+  <absolute-output>/<deck>.pptx --reuse-pdf <work-dir>/qa/<deck>.pdf \
+  --slides 8,16 --keep-slide-images --out <work-dir>/qa-detail
+unzip -t <absolute-output>/<deck>.pptx
 ```
+
+`py_compile`은 `.pyc`를 만들 수 있으므로 사용하지 않는다. 문법 검사는 위처럼 `ast.parse`로 수행하고,
+실행·감사·렌더 명령에는 모두 `-B`를 사용한다.
+
+`--reuse-pdf`는 sibling `manifest.json`의 PPTX SHA-256과 현재 파일이 일치할 때만 PDF를 재사용한다.
+PPTX를 수정한 뒤에는 기존 PDF를 재사용하지 말고 새 전체 렌더를 수행한다.

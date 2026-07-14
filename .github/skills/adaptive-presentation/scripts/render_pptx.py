@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
 import subprocess
@@ -101,6 +102,50 @@ def convert_to_pdf(deck: Path, out_dir: Path, soffice: str) -> Path:
             f"stderr:\n{result.stderr}"
         )
     return expected
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def validate_reusable_pdf(deck: Path, pdf: Path, deck_sha256: str) -> Path:
+    reusable = pdf.expanduser().resolve()
+    if not reusable.is_file():
+        raise FileNotFoundError(reusable)
+
+    manifest_path = reusable.parent / "manifest.json"
+    if not manifest_path.is_file():
+        raise RuntimeError(
+            f"Reusable PDF requires its render manifest: {manifest_path}"
+        )
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"Invalid reusable PDF manifest: {manifest_path}") from error
+
+    if manifest.get("deck_sha256") != deck_sha256:
+        raise RuntimeError(
+            "Reusable PDF does not match the current PPTX. "
+            "Run a fresh render with --keep-pdf."
+        )
+
+    manifest_pdf = manifest.get("pdf")
+    if not manifest_pdf or Path(manifest_pdf).expanduser().resolve() != reusable:
+        raise RuntimeError(
+            f"Reusable PDF is not the PDF recorded in {manifest_path}: {reusable}"
+        )
+
+    manifest_deck = manifest.get("deck")
+    if manifest_deck and Path(manifest_deck).expanduser().resolve() != deck:
+        raise RuntimeError(
+            f"Reusable PDF manifest belongs to another deck: {manifest_deck}"
+        )
+    return reusable
 
 
 def make_contact_sheet(
@@ -212,6 +257,7 @@ def render(args: argparse.Namespace) -> dict:
     deck = args.deck.expanduser().resolve()
     if not deck.is_file():
         raise FileNotFoundError(deck)
+    deck_sha256 = sha256_file(deck)
 
     out_dir = (
         args.out.expanduser().resolve()
@@ -220,8 +266,13 @@ def render(args: argparse.Namespace) -> dict:
     )
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    soffice = find_soffice(args.soffice)
-    pdf = convert_to_pdf(deck, out_dir, soffice)
+    reusable_pdf = getattr(args, "reuse_pdf", None)
+    reused_pdf = reusable_pdf is not None
+    if reused_pdf:
+        pdf = validate_reusable_pdf(deck, reusable_pdf, deck_sha256)
+    else:
+        soffice = find_soffice(args.soffice)
+        pdf = convert_to_pdf(deck, out_dir, soffice)
 
     if hasattr(fitz, "TOOLS") and hasattr(fitz.TOOLS, "mupdf_display_errors"):
         fitz.TOOLS.mupdf_display_errors(False)
@@ -289,15 +340,16 @@ def render(args: argparse.Namespace) -> dict:
         slide_images = []
 
     document.close()
-    keep_pdf = getattr(args, "keep_pdf", False)
-    pdf_path = str(pdf)
+    keep_pdf = getattr(args, "keep_pdf", False) or reused_pdf
+    pdf_path = str(pdf) if keep_pdf else None
     if not keep_pdf:
         pdf.unlink()
-        pdf_path = None
 
     manifest = {
         "deck": str(deck),
+        "deck_sha256": deck_sha256,
         "pdf": pdf_path,
+        "reused_pdf": reused_pdf,
         "total_slides": total_slides,
         "rendered_slides": selected,
         "slide_images": slide_images,
@@ -333,6 +385,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--soffice",
         type=Path,
         help="Explicit path to the LibreOffice soffice executable",
+    )
+    parser.add_argument(
+        "--reuse-pdf",
+        type=Path,
+        help=(
+            "Reuse a PDF kept by a previous render. Its sibling manifest.json "
+            "must match the current PPTX."
+        ),
     )
     parser.add_argument(
         "--slides",
@@ -407,7 +467,8 @@ def main() -> int:
         f"{manifest['total_slides']} slides"
     )
     if manifest["pdf"]:
-        print(f"PDF: {manifest['pdf']}")
+        action = "reused" if manifest["reused_pdf"] else "kept"
+        print(f"PDF ({action}): {manifest['pdf']}")
     else:
         print("PDF: discarded after rendering")
     for sheet in manifest["contact_sheets"]:
