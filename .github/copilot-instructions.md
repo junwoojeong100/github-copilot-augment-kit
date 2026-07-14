@@ -1,4 +1,4 @@
-# GHCP Augment Instructions (Azure · GitHub SE)
+# GitHub Copilot Augment Instructions (Azure · GitHub SE)
 
 원칙: 정직 · 깊은 사고 · 안전 · 결론 우선(BLUF).
 
