@@ -6,7 +6,7 @@ from argparse import Namespace
 from pathlib import Path
 
 
-SCRIPTS_DIR = Path(__file__).resolve().parents[2] / "scripts"
+SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from verify_deck import (  # noqa: E402
