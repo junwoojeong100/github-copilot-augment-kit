@@ -12,6 +12,7 @@ from pathlib import Path
 
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pptx.oxml.ns import qn
 from pptx.util import Inches
 
 
@@ -64,6 +65,27 @@ def looks_like_label(text: str) -> bool:
     return len(compact.split()) <= 3 and len(compact) <= 20
 
 
+def detect_repair_risks(prs) -> list[dict]:
+    """Find spPr elements with duplicate singleton children (invalid OOXML).
+
+    In CT_ShapeProperties each child (xfrm, geometry, fill, ln, effectLst, ...) may appear
+    at most once. e.g. two <a:effectLst> in one shape makes PowerPoint prompt to repair the
+    file on open, even though LibreOffice and `unzip -t` accept it.
+    """
+    from collections import Counter
+
+    risks: list[dict] = []
+    for number, slide in enumerate(prs.slides, 1):
+        for spPr in slide._element.iter(qn("p:spPr")):
+            counts = Counter(child.tag for child in spPr)
+            dups = sorted(
+                tag.split("}")[-1] for tag, count in counts.items() if count > 1
+            )
+            if dups:
+                risks.append({"slide": number, "duplicate_children": dups})
+    return risks
+
+
 def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
     deck = args.deck.resolve()
     if not deck.is_file():
@@ -73,6 +95,7 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
         corrupt_member = archive.testzip()
 
     prs = Presentation(deck)
+    repair_risks = detect_repair_risks(prs)
     slide_width = prs.slide_width
     slide_height = prs.slide_height
     tolerance = Inches(args.bounds_tolerance)
@@ -215,11 +238,17 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
         "title_risks": title_risks,
         "unsized_runs": unsized_runs,
         "group_shapes": group_shapes,
+        "ooxml_repair_risks": repair_risks,
     }
 
     failures: list[str] = []
     if corrupt_member is not None:
         failures.append(f"Corrupt ZIP member: {corrupt_member}")
+    if repair_risks:
+        failures.append(
+            f"{len(repair_risks)} shape(s) have duplicate OOXML children "
+            "(PowerPoint will prompt to repair)"
+        )
     if args.expected_slides is not None and len(prs.slides) != args.expected_slides:
         failures.append(
             f"Expected {args.expected_slides} slides, found {len(prs.slides)}"
@@ -273,6 +302,7 @@ def print_report(report: dict, failures: list[str]) -> None:
     print(f"Unsized runs: {len(report['unsized_runs'])}")
     print(f"Group shapes: {len(report['group_shapes'])}")
     print(f"Title risks: {len(report['title_risks'])}")
+    print(f"OOXML repair risks: {len(report.get('ooxml_repair_risks', []))}")
 
     for label, items in (
         ("Unexpected bounds", report["unexpected_out_of_bounds"]),
@@ -280,6 +310,7 @@ def print_report(report: dict, failures: list[str]) -> None:
         ("Unsized runs", report["unsized_runs"]),
         ("Group shapes", report["group_shapes"]),
         ("Title risks", report["title_risks"]),
+        ("OOXML repair risks", report.get("ooxml_repair_risks", [])),
     ):
         if items:
             print(f"\n{label}:")
