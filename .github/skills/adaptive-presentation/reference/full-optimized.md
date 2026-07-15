@@ -8,7 +8,7 @@
 
 - 조사 → Fact Ledger → 서사 → Design DNA → 청사진 → 제작 → 전체 QA 순서를 유지한다.
 - Storyline, Design DNA, 생성 스크립트, 최종 PPTX는 한 에이전트가 일관되게 소유한다.
-- `/fleet` 또는 병렬 subagent는 서로 독립적인 조사와 읽기 전용 검사에만 사용한다.
+- 조사에는 research agent나 `/fleet`을 사용하지 않고 공식 검색·문서 도구의 병렬 tool call만 사용한다.
 - 수정 중에는 증분 검사를 허용하지만, 완료 전에는 반드시 전체 구조 감사와 전체 렌더를 다시 수행한다.
 - 저장소와 최종 출력 폴더에는 사용자가 요청한 PPTX/PDF만 남긴다.
 
@@ -38,7 +38,7 @@
 2. 제품·기술·규제의 현재 상태
 3. 사례·성과·경쟁 또는 도입 근거
 
-각 조사자는 URL·확인일·인용 가능한 근거만 반환한다. 메인 에이전트가 결과를 하나의 Fact Ledger로
+각 조사 축에서는 URL·확인일·인용 가능한 근거만 수집한다. 메인 에이전트가 결과를 하나의 Fact Ledger로
 합친 후에만 서사를 시작한다. 기존 원장이 있으면 사업 영역처럼 안정적인 사실은 출처를 재확인하고,
 가격·제품 상태·규제·최근 뉴스처럼 변동성이 큰 사실은 항상 새로 확인한다.
 
@@ -62,7 +62,7 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 
 ## 5. 단일 소유 제작
 
-- 조사 subagent가 슬라이드 코드나 Design DNA를 작성하지 않는다.
+- 조사 단계에서는 슬라이드 코드나 Design DNA를 작성하지 않는다.
 - 메인 에이전트가 잠긴 `deck-spec.md`를 기준으로 생성 스크립트를 한 번에 작성한다.
 - `pptx_compiler`의 검증된 primitive·semantic blueprint와 audit/render 도구를 재사용한다.
 - 표준 슬라이드는 시각 토큰이 없는 `DeckRecipe`와 certified component로 조립한다.
