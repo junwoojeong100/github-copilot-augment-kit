@@ -16,16 +16,16 @@
 
 | 역할 | 토큰 | 값 |
 |---|---|---|
-| 배경 | `--canvas` / `--canvas-alt` | `#f3f2f1` / `#faf9f8` |
-| 표면(카드) | `--surface` / `--surface-alt` / `--surface-strong` | `#ffffff` / `#f8f7f6` / `#edebe9` |
-| 텍스트 | `--ink` / `--ink-muted` / `--ink-faint` | `#201f1e` / `#484644` / `#797775` |
-| 브랜드 | `--brand` / `--brand-alt` | `#0078d4` / `#2b88d8` (Microsoft blue) |
-| 강조 | `--accent` | `#038387` (Fluent teal) |
-| 상태 | `--info` / `--success` / `--warning` / `--danger` | `#0078d4` / `#107c10` / `#c77700` / `#d13438` |
-| AI/거버넌스 | `--violet` | `#8661c5` |
-| 선/그림자 | `--line` / `--line-soft` / `--shadow` | `rgba(0,0,0,.10)` / `rgba(0,0,0,.06)` / `0 8px 24px rgba(0,0,0,.09)` |
-| 형태 | `--radius` / `--nav-width` / `--font-scale` | `12px` / `254px` / `1` |
-| 폰트 | `--font` / `--mono` | Pretendard / SFMono |
+| 배경 | `--canvas` / `--canvas-alt` | `#f3f6fb` / `#fbfcfe` |
+| 표면(카드) | `--surface` / `--surface-alt` / `--surface-strong` | `#ffffff` / `#f4f7fc` / `#eaeef6` |
+| 텍스트 | `--ink` / `--ink-muted` / `--ink-faint` | `#1a1f2b` / `#4a5464` / `#79828f` |
+| 브랜드 | `--brand` / `--brand-alt` | `#0f6cbd` / `#2b88d8` (Fluent 2 brand blue) |
+| 강조 | `--accent` | `#0e7490` (refined teal) |
+| 상태 | `--info` / `--success` / `--warning` / `--danger` | `#0f6cbd` / `#0e7a3d` / `#b26a00` / `#c43d4b` |
+| AI/거버넌스 | `--violet` | `#8764b8` |
+| 선/그림자 | `--line` / `--line-soft` / `--shadow` | `rgba(22,32,52,.10)` / `rgba(22,32,52,.055)` / `0 6px 20px rgba(16,24,40,.10)` |
+| 형태 | `--radius` / `--nav-width` / `--font-scale` | `12px` / `264px` / `1` |
+| 폰트 | `--font` / `--mono` (본문 15.5px, 컴포넌트 상향·최소 10.5px) | Pretendard / SFMono |
 
 상태 색 매핑: ok=success(green), warn=warning(amber), bad=danger(red), info=info(blue), AI/governance=violet.
 

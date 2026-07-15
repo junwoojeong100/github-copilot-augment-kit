@@ -7,19 +7,20 @@
 ## 1. 고정 토큰 (`runtime.css`의 `:root`)
 ```css
 :root{
-  --canvas:#f3f2f1; --canvas-alt:#faf9f8;
-  --surface:#ffffff; --surface-alt:#f8f7f6; --surface-strong:#edebe9;
-  --ink:#201f1e; --ink-muted:#484644; --ink-faint:#797775;
-  --brand:#0078d4; --brand-alt:#2b88d8;      /* Microsoft blue */
-  --accent:#038387;                           /* Fluent teal */
-  --info:#0078d4; --success:#107c10; --warning:#c77700; --danger:#d13438; --violet:#8661c5;
-  --line:rgba(0,0,0,.10); --line-soft:rgba(0,0,0,.06);
-  --radius:12px; --nav-width:254px; --font-scale:1; --gap:15px; --panel-pad:18px;
-  --shadow:0 8px 24px rgba(0,0,0,.09);
+  --canvas:#f3f6fb; --canvas-alt:#fbfcfe;
+  --surface:#ffffff; --surface-alt:#f4f7fc; --surface-strong:#eaeef6;
+  --ink:#1a1f2b; --ink-muted:#4a5464; --ink-faint:#79828f;
+  --brand:#0f6cbd; --brand-alt:#2b88d8;      /* Fluent 2 brand blue */
+  --accent:#0e7490;                           /* refined teal */
+  --info:#0f6cbd; --success:#0e7a3d; --warning:#b26a00; --danger:#c43d4b; --violet:#8764b8;
+  --line:rgba(22,32,52,.10); --line-soft:rgba(22,32,52,.055);
+  --radius:12px; --nav-width:264px; --font-scale:1; --gap:16px; --panel-pad:20px;
+  --shadow:0 6px 20px rgba(16,24,40,.10);
   --font:'Pretendard',-apple-system,'Segoe UI',sans-serif;
   --mono:'SFMono-Regular',Consolas,Menlo,monospace;
 }
 ```
+본문 기본 크기는 `body{font-size:calc(15.5px * var(--font-scale))}`이며, 컴포넌트 글자 크기는 가독성을 위해 상향돼 있다(최소 10.5px).
 폰트 CDN(`<head>`): Pretendard(한글) + 시스템 폰트 폴백.
 
 상태 색 매핑: ok=success(green), warn=warning(amber), bad=danger(red), info=info(blue), AI/거버넌스=violet.
