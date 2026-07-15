@@ -1,0 +1,481 @@
+#!/usr/bin/env python3
+"""Compose a customer demo spec from a validated base, industry packs, and overlay."""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import html as html_lib
+import json
+import re
+import sys
+import unicodedata
+from datetime import datetime, timezone
+from html.parser import HTMLParser
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse, urlunparse
+
+import render_demo
+
+
+DELETE_MARKER = {"$delete": True}
+REPLACE_KEY = "$replace"
+CUSTOMER_DESIGN_KEYS = {
+    "conceptWords",
+    "visualMetaphor",
+    "archetype",
+    "counterInfluence",
+    "theme",
+    "density",
+    "motion",
+    "tokens",
+    "avoid",
+}
+CUSTOMER_TOKEN_KEYS = {
+    "canvas",
+    "canvasAlt",
+    "surface",
+    "surfaceAlt",
+    "ink",
+    "inkMuted",
+    "inkFaint",
+    "brand",
+    "brandAlt",
+    "accent",
+    "radius",
+    "navWidth",
+    "fontScale",
+}
+PLACEHOLDER_PATTERN = re.compile(r"__[A-Z][A-Z0-9_-]*__")
+
+
+class ComposeError(ValueError):
+    """Raised when composition metadata or layers are invalid."""
+
+
+class VisibleTextParser(HTMLParser):
+    """Extract rendered text while preserving adjacency across inline tags."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+
+    def handle_data(self, data: str) -> None:
+        self.parts.append(data)
+
+    def handle_starttag(
+        self,
+        tag: str,
+        attrs: list[tuple[str, str | None]],
+    ) -> None:
+        if tag.lower() in {"br", "div", "p", "li"}:
+            self.parts.append(" ")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.lower() in {"div", "p", "li"}:
+            self.parts.append(" ")
+
+
+def parse_args() -> argparse.Namespace:
+    skill_root = Path(__file__).resolve().parents[1]
+    parser = argparse.ArgumentParser(
+        description="Compose and validate a customer demo spec without fixing customer design."
+    )
+    parser.add_argument(
+        "--base",
+        type=Path,
+        default=skill_root / "examples" / "precision-manufacturing.example.json",
+        help="Complete validated base spec.",
+    )
+    parser.add_argument(
+        "--pack",
+        type=Path,
+        action="append",
+        default=[],
+        help="Industry pack. May be provided multiple times.",
+    )
+    parser.add_argument("--customer", type=Path, required=True, help="Customer overlay.")
+    parser.add_argument("--output", type=Path, required=True, help="Composed demo-spec.json.")
+    parser.add_argument("--html-output", type=Path, help="Optional rendered HTML output.")
+    parser.add_argument(
+        "--runtime-dir",
+        type=Path,
+        default=skill_root / "runtime",
+        help="Golden Runtime directory for --html-output.",
+    )
+    parser.add_argument(
+        "--max-research-age-hours",
+        type=float,
+        default=24.0,
+        help="Maximum age of live research metadata.",
+    )
+    parser.add_argument(
+        "--allow-stale-research",
+        action="store_true",
+        help="Allow stale research only for repository examples and tests.",
+    )
+    return parser.parse_args()
+
+
+def load_json(path: Path) -> Any:
+    resolved = path.expanduser().resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError(resolved)
+
+    def reject_constant(value: str):
+        raise ComposeError(f"Non-finite JSON number is not allowed: {value}")
+
+    with resolved.open(encoding="utf-8") as stream:
+        return json.load(stream, parse_constant=reject_constant)
+
+
+def deep_merge(base: Any, overlay: Any) -> Any:
+    if overlay == DELETE_MARKER:
+        return DELETE_MARKER
+    if isinstance(overlay, dict) and set(overlay) == {REPLACE_KEY}:
+        return copy.deepcopy(overlay[REPLACE_KEY])
+    if isinstance(base, dict) and isinstance(overlay, dict):
+        merged = copy.deepcopy(base)
+        for key, value in overlay.items():
+            result = deep_merge(merged.get(key), value)
+            if result == DELETE_MARKER:
+                merged.pop(key, None)
+            else:
+                merged[key] = result
+        return merged
+    return copy.deepcopy(overlay)
+
+
+def path_exists(value: Any, path: str) -> bool:
+    current = value
+    for segment in path.split("."):
+        if not isinstance(current, dict) or segment not in current:
+            return False
+        current = current[segment]
+    return True
+
+
+def get_path(value: Any, path: str) -> Any:
+    current = value
+    for segment in path.split("."):
+        if not isinstance(current, dict) or segment not in current:
+            raise ComposeError(f"Missing path: {path}")
+        current = current[segment]
+    return current
+
+
+def set_path(value: dict[str, Any], path: str, replacement: Any) -> None:
+    segments = path.split(".")
+    current = value
+    for segment in segments[:-1]:
+        child = current.get(segment)
+        if not isinstance(child, dict):
+            child = {}
+            current[segment] = child
+        current = child
+    current[segments[-1]] = copy.deepcopy(replacement)
+
+
+def meaningful(value: Any) -> bool:
+    if isinstance(value, (dict, list, str)):
+        return bool(value)
+    return value is not None
+
+
+def apply_customer_layer(
+    composed: dict[str, Any],
+    customer_spec: dict[str, Any],
+    required_paths: list[str],
+) -> dict[str, Any]:
+    merged = deep_merge(composed, customer_spec)
+    for section in ["meta", "design", "story"]:
+        merged[section] = copy.deepcopy(customer_spec[section])
+    for path in required_paths:
+        replacement = deep_merge(None, get_path(customer_spec, path))
+        if replacement == DELETE_MARKER:
+            raise ComposeError(f"Customer-required path cannot be deleted: {path}")
+        set_path(merged, path, replacement)
+    return merged
+
+
+def iter_strings(value: Any, path: str = "$"):
+    if isinstance(value, str):
+        yield path, value
+    elif isinstance(value, dict):
+        for key, child in value.items():
+            yield from iter_strings(child, f"{path}.{key}")
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            yield from iter_strings(child, f"{path}[{index}]")
+
+
+def visible_text(value: str) -> str:
+    parser = VisibleTextParser()
+    parser.feed(value)
+    parser.close()
+    normalized = unicodedata.normalize("NFKC", "".join(parser.parts))
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def term_matches(value: str, term: str) -> bool:
+    text = visible_text(value)
+    normalized_term = unicodedata.normalize("NFKC", html_lib.unescape(term)).strip()
+    if re.fullmatch(r"[A-Z0-9]{2,5}", normalized_term):
+        pattern = re.compile(
+            rf"(?<![A-Za-z0-9]){re.escape(normalized_term)}(?![A-Za-z0-9])",
+            re.IGNORECASE,
+        )
+        return bool(pattern.search(text))
+    return normalized_term.casefold() in text.casefold()
+
+
+def validate_pack(
+    document: Any,
+    source: Path,
+) -> tuple[dict[str, Any], list[str], list[str], dict[str, Any]]:
+    if not isinstance(document, dict):
+        raise ComposeError(f"{source}: pack must be an object")
+    metadata = document.get("_pack")
+    spec = document.get("spec")
+    if not isinstance(metadata, dict) or not isinstance(spec, dict):
+        raise ComposeError(f"{source}: pack requires _pack and spec objects")
+    for key in ["id", "name"]:
+        if not isinstance(metadata.get(key), str) or not metadata[key].strip():
+            raise ComposeError(f"{source}: _pack.{key} must be a non-empty string")
+    forbidden = {"meta", "design", "story"} & set(spec)
+    if forbidden:
+        raise ComposeError(
+            f"{source}: Industry Pack must not define customer-owned section(s): "
+            + ", ".join(sorted(forbidden))
+        )
+    if REPLACE_KEY in spec or "$delete" in spec:
+        raise ComposeError(f"{source}: merge directives are not allowed at pack spec root")
+    required_paths = metadata.get("requiredCustomerPaths", [])
+    if not isinstance(required_paths, list) or not all(
+        isinstance(path, str) and path.strip() for path in required_paths
+    ):
+        raise ComposeError(f"{source}: _pack.requiredCustomerPaths must contain strings")
+    forbid_terms = metadata.get("forbidOutputTerms", [])
+    if not isinstance(forbid_terms, list) or not all(
+        isinstance(term, str) and term for term in forbid_terms
+    ):
+        raise ComposeError(f"{source}: _pack.forbidOutputTerms must contain strings")
+    return spec, required_paths, forbid_terms, metadata
+
+
+def parse_checked_at(value: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ComposeError("_customer.research.checkedAt must be ISO 8601") from error
+    if parsed.tzinfo is None:
+        raise ComposeError("_customer.research.checkedAt must include a timezone")
+    return parsed.astimezone(timezone.utc)
+
+
+def canonical_source_url(value: str) -> str | None:
+    try:
+        parsed = urlparse(value)
+        port = parsed.port
+    except ValueError:
+        return None
+    if (
+        parsed.scheme.lower() not in {"http", "https"}
+        or not parsed.hostname
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        return None
+    scheme = parsed.scheme.lower()
+    hostname = parsed.hostname.lower()
+    default_port = (scheme == "http" and port == 80) or (
+        scheme == "https" and port == 443
+    )
+    netloc = hostname if port is None or default_port else f"{hostname}:{port}"
+    path = parsed.path or "/"
+    return urlunparse((scheme, netloc, path, "", parsed.query, ""))
+
+
+def validate_customer(
+    document: Any,
+    required_paths: list[str],
+    *,
+    allow_stale: bool,
+    max_age_hours: float,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    if not isinstance(document, dict):
+        raise ComposeError("Customer overlay must be an object")
+    metadata = document.get("_customer")
+    spec = document.get("spec")
+    if not isinstance(metadata, dict) or not isinstance(spec, dict):
+        raise ComposeError("Customer overlay requires _customer and spec objects")
+    for section in ["meta", "design", "story"]:
+        if not isinstance(spec.get(section), dict):
+            raise ComposeError(f"Customer overlay must own the full '{section}' section")
+    missing_design = CUSTOMER_DESIGN_KEYS - set(spec["design"])
+    if missing_design:
+        raise ComposeError(
+            "Customer overlay must define complete Adaptive Design DNA; missing: "
+            + ", ".join(sorted(missing_design))
+        )
+    tokens = spec["design"].get("tokens")
+    if not isinstance(tokens, dict):
+        raise ComposeError("Customer Overlay design.tokens must be an object")
+    missing_tokens = CUSTOMER_TOKEN_KEYS - set(tokens)
+    if missing_tokens:
+        raise ComposeError(
+            "Customer Overlay must own the customer visual token set; missing: "
+            + ", ".join(sorted(missing_tokens))
+        )
+
+    research = metadata.get("research")
+    if not isinstance(research, dict) or research.get("mode") != "live":
+        raise ComposeError("_customer.research.mode must be 'live'")
+    checked_at_raw = research.get("checkedAt")
+    if not isinstance(checked_at_raw, str):
+        raise ComposeError("_customer.research.checkedAt is required")
+    checked_at = parse_checked_at(checked_at_raw)
+    sources = research.get("sourceUrls")
+    if not isinstance(sources, list):
+        raise ComposeError("_customer.research.sourceUrls must be an array")
+    if not all(isinstance(url, str) for url in sources):
+        raise ComposeError("Customer research sources must be valid HTTP(S) URL strings")
+    canonical_sources = [canonical_source_url(url) for url in sources]
+    if any(url is None for url in canonical_sources):
+        raise ComposeError("Customer research sources must be valid HTTP(S) URL strings")
+    unique_sources = sorted(set(canonical_sources))
+    if len(unique_sources) < 2:
+        raise ComposeError("Customer overlay requires at least two unique HTTP(S) sources")
+    if not allow_stale:
+        now = datetime.now(timezone.utc)
+        age_hours = (now - checked_at).total_seconds() / 3600
+        if age_hours < -0.25:
+            raise ComposeError("Research timestamp is unexpectedly in the future")
+        if age_hours > max_age_hours:
+            raise ComposeError(
+                f"Live research is {age_hours:.1f} hours old; maximum is {max_age_hours:.1f}"
+            )
+
+    missing_paths = []
+    for path in required_paths:
+        if not path_exists(spec, path):
+            missing_paths.append(path)
+            continue
+        resolved = deep_merge(None, get_path(spec, path))
+        if resolved == DELETE_MARKER or not meaningful(resolved):
+            missing_paths.append(path)
+    if missing_paths:
+        raise ComposeError(
+            "Customer overlay is missing high-impact path(s): "
+            + ", ".join(sorted(set(missing_paths)))
+        )
+    forbid_terms = metadata.get("forbidTerms", [])
+    if not isinstance(forbid_terms, list) or not all(
+        isinstance(term, str) and term for term in forbid_terms
+    ):
+        raise ComposeError("_customer.forbidTerms must contain non-empty strings")
+    return spec, metadata
+
+
+def check_output_leaks(spec: dict[str, Any], forbid_terms: list[str]) -> None:
+    for path, value in iter_strings(spec):
+        for term in forbid_terms:
+            if term_matches(value, term):
+                raise ComposeError(f"Forbidden base/example term leaked into {path}: {term}")
+        placeholder = PLACEHOLDER_PATTERN.search(visible_text(value))
+        if placeholder:
+            raise ComposeError(f"Unresolved placeholder in {path}: {placeholder.group(0)}")
+
+
+def main() -> int:
+    args = parse_args()
+    base = load_json(args.base)
+    if not isinstance(base, dict):
+        raise ComposeError("Base spec must be an object")
+    composed = copy.deepcopy(base)
+    required_paths: list[str] = []
+    pack_forbid_terms: list[str] = []
+    pack_summaries = []
+
+    for pack_path in args.pack:
+        pack_document = load_json(pack_path)
+        pack_spec, pack_required, pack_forbid, metadata = validate_pack(
+            pack_document,
+            pack_path,
+        )
+        composed = deep_merge(composed, pack_spec)
+        required_paths.extend(pack_required)
+        pack_forbid_terms.extend(pack_forbid)
+        pack_summaries.append(
+            {
+                "id": metadata["id"],
+                "name": metadata["name"],
+                "designHints": metadata.get("designHints", []),
+            }
+        )
+
+    customer_document = load_json(args.customer)
+    customer_spec, customer_metadata = validate_customer(
+        customer_document,
+        required_paths,
+        allow_stale=args.allow_stale_research,
+        max_age_hours=args.max_research_age_hours,
+    )
+    composed = apply_customer_layer(composed, customer_spec, required_paths)
+    composed = render_demo.sanitize_rich_fields(composed)
+    check_output_leaks(
+        composed,
+        pack_forbid_terms + customer_metadata.get("forbidTerms", []),
+    )
+    render_demo.validate_spec(composed)
+
+    output = args.output.expanduser().resolve()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(composed, ensure_ascii=False, indent=2, allow_nan=False),
+        encoding="utf-8",
+    )
+
+    summary: dict[str, Any] = {
+        "base": str(args.base.expanduser().resolve()),
+        "packs": pack_summaries,
+        "customer": composed["meta"]["customer"],
+        "archetype": composed["design"]["archetype"],
+        "researchCheckedAt": customer_metadata["research"]["checkedAt"],
+        "routes": len(composed["navigation"]),
+        "agents": len(composed["agents"]["profiles"]),
+        "specOutput": str(output),
+        "specBytes": output.stat().st_size,
+    }
+
+    if args.html_output:
+        html_output = args.html_output.expanduser().resolve()
+        html_output.parent.mkdir(parents=True, exist_ok=True)
+        html_output.write_text(
+            render_demo.render(composed, args.runtime_dir),
+            encoding="utf-8",
+        )
+        summary.update(
+            {
+                "htmlOutput": str(html_output),
+                "htmlBytes": html_output.stat().st_size,
+            }
+        )
+
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except (
+        ComposeError,
+        FileNotFoundError,
+        json.JSONDecodeError,
+        render_demo.SpecError,
+        RuntimeError,
+    ) as error:
+        print(f"compose_demo_spec.py: {error}", file=sys.stderr)
+        raise SystemExit(2)

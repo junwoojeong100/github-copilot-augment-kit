@@ -21,6 +21,7 @@
   storyline.md
   design-dna.md
   view-contract.md
+  customer-overlay.json
   demo-spec.json
   defects.md
   metrics.json
@@ -29,7 +30,8 @@
 
 `view-contract.md`에는 각 route의 KPI, 필수 DOM ID, 클릭 동작, 시뮬레이터 입력, 예상 결과,
 에이전트 전환 조건을 기록한다. `design-dna.md`에는 고객별 archetype·token·density·avoid를 기록하고,
-두 계약을 `demo-spec.json`으로 합친다. 이후 수정 surface는 HTML보다 spec을 우선한다.
+실시간 Fact Ledger와 함께 `customer-overlay.json`으로 합친다. Composer가 Industry Pack과 Overlay를
+`demo-spec.json`으로 만들며 이후 수정 surface는 HTML이나 전체 Spec보다 Overlay를 우선한다.
 
 ## 3. 리서치 병렬화
 
@@ -41,7 +43,8 @@
 
 각 조사자는 1차 출처 URL·확인일·핵심 근거만 반환한다. 메인 에이전트가 결과를 하나의 Fact Ledger로
 합치고 충돌을 해결한 뒤에만 스토리라인을 시작한다. 기존 원장이 있으면 안정적인 회사 사실은 출처를
-재확인하고, 최근 뉴스와 제품 상태는 항상 새로 확인한다.
+찾는 참고로만 사용하고, **고객 요청마다 공식 원문을 실시간으로 다시 확인한다.** 이전 Fact Ledger나
+Industry Pack의 사실이 새 조사를 대체하면 안 된다.
 
 ## 4. Puppeteer 공용 캐시
 
@@ -62,11 +65,14 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/ai-platform-demo/puppeteer/
 ## 5. Golden Runtime 기반 단일 소유 빌드
 
 - 조사 subagent가 화면별 HTML/CSS/JS를 따로 작성하지 않는다.
-- 메인 에이전트가 잠긴 storyline·Design DNA·view contract를 고객 `demo-spec.json`으로 작성한다.
-- `scripts/render_demo.py`가 `runtime/shell.tmpl`, `runtime/runtime.css`, `runtime/runtime.js`와 spec을
-  inline해 단일 HTML을 만든다.
+- 메인 에이전트가 잠긴 storyline·Design DNA·view contract와 실시간 research metadata를
+  `customer-overlay.json`으로 작성한다.
+- `scripts/compose_demo_spec.py`가 base + Industry Pack + Customer Overlay를 합치고
+  `scripts/render_demo.py` validation을 거쳐 단일 HTML까지 생성한다.
+- Industry Pack은 `meta`, `story`, `design`을 소유하지 않으며 고객 Overlay가 전체 Design DNA를
+  제공하지 않으면 Composer가 실패한다.
 - 고객 콘텐츠·브랜드 표현·산업 공식·Agent는 spec에서 새로 매핑하고 runtime engine은 재사용한다.
-- 기본 수정은 spec→재생성으로 수행한다. 핵심 장면이 runtime variant로 표현되지 않을 때만 해당
+- 기본 수정은 Overlay→재합성으로 수행한다. 핵심 장면이 runtime variant로 표현되지 않을 때만 해당
   route를 bespoke patch한다.
 - 여러 에이전트가 같은 spec·HTML을 동시에 편집하지 않는다.
 
@@ -87,6 +93,8 @@ route만 전환한다.
 {
   "research_seconds": 0,
   "storyline_design_seconds": 0,
+  "customer_overlay_seconds": 0,
+  "spec_compose_seconds": 0,
   "build_seconds": 0,
   "runtime_render_seconds": 0,
   "bespoke_extension_routes": 0,

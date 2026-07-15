@@ -1,0 +1,575 @@
+{
+  "_pack": {
+    "id": "renewable-energy-holdings",
+    "name": "Renewable Energy Holdings",
+    "version": "1.0.0",
+    "designHints": [
+      "global energy network",
+      "traceability",
+      "portfolio control",
+      "carbon evidence"
+    ],
+    "requiredCustomerPaths": [
+      "dashboard.hero",
+      "operations.hero",
+      "operations.flow.nodes",
+      "simulator.hero",
+      "simulator.inputs",
+      "improvement.hero",
+      "finance.hero",
+      "agents.hero",
+      "agents.profiles",
+      "agents.orchestration",
+      "governance.hero"
+    ],
+    "forbidOutputTerms": [
+      "Boards per hour",
+      "First-Pass Yield",
+      "SPI",
+      "AOI",
+      "Printer pressure",
+      "Placement X-offset",
+      "Placement offset",
+      "Smart Review",
+      "AI server baseline",
+      "package family",
+      "false-call",
+      "Quality Agent",
+      "Process approval",
+      "Telemetry issue"
+    ]
+  },
+  "spec": {
+    "navigation": [
+      {"id": "dashboard", "icon": "◫", "name": "Executive Cockpit", "short": "Overview", "crumb": "Global Portfolio"},
+      {"id": "operations", "icon": "◇", "name": "Global Value Chain", "short": "Live", "crumb": "Materials · Energy · Delivery"},
+      {"id": "simulator", "icon": "△", "name": "Energy Twin", "short": "Predict", "crumb": "Generation · Storage · Demand"},
+      {"id": "improvement", "icon": "◎", "name": "Portfolio Optimizer", "short": "Improve", "crumb": "Carbon · Supply · Reliability"},
+      {"id": "finance", "icon": "₩", "name": "Portfolio Economics", "short": "Finance", "crumb": "Capital Allocation"},
+      {"id": "devops", "icon": "⌘", "name": "Software Delivery", "short": "Copilot", "crumb": "Energy Software"},
+      {"id": "agents", "icon": "✦", "name": "Agent Studio", "short": "Orchestrate", "crumb": "Multi-Agent Operations"},
+      {"id": "governance", "icon": "⬡", "name": "Trust & Sovereignty", "short": "Govern", "crumb": "Evidence · Identity · Evaluation"}
+    ],
+    "dashboard": {
+      "kpis": [
+        {
+          "label": "Global operating nodes",
+          "value": 12,
+          "decimals": 0,
+          "unit": "nodes",
+          "delta": "+3 coordinated",
+          "direction": "up",
+          "icon": "◎",
+          "color": "brand",
+          "series": [5, 6, 7, 7, 8, 9, 11, 12],
+          "tick": {"min": 0, "max": 0.2, "floor": 12, "ceiling": 16}
+        },
+        {
+          "label": "Clean-energy flow",
+          "value": 2.8,
+          "decimals": 1,
+          "unit": "GW",
+          "delta": "+0.2 GW demo",
+          "direction": "up",
+          "icon": "◇",
+          "color": "accent",
+          "series": [2.1, 2.2, 2.3, 2.35, 2.5, 2.55, 2.7, 2.8],
+          "tick": {"min": -0.03, "max": 0.05, "floor": 2.5, "ceiling": 3.2}
+        },
+        {
+          "label": "Delivery confidence",
+          "value": 97.6,
+          "decimals": 1,
+          "unit": "%",
+          "delta": "+0.4%p coordinated",
+          "direction": "up",
+          "icon": "✓",
+          "color": "success",
+          "series": [96.4, 96.7, 96.9, 97.0, 97.1, 97.3, 97.4, 97.6],
+          "tick": {"min": -0.06, "max": 0.08, "floor": 95.5, "ceiling": 99}
+        },
+        {
+          "label": "Agent decisions",
+          "value": 720,
+          "decimals": 0,
+          "unit": "today",
+          "delta": "+82 evaluated",
+          "direction": "up",
+          "icon": "✦",
+          "color": "violet",
+          "series": [180, 240, 310, 380, 460, 550, 640, 720],
+          "tick": {"min": 2, "max": 7, "floor": 700, "ceiling": 1100}
+        }
+      ],
+      "stream": {
+        "title": "Global delivery confidence",
+        "label": "Delivery confidence",
+        "unit": "%",
+        "color": "accent",
+        "values": [96.4, 96.6, 96.5, 96.8, 96.9, 97.0, 97.1, 97.0, 97.25, 97.35, 97.4, 97.55, 97.6],
+        "min": 95.5,
+        "max": 99,
+        "tick": {"min": -0.09, "max": 0.12},
+        "intervalMs": 1900
+      },
+      "feedTitle": "Portfolio agent activity",
+      "feedHint": "Real-time DEMO DATA",
+      "feed": [
+        {"icon": "◇", "title": "Material Agent", "text": "Low-carbon material flow is within range."},
+        {"icon": "△", "title": "Energy Agent", "text": "Storage reserve policy was recalculated."},
+        {"icon": "⬡", "title": "Traceability Agent", "text": "Two evidence items entered review."},
+        {"icon": "◎", "title": "Reliability Agent", "text": "Maintenance impact was evaluated."}
+      ],
+      "cards": {
+        "title": "Executive control signals",
+        "hint": "Industry defaults",
+        "items": [
+          {"name": "Traceability", "value": "99.2%", "sub": "evidence completeness", "detail": "Material, energy, ownership, and delivery evidence are linked."},
+          {"name": "Carbon Signal", "value": "−31%", "sub": "embedded-carbon index", "detail": "Energy source and operating efficiency form a demo carbon index."},
+          {"name": "Project Execution", "value": "91.8%", "sub": "milestone confidence", "detail": "Development, procurement, and interconnection signals are combined."}
+        ]
+      },
+      "table": {
+        "title": "Regional portfolio pulse",
+        "hint": "Click a row for details",
+        "headers": ["Region", "Portfolio role", "Signal", "Status"],
+        "rows": [
+          {"cells": ["Region A", "Core material", "95.8%"], "status": {"label": "Stable", "tone": "success"}, "detailTitle": "Core material region", "detail": "Clean-power input, production, and evidence are combined.", "icon": "◇"},
+          {"cells": ["Region B", "Manufacturing", "92.1%"], "status": {"label": "Ramp", "tone": "info"}, "detailTitle": "Manufacturing region", "detail": "Capacity, yield, and delivery slots are coordinated.", "icon": "△"},
+          {"cells": ["Region C", "Generation / ESS", "Peak 18:00"], "status": {"label": "Watch", "tone": "warning"}, "detailTitle": "Generation and storage region", "detail": "Forecast, storage reserve, and contracts are monitored.", "icon": "✦"},
+          {"cells": ["Region D", "Power / Development", "99.0%"], "status": {"label": "Stable", "tone": "success"}, "detailTitle": "Power and development region", "detail": "Industrial energy and project milestones are summarized.", "icon": "◎"}
+        ]
+      },
+      "learningLoop": {
+        "label": "OWNED ENERGY LEARNING LOOP",
+        "value": 16820,
+        "unit": "assets",
+        "note": "dispatch patterns · evidence · project playbooks · evaluation"
+      }
+    },
+    "operations": {
+      "kpis": [
+        {"label": "Material flow", "value": 94.8, "decimals": 1, "unit": "%", "delta": "+1.4% coordinated", "direction": "up", "icon": "◇", "color": "brand", "series": [88, 89, 90, 91, 92, 92.5, 93.8, 94.8], "tick": {"min": -0.35, "max": 0.45, "floor": 88, "ceiling": 101}},
+        {"label": "Delivery confidence", "value": 97.6, "decimals": 1, "unit": "%", "delta": "+0.3%p today", "direction": "up", "icon": "✓", "color": "success", "series": [96.5, 96.8, 96.9, 97.0, 97.2, 97.3, 97.4, 97.6], "tick": {"min": -0.06, "max": 0.08, "floor": 95.8, "ceiling": 99}},
+        {"label": "Evidence exceptions", "value": 4, "decimals": 0, "unit": "open", "delta": "−6 after matching", "direction": "down", "icon": "⬡", "color": "warning", "series": [13, 12, 10, 9, 8, 6, 5, 4]},
+        {"label": "Coordinated actions", "value": 24, "decimals": 0, "unit": "today", "delta": "+8 cross-portfolio", "direction": "up", "icon": "✦", "color": "violet", "series": [2, 5, 8, 11, 14, 18, 21, 24]}
+      ],
+      "flow": {
+        "title": "Cross-border clean-energy flow",
+        "hint": "Moving material / MWh",
+        "moverLabel": "FLOW",
+        "nodes": [
+          {"name": "Clean Power", "subtitle": "Source", "metric": "97.4%", "status": "availability", "detail": "Renewable energy availability and production plans are linked."},
+          {"name": "Core Material", "subtitle": "Production", "metric": "95.8%", "status": "run-rate", "detail": "Material quality, energy, and lot evidence are monitored."},
+          {"name": "Manufacturing", "subtitle": "Downstream", "metric": "92.1%", "status": "readiness", "detail": "Capacity, yield, and handoff windows are coordinated."},
+          {"name": "Generation", "subtitle": "Solar / Wind", "metric": "2.8 GW", "status": "portfolio flow", "detail": "Forecast and contracted delivery are combined."},
+          {"name": "Storage", "subtitle": "ESS", "metric": "28%", "status": "reserve SOC", "detail": "Storage reserve is optimized against demand and contracts."},
+          {"name": "Grid / Customer", "subtitle": "Delivery", "metric": "97.6%", "status": "confidence", "detail": "Portfolio delivery confidence is calculated."}
+        ],
+        "events": [
+          "Clean-power forecast locked",
+          "Material lot and evidence attached",
+          "Manufacturing slot confirmed",
+          "Generation forecast synchronized",
+          "Storage reserve recalculated",
+          "Delivery commitment ready"
+        ]
+      },
+      "action": {
+        "button": "✦ AI re-orchestrate",
+        "running": "Analyzing portfolio…",
+        "complete": "✓ Re-orchestration complete",
+        "runningEvent": "Forecast, evidence, storage, and contract signals are being combined",
+        "completeEvent": "Delivery package created · awaiting approval",
+        "recommendationLabel": "Current recommendation",
+        "recommendationBefore": "<b>Increase storage reserve and resolve evidence exceptions.</b><br>Expected delivery-confidence improvement: +0.2%p",
+        "recommendationAfter": "<b>Approval package ready.</b><br>Reserve +4%p · handoff adjusted · evidence items prioritized",
+        "kpiUpdates": {"1": 97.9, "2": 1, "3": 27},
+        "durationMs": 1100,
+        "toastTitle": "Delivery package created",
+        "toastText": "Three portfolio actions reached the approval gate.",
+        "toastIcon": "✦"
+      },
+      "table": {
+        "title": "Live portfolio exceptions",
+        "hint": "Click a row for details",
+        "headers": ["Asset / Flow", "Signal", "Status"],
+        "rows": [
+          {"cells": ["Material lot", "Evidence 98.9%"], "status": {"label": "Review", "tone": "warning"}, "detailTitle": "Material evidence", "detail": "Two evidence items require review before release.", "icon": "⬡"},
+          {"cells": ["Manufacturing handoff", "+5 h"], "status": {"label": "Coordinate", "tone": "info"}, "detailTitle": "Manufacturing handoff", "detail": "Production and delivery slots are being aligned.", "icon": "△"},
+          {"cells": ["Generation portfolio", "92.6%"], "status": {"label": "Normal", "tone": "success"}, "detailTitle": "Generation readiness", "detail": "Forecast and asset readiness are within range.", "icon": "◇"},
+          {"cells": ["Storage reserve", "SOC 28%"], "status": {"label": "AI policy", "tone": "violet"}, "detailTitle": "Storage reserve", "detail": "Reserve policy was recalculated for the peak window.", "icon": "✦"},
+          {"cells": ["Industrial energy", "99.0%"], "status": {"label": "Stable", "tone": "success"}, "detailTitle": "Industrial energy", "detail": "Maintenance and demand signals are stable.", "icon": "◎"}
+        ]
+      }
+    },
+    "simulator": {
+      "inputsTitle": "Energy variables",
+      "inputsHint": "Adjust the scenario",
+      "inputs": [
+        {"id": "forecastConfidence", "label": "Generation forecast confidence", "min": 70, "max": 99, "step": 1, "value": 94, "decimals": 0, "unit": "%", "optimum": 97, "weight": 0.22},
+        {"id": "reserveSoc", "label": "Storage reserve SOC", "min": 10, "max": 60, "step": 1, "value": 28, "decimals": 0, "unit": "%", "optimum": 28, "weight": 0.1},
+        {"id": "loadRamp", "label": "Peak-load ramp", "min": 0, "max": 40, "step": 1, "value": 12, "decimals": 0, "unit": "%", "optimum": 8, "weight": 0.14}
+      ],
+      "output": {
+        "label": "Delivery Confidence",
+        "unit": "%",
+        "base": 99.3,
+        "min": 86,
+        "max": 99.5,
+        "decimals": 2,
+        "goodThreshold": 97,
+        "warningThreshold": 93,
+        "goodLabel": "Commit",
+        "warningLabel": "Rebalance",
+        "dangerLabel": "Hold"
+      },
+      "secondary": [
+        {"label": "Curtailed energy", "base": 4.2, "unit": " MWh", "decimals": 1, "weights": {"forecastConfidence": -0.18, "reserveSoc": -0.04, "loadRamp": 0.22}},
+        {"label": "Merchant exposure", "base": 8.4, "unit": "%", "decimals": 1, "weights": {"forecastConfidence": -0.12, "reserveSoc": -0.09, "loadRamp": 0.18}},
+        {"label": "Avoided carbon", "base": 410, "unit": " tCO₂", "decimals": 0, "weights": {"forecastConfidence": 1.8, "reserveSoc": 0.7, "loadRamp": -1.1}}
+      ],
+      "recommendations": [
+        {"inputId": "forecastConfidence", "operator": "<", "threshold": 88, "message": "<b>Forecast confidence is low.</b><br>Reduce commitments and increase storage reserve."},
+        {"inputId": "reserveSoc", "operator": "<", "threshold": 20, "message": "<b>Storage reserve is insufficient.</b><br>Adjust the charge schedule before the peak window."},
+        {"inputId": "loadRamp", "operator": ">", "threshold": 24, "message": "<b>Peak-load ramp is high.</b><br>Rebalance storage dispatch and merchant position."},
+        {"inputId": "reserveSoc", "operator": "default", "threshold": 0, "message": "<b>The scenario is within commit range.</b>"}
+      ],
+      "defaultRecommendation": "<b>The scenario is within commit range.</b>",
+      "histogram": {
+        "title": "Predicted delivery distribution",
+        "hint": "Recalculated from the scenario",
+        "leftLabel": "shortfall",
+        "centerLabel": "commit",
+        "rightLabel": "surplus"
+      },
+      "history": {
+        "title": "Recent energy-twin scenarios",
+        "hint": "Click a row for details",
+        "headers": ["Scenario", "Confidence", "Risk", "Decision"],
+        "rows": [
+          {"cells": ["Peak baseline", "97.6%", "Low"], "status": {"label": "Commit", "tone": "success"}, "detailTitle": "Peak baseline", "detail": "Current forecast and reserve policy are applied.", "icon": "△"},
+          {"cells": ["Weather shock", "91.8%", "High"], "status": {"label": "Rebalance", "tone": "danger"}, "detailTitle": "Weather shock", "detail": "Generation forecast confidence is reduced.", "icon": "△"},
+          {"cells": ["Reserve optimized", "98.2%", "Low"], "status": {"label": "Commit", "tone": "success"}, "detailTitle": "Reserve optimized", "detail": "Storage reserve is increased before the peak.", "icon": "✦"},
+          {"cells": ["Load ramp +28%", "93.9%", "Medium"], "status": {"label": "Validate", "tone": "warning"}, "detailTitle": "Load ramp", "detail": "Demand increases rapidly during the delivery window.", "icon": "◇"}
+        ]
+      },
+      "assumption": "This is an illustrative interaction model, not a production energy forecast."
+    },
+    "improvement": {
+      "kpis": [
+        {"label": "Ranked portfolio factors", "value": 6, "decimals": 0, "unit": "factors", "delta": "+3 cross-asset signals", "direction": "up", "icon": "◎", "color": "brand", "series": [1, 2, 2, 3, 4, 4, 5, 6]},
+        {"label": "Expected curtailment reduction", "value": 18, "decimals": 0, "unit": "%", "delta": "+7%p coordinated", "direction": "up", "icon": "↓", "color": "success", "series": [2, 4, 6, 8, 10, 13, 15, 18]},
+        {"label": "Evidence-exception reduction", "value": 41, "decimals": 0, "unit": "%", "delta": "−2 review cycles", "direction": "down", "icon": "⬡", "color": "accent", "series": [4, 8, 12, 17, 23, 30, 36, 41]},
+        {"label": "Owned portfolio playbooks", "value": 1084, "decimals": 0, "unit": "items", "delta": "+24 this month", "direction": "up", "icon": "▤", "color": "violet", "series": [780, 820, 860, 900, 945, 990, 1040, 1084]}
+      ],
+      "stepsTitle": "Agent reasoning trace",
+      "stepsHint": "Explainable steps",
+      "steps": [
+        {"title": "Signal alignment", "text": "Generation, storage, evidence, contracts, and maintenance are aligned."},
+        {"title": "Portfolio comparison", "text": "Regional and asset signals are compared with operating baselines."},
+        {"title": "Contribution analysis", "text": "Forecast, grid, reserve, evidence, and maintenance impacts are ranked."},
+        {"title": "Action package", "text": "Storage, delivery, evidence, and maintenance actions are generated."},
+        {"title": "Private evaluation", "text": "Customer-owned delivery, carbon, and approval tests are executed."},
+        {"title": "Approval gate", "text": "Operations, finance, and compliance owners review staged actions."}
+      ],
+      "factorsTitle": "Top contributing factors",
+      "factorsHint": "Animated after analysis",
+      "factors": [
+        {"label": "Forecast error", "value": "29%", "width": 84, "color": "brand"},
+        {"label": "Interconnection constraint", "value": "24%", "width": 69, "color": "info"},
+        {"label": "Storage reserve policy", "value": "19%", "width": 54, "color": "accent"},
+        {"label": "Evidence handoff", "value": "16%", "width": 45, "color": "warning"},
+        {"label": "Maintenance window", "value": "12%", "width": 34, "color": "violet"}
+      ],
+      "impactsTitle": "Expected portfolio impact",
+      "impactsHint": "Click a card to inspect assumptions",
+      "impacts": [
+        {"label": "CURTAILMENT", "value": "−18%", "sub": "energy-twin scenario", "detail": "Forecast and reserve policy are brought within target range."},
+        {"label": "EVIDENCE EXCEPTIONS", "value": "−41%", "sub": "approval workflow", "detail": "Evidence collection and review order are redesigned."},
+        {"label": "WORKING CAPITAL", "value": "−5 days", "sub": "cross-border flow", "detail": "Handoff and contract milestones are aligned."},
+        {"label": "LEARNING ASSET", "value": "+1 playbook", "sub": "customer-owned IP", "detail": "Validated outcomes become a reusable portfolio playbook."}
+      ],
+      "board": {
+        "title": "Portfolio improvement board",
+        "hint": "Every card is clickable",
+        "columns": [
+          {
+            "name": "DISCOVERED",
+            "items": [
+              {"text": "Forecast bias · PEAK-18", "title": "Forecast bias", "detail": "Weather-regime forecast error needs additional evaluation."},
+              {"text": "Evidence gap · LOT-0715", "title": "Evidence gap", "detail": "Power-source and ownership evidence need review."}
+            ]
+          },
+          {
+            "name": "VALIDATING",
+            "items": [
+              {"text": "Storage reserve +4%p", "title": "Storage staged policy", "detail": "Reserve policy is applied to a limited delivery window."},
+              {"text": "Manufacturing handoff +5h", "title": "Handoff validation", "detail": "Production, shipment, and delivery windows are compared."}
+            ]
+          },
+          {
+            "name": "OWNED PLAYBOOK",
+            "items": [
+              {"text": "Evidence package v8", "title": "Traceability playbook", "detail": "Material, energy, ownership, and delivery evidence order is stored."},
+              {"text": "Peak dispatch v12", "title": "Peak dispatch playbook", "detail": "Forecast, reserve, and approval criteria are stored."}
+            ]
+          }
+        ]
+      },
+      "action": {
+        "button": "◎ Run portfolio analysis",
+        "running": "Analyzing portfolio…",
+        "complete": "✓ Analysis complete · Run again",
+        "summaryBefore": "<b>Waiting for analysis.</b><br>Run the workflow to generate portfolio factors and actions.",
+        "summaryAfter": "<b>Forecast and interconnection explain 53% of the scenario.</b><br>Increase reserve, resolve evidence, and adjust the handoff window.",
+        "durationMs": 1850,
+        "autoRun": true,
+        "toastTitle": "Portfolio analysis complete",
+        "toastText": "Three portfolio actions and one playbook were generated.",
+        "toastIcon": "◎"
+      }
+    },
+    "finance": {
+      "leversTitle": "Investment committee levers",
+      "leversHint": "Adjust three variables",
+      "levers": [
+        {"id": "contractCoverage", "label": "Contracted storage coverage", "min": 30, "max": 90, "step": 1, "value": 62, "decimals": 0, "unit": "%", "impact": 0.045},
+        {"id": "greenPremium", "label": "Low-carbon premium capture", "min": 0, "max": 30, "step": 1, "value": 12, "decimals": 0, "unit": "%", "impact": 0.07},
+        {"id": "cashRelease", "label": "Working-capital release", "min": 0, "max": 20, "step": 1, "value": 6, "decimals": 0, "unit": " days", "impact": 0.055}
+      ],
+      "margin": {
+        "label": "Illustrative portfolio value margin",
+        "base": 17.4,
+        "unit": "%",
+        "decimals": 1,
+        "note": "Demo scenario · not company guidance",
+        "impacts": {
+          "$replace": {
+            "contractCoverage": 0.045,
+            "greenPremium": 0.07,
+            "cashRelease": 0.055
+          }
+        },
+        "goodThreshold": 20,
+        "warningThreshold": 16,
+        "goodLabel": "Compounding value",
+        "warningLabel": "Balanced portfolio",
+        "lowLabel": "Exposure weighted"
+      },
+      "summaryMetrics": [
+        {"label": "Contracted value", "base": 410, "unit": "억", "decimals": 0, "impacts": {"contractCoverage": 4.6, "greenPremium": 1.2}},
+        {"label": "Cash release", "base": 130, "unit": "억", "decimals": 0, "impacts": {"cashRelease": 18.5}},
+        {"label": "Portfolio value index", "base": 116, "unit": "", "decimals": 0, "impacts": {"contractCoverage": 0.34, "greenPremium": 0.52, "cashRelease": 0.41}}
+      ],
+      "composition": {
+        "title": "Portfolio value composition",
+        "hint": "Illustrative mix",
+        "centerLabel": "projects / storage",
+        "centerSegment": 2,
+        "segments": [
+          {"label": "Core materials", "base": 34, "color": "brand", "impacts": {"greenPremium": 0.22}},
+          {"label": "Manufacturing", "base": 22, "color": "accent", "impacts": {"greenPremium": 0.12}},
+          {"label": "Projects / storage", "base": 31, "color": "info", "impacts": {"contractCoverage": 0.28}},
+          {"label": "Power / other", "base": 13, "color": "violet", "impacts": {"cashRelease": 0.08}}
+        ]
+      },
+      "watchlist": {
+        "title": "Autonomous portfolio watchlist",
+        "hint": "Click a row for details",
+        "headers": ["Signal", "Variance", "AI comment", "Status"],
+        "rows": [
+          {"cells": ["Storage contract coverage", "+4.0%p", "Project pipeline"], "status": {"label": "Opportunity", "tone": "success"}, "detailTitle": "Contract coverage", "detail": "Contracted capacity and merchant exposure are compared.", "icon": "₩"},
+          {"cells": ["Low-carbon premium", "+2.5%p", "Traceable supply"], "status": {"label": "Model", "tone": "info"}, "detailTitle": "Low-carbon premium", "detail": "Energy-source evidence and customer value are linked.", "icon": "◇"},
+          {"cells": ["Grid milestone", "+8.8%", "Schedule risk"], "status": {"label": "Review", "tone": "warning"}, "detailTitle": "Grid milestone", "detail": "Interconnection schedule and value at risk are monitored.", "icon": "△"},
+          {"cells": ["Working capital", "−3.1 days", "Handoff aligned"], "status": {"label": "Improving", "tone": "success"}, "detailTitle": "Working capital", "detail": "Cross-border handoff and invoice milestones are aligned.", "icon": "◎"},
+          {"cells": ["Agent run cost", "+2.0%", "Volume driven"], "status": {"label": "Controlled", "tone": "violet"}, "detailTitle": "AI operating cost", "detail": "Model, tool, and trace costs are tracked separately.", "icon": "✦"}
+        ]
+      },
+      "explanation": "<b>Scenario value margin {{value}}</b><br>Contract coverage, low-carbon premium, and working capital are compared.",
+      "assumption": "All finance values are illustrative demo assumptions."
+    },
+    "devops": {
+      "hero": {
+        "icon": "⌘",
+        "title": "Energy Software Delivery · Issue to governed pull request",
+        "subtitle": "GitHub Copilot cloud agent researches, plans, tests, and prepares changes for forecast, evidence, and storage software."
+      },
+      "kpis": [
+        {"label": "Median lead time", "value": 4.2, "decimals": 1, "unit": "days", "delta": "−36% demo baseline", "direction": "down", "icon": "◷", "color": "brand", "series": [8.9, 8.2, 7.5, 6.7, 5.9, 5.2, 4.7, 4.2]},
+        {"label": "Agent pull requests", "value": 34, "decimals": 0, "unit": "month", "delta": "+24 reviewed", "direction": "up", "icon": "⑂", "color": "info", "series": [3, 6, 10, 14, 19, 24, 29, 34]},
+        {"label": "Security checks", "value": 100, "decimals": 0, "unit": "%", "delta": "code · secret · dependency", "direction": "up", "icon": "⬡", "color": "success", "series": [84, 89, 93, 96, 98, 99, 100, 100]},
+        {"label": "Review turnaround", "value": 6.0, "decimals": 1, "unit": "hours", "delta": "−2.0 h with context", "direction": "down", "icon": "✓", "color": "violet", "series": [12, 11, 10.3, 9.4, 8.6, 7.5, 6.7, 6.0]}
+      ],
+      "stepsTitle": "Copilot cloud agent session",
+      "stepsHint": "GitHub Actions-powered environment",
+      "steps": [
+        {"title": "Research repository", "text": "Instructions, forecast schema, evidence model, and tests are inspected."},
+        {"title": "Create implementation plan", "text": "Threshold, approval, and rollback boundaries are defined."},
+        {"title": "Implement on branch", "text": "Typed policy configuration and audit events are added."},
+        {"title": "Run tests and security gates", "text": "Unit, integration, code, secret, and dependency checks run."},
+        {"title": "Open draft pull request", "text": "Rationale, risk, and validation results are attached."}
+      ],
+      "issuesTitle": "Energy software backlog",
+      "issuesHint": "Select an issue and assign it to Copilot",
+      "issueHeaders": ["Issue", "Product", "Type", "Risk", "Status"],
+      "issues": [
+        {
+          "id": "#612",
+          "title": "Forecast-confidence guard",
+          "product": "Energy Twin",
+          "type": "Reliability",
+          "risk": "Medium",
+          "status": {"label": "Ready", "tone": "info"},
+          "highRisk": false,
+          "context": "Generation forecast, storage reserve, and commitment schemas are used.",
+          "diffLines": [
+            {"type": "comment", "text": "// energy/forecast/confidence-guard.ts"},
+            {"type": "delete", "text": "- const COMMIT_THRESHOLD = 0.90;"},
+            {"type": "add", "text": "+ const commitThreshold = policy.deliveryConfidence;"},
+            {"type": "add", "text": "+ const requiresApproval = reserveDelta > policy.autoReserveMax;"},
+            {"type": "add", "text": "+ audit.emit('delivery.evaluated', { confidence, requiresApproval });"}
+          ]
+        },
+        {
+          "id": "#604",
+          "title": "Evidence-package audit",
+          "product": "Traceability",
+          "type": "Governance",
+          "risk": "Low",
+          "status": {"label": "Scoped", "tone": "success"},
+          "highRisk": false,
+          "context": "Material, power-source, ownership, and delivery evidence are used.",
+          "diffLines": [
+            {"type": "comment", "text": "// traceability/evidence-policy.ts"},
+            {"type": "add", "text": "+ type EvidenceSet = { lotId: string; source: string; owner: string };"},
+            {"type": "add", "text": "+ await policyLedger.append(evidenceSet);"},
+            {"type": "add", "text": "+ return evaluation.run('evidence-v8');"}
+          ]
+        },
+        {
+          "id": "#598",
+          "title": "Storage approval log",
+          "product": "Storage Operations",
+          "type": "Audit",
+          "risk": "Low",
+          "status": {"label": "Scoped", "tone": "success"},
+          "highRisk": false,
+          "context": "Reserve policy, recommendation, and approver trace are used.",
+          "diffLines": [
+            {"type": "comment", "text": "// storage/dispatch/approval-log.ts"},
+            {"type": "add", "text": "+ record({ beforeSoc, afterSoc, forecastId, approverId });"},
+            {"type": "add", "text": "+ evaluation.attach('dispatch-safety-v12');"},
+            {"type": "add", "text": "+ telemetry.emit('dispatch.approved');"}
+          ]
+        },
+        {
+          "id": "#587",
+          "title": "Live-grid rollback telemetry",
+          "product": "Grid Operations",
+          "type": "Safety",
+          "risk": "High",
+          "status": {"label": "Human lead", "tone": "warning"},
+          "highRisk": true,
+          "context": "Copilot researches and plans; a grid operator implements and approves.",
+          "diffLines": [
+            {"type": "comment", "text": "// grid/safety/rollback.ts"},
+            {"type": "add", "text": "+ if (deployment.isLiveGrid) requireHumanApproval(changeSet);"},
+            {"type": "add", "text": "+ rollback.on('triggered', event => audit.write(event));"},
+            {"type": "comment", "text": "// Safety-critical: human operator leads."}
+          ]
+        }
+      ],
+      "assumption": "Issues, code, pull requests, and productivity metrics are demo data."
+    },
+    "agents": {
+      "listTitle": "Domain agents",
+      "listHint": "Every row is clickable",
+      "governedLabel": "Governed",
+      "placeholder": "Ask about energy, storage, evidence, finance, or software",
+      "sendLabel": "Send",
+      "fallback": "<b>{{agent}}</b>입니다. Energy, storage, traceability, finance, software 중 하나로 질문을 구체화해 주세요."
+    },
+    "governance": {
+      "cards": [
+        {"icon": "◈", "title": "PRIVATE EVALUATION", "value": "92.6", "sub": "energy & evidence checks", "detail": "Delivery, evidence, carbon, approval, and rollback are evaluated."},
+        {"icon": "▤", "title": "GOVERNED EVIDENCE", "value": "16,820", "sub": "patterns · evidence · playbooks", "detail": "Operating patterns and evidence packages are versioned."},
+        {"icon": "⬡", "title": "POLICY COVERAGE", "value": "100%", "sub": "reference architecture coverage", "detail": "Identity, retrieval, tools, approval, and trace are covered."}
+      ],
+      "controls": {
+        "title": "Enterprise control plane",
+        "hint": "Click a row for details",
+        "headers": ["Control", "Microsoft / GitHub service", "Demo policy", "Status"],
+        "rows": [
+          {"cells": ["Identity", "Entra Agent ID · RBAC", "Per-agent least privilege"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Agent identity", "detail": "Each agent receives scoped identity and permissions.", "icon": "⬡"},
+          {"cells": ["Knowledge", "Foundry IQ · Azure AI Search", "ACL-aware grounding"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Knowledge grounding", "detail": "Evidence and operating knowledge are retrieved with access filters.", "icon": "▤"},
+          {"cells": ["Data", "Microsoft Purview", "Classify · protect · audit"], "status": {"label": "Designed", "tone": "info"}, "detailTitle": "Data governance", "detail": "Sensitivity and AI data posture controls are mapped.", "icon": "◈"},
+          {"cells": ["Safety", "AI Content Safety", "Filter · evaluate · red team"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Safety evaluation", "detail": "External responses and internal actions are evaluated separately.", "icon": "✓"},
+          {"cells": ["Runtime", "Defender · VNet isolation", "Threat and posture signals"], "status": {"label": "Designed", "tone": "info"}, "detailTitle": "Runtime security", "detail": "Runtime and tool connections are monitored.", "icon": "⬡"},
+          {"cells": ["Engineering", "GitHub AI Controls · GHAS", "Session audit · merge gate"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Engineering governance", "detail": "Agent sessions and code changes require review.", "icon": "⌘"},
+          {"cells": ["Observability", "Foundry · Application Insights", "Trace every decision"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Observability", "detail": "Decision, retrieval, tool, approval, and latency are traced.", "icon": "✦"}
+        ]
+      },
+      "memories": {
+        "title": "Customer-owned evidence register",
+        "hint": "Owned assets",
+        "headers": ["Asset", "Count", "Ownership"],
+        "rows": [
+          {"cells": ["Energy dispatch patterns", "4,980"], "status": {"label": "Owned", "tone": "success"}, "detailTitle": "Dispatch patterns", "detail": "Forecast, reserve, and load-ramp patterns are stored.", "icon": "△"},
+          {"cells": ["Traceability evidence sets", "3,860"], "status": {"label": "Owned", "tone": "success"}, "detailTitle": "Evidence sets", "detail": "Material, energy, ownership, and delivery evidence are stored.", "icon": "⬡"},
+          {"cells": ["Project playbooks", "2,140"], "status": {"label": "Owned", "tone": "success"}, "detailTitle": "Project playbooks", "detail": "Milestone, interconnection, and maintenance decisions are stored.", "icon": "◎"},
+          {"cells": ["Agent evaluation cases", "5,840"], "status": {"label": "Owned", "tone": "success"}, "detailTitle": "Evaluation cases", "detail": "Delivery, carbon, approval, and rollback cases are stored.", "icon": "◈"}
+        ]
+      },
+      "learningLoop": {
+        "title": "Customer-owned learning loop",
+        "hint": "Click a step for details",
+        "steps": [
+          {"icon": "◇", "title": "SENSE", "sub": "Material · Energy · Project", "detail": "Operating, evidence, and project signals are collected."},
+          {"icon": "△", "title": "SIMULATE", "sub": "Energy & portfolio twin", "detail": "Delivery, carbon, and value at risk are compared before action."},
+          {"icon": "⬡", "title": "APPROVE", "sub": "Policy-gated action", "detail": "Operations, finance, and compliance owners approve staged actions."},
+          {"icon": "✦", "title": "LEARN", "sub": "Compounding customer IP", "detail": "Validated outcomes become evidence, patterns, playbooks, and evaluations."}
+        ]
+      },
+      "evaluation": {
+        "title": "Evaluation trace",
+        "hint": "Demo results",
+        "button": "⬡ Run private evaluation",
+        "running": "Running evaluation…",
+        "complete": "✓ Evaluation complete · Run again",
+        "initialScore": 92.6,
+        "finalScore": 95.2,
+        "readyLines": [
+          "[READY] evaluation-set: energy-private-v12",
+          "[READY] checks: delivery / evidence / carbon / approval / rollback",
+          "[READY] boundary: customer-owned evaluation assets",
+          "[WAIT ] run private evaluation"
+        ],
+        "runLines": [
+          "[RUN  ] agent-identity ........ PASS",
+          "[RUN  ] evidence-retrieval ... PASS",
+          "[RUN  ] delivery-reasoning ... PASS",
+          "[RUN  ] carbon-claim guard ... PASS",
+          "[RUN  ] action approval ...... PASS",
+          "[RUN  ] grid rollback ........ PASS",
+          "[DONE ] score: 95.2 / 100"
+        ],
+        "toastTitle": "Private evaluation passed",
+        "toastText": "Energy and evidence checks passed."
+      },
+      "assumption": "This is a target architecture, not a claim about the customer's current deployment."
+    },
+    "ambientNotifications": [
+      {"title": "Material Agent", "text": "Clean-power input and production plan are within range.", "icon": "◇"},
+      {"title": "Energy Agent", "text": "Storage reserve policy reached the approval queue.", "icon": "△"},
+      {"title": "Traceability Agent", "text": "Two evidence items are prioritized for review.", "icon": "⬡"},
+      {"title": "Copilot session", "text": "Forecast-confidence tests are ready.", "icon": "⌘"}
+    ],
+    "ambientIntervalMs": 11500,
+    "notification": {
+      "title": "Energy portfolio alerts",
+      "text": "Evidence 2 · storage 1 · approval 1 are waiting.",
+      "icon": "◇"
+    }
+  }
+}

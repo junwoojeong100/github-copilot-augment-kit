@@ -3,6 +3,9 @@
 Adaptive Design DNA는 Golden Runtime 위에 적용되는 고객별 시각 계약이다. 브랜드 색 하나만 바꾸는
 theme이 아니라, 고객·산업·청중·목적의 물성을 UI token과 composition으로 번역한다.
 
+Industry Pack은 Design DNA를 정의할 수 없다. Pack의 `designHints`는 참고 정보일 뿐이며, 최종
+`design` section은 실시간 조사 결과를 반영한 Customer Overlay가 매 요청 새로 제공한다.
+
 ## 1. 반드시 결정할 항목
 
 `demo-spec.json`의 `design`에 다음을 기록한다.

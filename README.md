@@ -119,11 +119,13 @@ npm install -g @github/copilot
     ├── google-web-search/               # 실시간 웹·공식 문서 검색
     │   └── SKILL.md
     ├── ai-platform-demo/                # 고객·산업별 AI 플랫폼 데모(단일 HTML) 생성기
-    │   ├── SKILL.md                     # 워크플로우(리서치→화면설계→빌드→검증)
+    │   ├── SKILL.md                     # 실시간 리서치→Design DNA→Overlay 합성→검증
     │   ├── runtime/                     # 검증된 SPA shell·CSS·JavaScript Golden Runtime
+    │   ├── packs/                       # 디자인·고객 사실을 고정하지 않는 산업별 기본 구조
     │   ├── schema/                      # 고객별 demo-spec JSON Schema
-    │   ├── scripts/                     # Spec→HTML Renderer·브라우저 검증기
-    │   ├── examples/                    # 고객 콘텐츠를 복제하지 않는 구조 예제
+    │   ├── scripts/                     # Overlay Composer·Spec Renderer·브라우저 검증기
+    │   ├── tests/                       # Composition·Design DNA gate 회귀 테스트
+    │   ├── examples/                    # 전체 Spec·compact Customer Overlay 구조 예제
     │   └── reference/                   # Design DNA·화면 청사진·Runtime·검증 절차
     └── adaptive-presentation/           # 주제·청중별 고품질 PPTX 생성기
         ├── SKILL.md                     # 조사→서사→Design DNA→PPTX→렌더 QA
@@ -158,7 +160,7 @@ npm install -g @github/copilot
 | 스킬 | 트리거 예시 | 기능 |
 |------|-----------|------|
 | **google-web-search** | "최신 버전 알려줘", "최근 업데이트" | 공식 소스 우선 실시간 웹·문서 검색 |
-| **ai-platform-demo** | "○○ 고객 △△ 산업 AI 데모 만들어줘", "임원 데모", "운영 대시보드 데모" | 고객별 `demo-spec.json` + Golden Runtime → 실제 동작하는 단일 HTML SaaS 데모(8화면) 생성·전체 QA |
+| **ai-platform-demo** | "○○ 고객 △△ 산업 AI 데모 만들어줘", "임원 데모", "운영 대시보드 데모" | 실시간 조사 + Customer Overlay + Industry Pack + Golden Runtime → 실제 동작하는 단일 HTML SaaS 데모(8화면) 생성·전체 QA |
 | **adaptive-presentation** | "병원 경영진 대상 의료 AI 전략 PPT 20장", "기술 발표자료 만들어줘", "기존 PPT 재디자인" | 매번 새로운 Design DNA + 재사용 Slide Compiler → 편집 가능한 PPTX 생성·preflight·렌더 QA |
 
 ---
@@ -175,12 +177,14 @@ npm install -g @github/copilot
 > 현대제철 대상으로 철강 제조 AI 운영 플랫폼 데모 만들어줘. 청중은 CDO·생산본부장.
 ```
 
-스킬이 자동 로드되어 ① 고객·산업 리서치 → ② Storyline·Adaptive Design DNA·8개 화면 계약 →
-③ `demo-spec.json` 작성 → ④ Golden Runtime Renderer로 단일 HTML 생성 → ⑤ Puppeteer 전체 QA까지
+스킬이 자동 로드되어 ① **매 요청 실시간** 고객·산업 리서치 → ② Storyline·Adaptive Design DNA·8개 화면 계약 →
+③ compact `customer-overlay.json` 작성 → ④ Industry Pack과 합성해 Spec·HTML 생성 → ⑤ Puppeteer 전체 QA까지
 수행합니다.
 
 ```text
-Fact Ledger + Storyline + Design DNA + demo-spec.json
+실시간 Fact Ledger + Storyline + 고객별 Design DNA
+  → Customer Overlay + Industry Pack
+  → validated demo-spec.json
   → Golden Runtime (shell.tmpl + runtime.css + runtime.js)
   → 고객별 단일 HTML
   → 8개 화면·전체 인터랙션 브라우저 QA
@@ -192,10 +196,23 @@ Fact Ledger + Storyline + Design DNA + demo-spec.json
 매번 새로 결정하므로 HTML·CSS·JavaScript를 처음부터 다시 쓰는 시간을 줄이면서도 고객별 차별성을
 유지합니다.
 
-**고객·산업이 바뀌어도 재현** — `demo-spec.json`에서 palette role, 도메인 화면, 에이전트, KPI,
-시뮬레이터 공식을 바꾸고, Golden Runtime의 route lifecycle·interaction engine·QA hook은
-검증된 상태로 유지합니다. 내장 산업 매핑표는 레미콘·은행·유통·물류·제조·에너지·헬스케어 등의
-출발점을 제공하지만 실제 고객 사실과 용어로 다시 작성합니다.
+**Industry Pack도 디자인을 고정하지 않습니다.** Pack은 산업 terminology·KPI 공식·Agent 역할의
+출발점만 제공하며 고객명·Storyline·Design DNA를 포함할 수 없습니다. Composer는 Customer Overlay에
+전체 `design`이 없거나 실시간 research metadata가 오래됐거나 핵심 고객 path가 빠지면 실패합니다.
+따라서 같은 에너지 산업이라도 고객별 palette, light/dark theme, density, shape, chart grammar,
+운영 flow와 climax가 달라집니다.
+
+```bash
+python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
+  --base .github/skills/ai-platform-demo/examples/precision-manufacturing.example.json \
+  --pack .github/skills/ai-platform-demo/packs/renewable-energy-holdings.pack.json \
+  --customer <session>/files/<app>-work/customer-overlay.json \
+  --output <session>/files/<app>-work/demo-spec.json \
+  --html-output <session>/files/<app>-work/<app>.html
+```
+
+적합한 Industry Pack이 없으면 전체 `demo-spec.json`을 직접 작성하는 기존 경로를 사용합니다. 속도를
+위해 고객과 맞지 않는 Pack을 사용하지 않으며 최종 8화면 QA는 항상 유지합니다.
 
 | 입력 | 예시 |
 |------|------|
@@ -316,7 +333,7 @@ cp -R .github/skills/adaptive-presentation ~/.copilot/skills/
 | 최적화 | `ai-platform-demo` | `adaptive-presentation` |
 |---|---|---|
 | **생성 메커니즘 재사용** | Golden Runtime의 SPA lifecycle·interaction·QA hook 재사용 | Recipe·certified component·Slide Compiler·Font Metrics 재사용 |
-| **요청별 변경 surface 축소** | 고객별 사실·Design DNA·화면 계약을 `demo-spec.json`에서 수정 후 재생성 | 실시간 Fact Ledger·Deck Recipe·Design DNA·핵심 custom slide만 작성 |
+| **요청별 변경 surface 축소** | 매번 실시간 조사 후 Industry Pack에는 없는 고객 사실·Design DNA·핵심 route만 Customer Overlay에 작성 | 실시간 Fact Ledger·Deck Recipe·Design DNA·핵심 custom slide만 작성 |
 | **안전한 병렬 실행** | 독립 조사와 도구 준비를 병렬화하고 최종 Spec·HTML은 한 에이전트가 소유 | 독립 조사와 도구 준비를 병렬화하고 구조 감사·전체 렌더를 같은 immutable PPTX에서 병렬 실행 |
 | **도구 캐시** | 저장소 밖 공용 Puppeteer·Chromium 캐시를 재사용 | 저장소 밖 Python·렌더링 도구·폰트 탐색 캐시를 재사용 |
 | **중간 산출물 재사용** | 한 browser/page 세션에서 8개 route와 인터랙션을 연속 검증 | PPTX SHA-256이 같은 리비전에서만 중간 PDF를 상세 렌더에 재사용 |

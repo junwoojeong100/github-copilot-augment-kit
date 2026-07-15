@@ -56,6 +56,20 @@ runtime/
 
 ## 4. 기본 생성 경로
 
+고객 작업의 기본은 Composable Spec 경로다.
+
+```bash
+python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
+  --base .github/skills/ai-platform-demo/examples/precision-manufacturing.example.json \
+  --pack .github/skills/ai-platform-demo/packs/<industry>.pack.json \
+  --customer <session>/files/<app>-work/customer-overlay.json \
+  --output <session>/files/<app>-work/demo-spec.json \
+  --html-output <session>/files/<app>-work/<app>.html
+```
+
+Industry Pack은 디자인을 포함할 수 없고 Customer Overlay가 전체 Design DNA를 제공해야 한다. 적합한
+Pack이 없을 때만 전체 Spec을 직접 작성해 아래 Renderer를 사용한다.
+
 ```bash
 python3 -B .github/skills/ai-platform-demo/scripts/render_demo.py \
   --spec <session>/files/<app>-work/demo-spec.json \
