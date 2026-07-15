@@ -69,7 +69,7 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
 ### 1단계 — 데이터 수집과 Fact Ledger
 
 1. 외부 사실이 있는 발표자료는 매 요청마다 `google-web-search`와 공식 도구로 실시간 조사한다.
-2. 서로 독립적인 조사 축은 최대 2~3개로 나눠 같은 단계 안에서 병렬 tool call로 수행한다.
+2. 독립적인 조사 축을 **먼저 모두 정한 뒤 한 번의 병렬 tool call 배치**로 동시에 실행한다(왕복 최소화). 결과를 본 뒤 꼭 필요할 때만 축을 추가한다.
 3. 1차 출처를 우선하고, 숫자·날짜·제품 상태·규제·고객 성과에는 URL과 확인일을 기록한다.
 4. 메인 에이전트가 결과를 하나의 Fact Ledger(`fact-ledger.md`)로 합친다.
 
@@ -100,6 +100,10 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
 `reference/pptx-production.md`를 읽고 세션 작업 폴더의 `build_<deck>.py`에서 **`python-pptx`로 직접**
 슬라이드를 만든다. 고정 생성 엔진이나 컴포넌트 라이브러리를 쓰지 않는다.
 
+빌드 전 `scripts/toolcheck.py`로 소프트웨어(soffice·PyMuPDF·Pillow)와 한글 폰트를 한 번 확인·캐시한다
+(이후 재탐색 생략). 원하면 `pptx_helpers`(디자인 중립 기계적 프리미티브: box·text·bullets·chip·chevron·
+grid_table)를 import해 보일러플레이트를 줄인다 — 색·레이아웃·구조는 여전히 매 덱 자유롭게 정한다.
+
 - 기본 화면비 16:9(13.333 × 7.5 inch), 사용자가 다른 비율·템플릿을 주면 따른다.
 - 정보 관계에 맞는 시각 형태를 슬라이드마다 자유롭게 선택한다. 아이디어가 필요하면
   `reference/slide-blueprints.md`의 관계형 패턴을 **선택적 참고**로만 사용하고 그대로 복제하지 않는다.
@@ -124,8 +128,10 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
    (`soffice` → PDF → PyMuPDF 소형 JPEG contact sheet)
 2. 30장 단위 compact contact sheet 1장을 확인하고, 위험 슬라이드만 `--reuse-pdf`로 개별 확인한다.
 3. 겹침·잘림·낮은 대비·고아 문장·경계 이탈 결함을 모두 기록한다.
-4. 결함을 한 번에 수정하고, 변경 슬라이드만 다시 확인한다.
-5. 변경이 없으면 최초 전체 렌더가 최종 검증이다. 변경이 있었을 때만 전체 렌더를 다시 수행한다.
+4. 결함을 한 번에 수정하고 PPTX를 재생성한다. **국소(단일·소수 슬라이드, 비구조) 수정이면 재렌더 후
+   전체 contact sheet를 다시 열지 말고 변경 슬라이드 이미지만 확인**한다.
+5. 여러 슬라이드·구조가 바뀐 경우에만 전체 contact sheet를 다시 열람한다. 변경이 없으면 최초 전체
+   렌더가 최종 검증이다.
 6. 세션 작업 폴더의 임시 PDF·JPEG를 정리한다.
 
 렌더링 도구가 없으면 가능한 대체 도구를 쓰되, 시각 검증 없이 완료했다고 주장하지 않는다.
@@ -170,6 +176,8 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
 - `reference/pptx-production.md` — python-pptx 직접 구현·타이포·차트·출처·파일 위생
 - `reference/verification.md` — 구조 감사·렌더링·contact sheet·빠른 수정 절차
 - `reference/full-optimized.md` — 단계 유지형 병렬화·캐시·일괄 수정·시간 측정
+- `pptx_helpers.py` — (선택) 디자인 중립 python-pptx 프리미티브(색·좌표는 인자, 팔레트·레이아웃 없음)
+- `scripts/toolcheck.py` — soffice·PyMuPDF·Pillow·한글 폰트 1회 탐지·캐시
 - `scripts/audit_pptx.py` — 장수·경계·폰트·밀도·압축 구조 감사(임의 PPTX 대상)
 - `scripts/render_pptx.py` — soffice/PyMuPDF 기반 소형 JPEG·contact sheet 렌더
 - `scripts/verify_deck.py` — audit·전체 render·위험 슬라이드·ZIP 검사를 한 번에 실행
