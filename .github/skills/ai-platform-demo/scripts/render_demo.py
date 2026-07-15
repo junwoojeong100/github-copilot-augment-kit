@@ -1166,15 +1166,25 @@ def render(spec: dict[str, Any], runtime_dir: Path) -> str:
     shell = read_text(runtime / "shell.tmpl")
     css = read_text(runtime / "runtime.css")
     javascript = read_text(runtime / "runtime.js")
+    language = spec["meta"]["language"].casefold()
+    is_korean = language == "ko" or language.startswith("ko-")
     canvas_match = re.search(r"--canvas:\s*(#[0-9a-fA-F]{6})\s*;", css)
     if canvas_match is None:
         raise RuntimeError("Runtime CSS must define --canvas as a six-digit hex color")
     replacements = {
         "{{LANG}}": html_lib.escape(spec["meta"]["language"], quote=True),
         "{{TITLE}}": html_lib.escape(
-            f'{spec["meta"]["appName"]} | Executive AI Operations Demo',
+            (
+                f'{spec["meta"]["appName"]} | 임원용 AI 운영 데모'
+                if is_korean
+                else f'{spec["meta"]["appName"]} | Executive AI Operations Demo'
+            ),
             quote=False,
         ),
+        "{{NAV_SECTION_LABEL}}": "통합 운영 현황" if is_korean else "Operations Intelligence",
+        "{{EXECUTIVE_WORKSPACE_LABEL}}": "임원용 · 시연 환경" if is_korean else "Executive · Demo workspace",
+        "{{DEMO_DATA_LABEL}}": "시연 데이터" if is_korean else "DEMO DATA",
+        "{{NOTIFICATION_ARIA_LABEL}}": "시연 알림" if is_korean else "Demo notifications",
         "{{RUNTIME_CSS}}": css,
         "{{THEME_COLOR}}": canvas_match.group(1),
         "{{DEMO_SPEC_JSON}}": safe_json_for_script(spec),

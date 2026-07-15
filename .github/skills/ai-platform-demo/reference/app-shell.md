@@ -10,17 +10,17 @@
   <aside id="sidebar">
     <div class="brand"><div class="brand-mark" id="brandMark"></div>
       <div><div class="brand-name" id="brandName"></div><div class="brand-sub" id="brandSub"></div></div></div>
-    <div class="nav-section">Operations Intelligence</div>
+    <div class="nav-section">통합 운영 현황</div>
     <nav class="nav" id="nav"></nav>
     <!-- 선택: 'Learning Loop' 위젯(쓸수록 커지는 고객 소유 AI 자산 카운터) -->
     <div class="side-user"><div class="side-avatar" id="sideAvatar"></div>
-      <div><div class="side-user-name" id="sideUserName"></div><div class="side-user-role">Executive · Demo workspace</div></div></div>
+      <div><div class="side-user-name" id="sideUserName"></div><div class="side-user-role">임원용 · 시연 환경</div></div></div>
   </aside>
   <div id="main">
     <header id="topbar">
       <div><div class="top-title" id="topTitle"></div><div class="top-crumb" id="topCrumb"></div></div>
       <div class="top-spacer"></div>
-      <span class="demo-badge">● DEMO DATA</span>
+      <span class="demo-badge">● 시연 데이터</span>
       <div class="top-item architecture"><span class="dot-live"></span><span id="infraLabel"></span></div>
       <div class="top-item mono" id="clock">--:--:--</div>
       <button class="notification-button" id="notificationButton" type="button">◇</button>

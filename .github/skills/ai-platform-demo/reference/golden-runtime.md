@@ -10,7 +10,7 @@ Golden Runtime은 고객 데모의 **동작 엔진**이다. 특정 고객의 색
 
 - 고정 GitHub Primer Dark Dimmed 계열 soft-dark 디자인(색·타이포·radius·shadow·spacing =
   `runtime.css`의 `:root`)
-- 단일 HTML shell, 8-route hash router, sidebar/topbar, `DEMO DATA` 표시
+- 단일 HTML shell, 8-route hash router, sidebar/topbar, `시연 데이터` 표시
 - route 전환 시 timer/listener cleanup
 - KPI tick, streaming chart, activity feed, toast, moving-object engine
 - slider simulator, root-cause animation, finance what-if, Issue-to-PR flow
@@ -101,7 +101,7 @@ Renderer는 다음을 수행한다.
 
 QA는 추가로 확인한다.
 
-- `DEMO DATA` badge
+- `시연 데이터` badge
 - `NaN`, `undefined`, `null%` 없음
 - horizontal overflow 없음
 - 모든 `.click-row`와 `.agent-row`에 click handler 존재

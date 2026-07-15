@@ -47,13 +47,14 @@ Overlay는 정의하지 않는다. 고정값은 `archetype=trusted-executive`, `
     "appName": "Customer IQ",
     "initials": "CI",
     "language": "ko",
-    "infrastructureLabel": "Microsoft Foundry · Reference Architecture",
+    "infrastructureLabel": "Microsoft Foundry · 참조 아키텍처",
     "demoNote": "모든 수치는 시연용 가정치입니다."
   }
 }
 ```
 
-실명 대신 회사명·직무를 사용한다.
+실명 대신 회사명·직무를 사용한다. `language`가 `ko`이면 임원이 보는 문구는 한글 우선으로 작성한다.
+공식 제품명, 업계 표준 약어·단위, 코드 식별자처럼 영어가 더 명확하거나 일반적인 경우만 영어를 유지한다.
 
 ## 3. Navigation
 
@@ -61,16 +62,19 @@ Overlay는 정의하지 않는다. 고정값은 `archetype=trusted-executive`, `
 
 ```json
 [
-  {"id":"dashboard","icon":"◫","name":"Executive Cockpit","short":"Overview"},
-  {"id":"operations","icon":"◇","name":"Operations","short":"Live"},
-  {"id":"simulator","icon":"△","name":"Simulator","short":"Predict"},
-  {"id":"improvement","icon":"◎","name":"Improvement","short":"Improve"},
-  {"id":"finance","icon":"₩","name":"Economics","short":"Finance"},
-  {"id":"devops","icon":"⌘","name":"Software Delivery","short":"Copilot"},
-  {"id":"agents","icon":"✦","name":"Agent Studio","short":"Orchestrate"},
-  {"id":"governance","icon":"⬡","name":"Trust","short":"Govern"}
+  {"id":"dashboard","icon":"◫","name":"경영 현황","short":"전체"},
+  {"id":"operations","icon":"◇","name":"통합 운영","short":"실시간"},
+  {"id":"simulator","icon":"△","name":"예측 시뮬레이션","short":"예측"},
+  {"id":"improvement","icon":"◎","name":"개선 과제","short":"개선"},
+  {"id":"finance","icon":"₩","name":"재무 효과","short":"재무"},
+  {"id":"devops","icon":"⌘","name":"개발 가속","short":"Copilot"},
+  {"id":"agents","icon":"✦","name":"AI 에이전트","short":"협업"},
+  {"id":"governance","icon":"⬡","name":"신뢰·데이터 주권","short":"통제"}
 ]
 ```
+
+메뉴·제목·버튼·상태에 장식용 영어를 쓰지 않는다. `GitHub Copilot`, `Microsoft Foundry`, `OEE`,
+`ESS`, `PR`처럼 공식명 또는 일반 약어인 경우는 예외다.
 
 ## 4. 공통 data shapes
 

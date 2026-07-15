@@ -10,7 +10,17 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 가장 빠른 방법: **`examples/precision-manufacturing.example.json`을 복사해 내부 ID는 그대로 두고
 사람이 보는 문자열·숫자만 교체**한다(ID 연동이 자동으로 유지됨).
 
-## 1. 배열 개수 (검증기 강제)
+## 1. 임원용 한글 우선 문구
+
+- `meta.language`가 `ko`이면 메뉴 `name`·`short`·`crumb`와 모든 화면의 `hero.title`·
+  `hero.subtitle`는 한글을 기본으로 쓴다. linter가 이 핵심 노출면을 검사한다.
+- KPI명, 버튼, 상태, 표 머리글, 토스트, 에이전트 이름·설명·답변도 자연스러운 한글로 작성한다.
+- 공식 제품명(`Microsoft Foundry`, `GitHub Copilot`, `Microsoft Entra ID`), 일반 약어·단위
+  (`AI`, `KPI`, `OEE`, `API`, `PR`, `ESS`, `MWh`, `SOC`), 코드 식별자는 영어를 유지할 수 있다.
+- 장식용 영어를 남기지 않는다: `Overview`→`전체 현황`, `Live`→`실시간`,
+  `Agent Studio`→`AI 에이전트`, `Governed`→`정책 적용`.
+
+## 2. 배열 개수 (검증기 강제)
 | 위치 | 개수 |
 |---|---|
 | `navigation` | **정확히 8**, ID 고정: dashboard, operations, simulator, improvement, finance, devops, agents, governance |
@@ -24,19 +34,19 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 | `agents.profiles` | **5~7**(각 `qa` ≥3, 이름 모두 상이) · `orchestration.stages` ≥3 |
 | `governance.cards` | **정확히 3** · `learningLoop.steps` **정확히 4** · `controls.rows`/`memories.rows` ≥N |
 
-## 2. 내부 ID 연동 (반드시 일치)
+## 3. 내부 ID 연동 (반드시 일치)
 - `simulator.inputs[].id` 집합 == 각 `simulator.secondary[].weights`의 키 집합. 모든 `recommendations[].inputId`는 그 집합에 속해야 한다.
 - `finance.*.impacts` 키는 `finance.levers[].id`의 **부분집합**이다. 생략한 lever 영향은 0으로 처리한다.
 - `operations.action.kpiUpdates`의 키는 바꿀 KPI의 0-based 인덱스(`"0"`~`"3"`)다.
 > base를 복사하면 이 ID들이 그대로 유지되므로 **라벨만 바꾸고 id는 두는 것**이 가장 안전하다.
 
-## 3. 색·상태 값
+## 4. 색·상태 값
 - `status.tone` / `hero.badge.tone`: `success` · `warning` · `danger` · `info` · `violet` (→ ok/warn/bad/info/violet 배지)
 - `kpi.color`: `brand` · `info` · `accent` · `success` · `violet` · `warning`
 - 디자인은 **고정 GitHub Primer Dark Dimmed 계열 soft-dark**라 색을 새로 만들지 않는다. `design`
   블록은 base의 것을 그대로 복사하며 `design.tokens`는 빈 객체다.
 
-## 4. Rich text (에이전트 답변 등)
+## 5. Rich text (에이전트 답변 등)
 - 허용 태그: `b` `strong` `em` `code` `br` `div` `span`
 - 허용 class(오직 message-stat용): `message-stats` · `message-stat-label` · `message-stat-value`
 - 정확한 통계 마크업:
@@ -45,7 +55,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 ```
 - `style`, event handler, URL, SVG, 이미지, 그 외 class는 금지.
 
-## 5. QA 통과 불변식 (lint_spec.py가 검사)
+## 6. QA 통과 불변식 (lint_spec.py가 검사)
 브라우저 QA(`verify_demo.js`)는 인터랙션 완료를 시간 내에 확인한다. 아래를 지키면 첫 렌더에 통과한다.
 - `operations.action.durationMs` ≤ **1200** (QA가 ~1300ms 후 권고문 재확인)
 - `improvement.action.durationMs` ≤ **2000** (막대가 durationMs에 채워짐, QA ~2200ms 확인)
@@ -55,7 +65,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 - `governance.cards[0].value` ≠ `governance.evaluation.finalScore` (평가 실행 시 점수가 눈에 띄게 바뀌어야 함 → cards[0].value는 **초기 점수**)
 - `simulator.output.goodThreshold` > `warningThreshold` — 런타임은 **높은 output을 good/green**으로 처리하므로 output은 "신뢰 점수"처럼 **높을수록 좋은 값**으로 설계한다(부정확률처럼 높을수록 나쁜 값 금지).
 
-## 6. 속도 팁
+## 7. 속도 팁
 - spec 작성 후 **먼저 `lint_spec.py`** → 통과하면 render → 그 다음 puppeteer QA. (렌더 전에 gotcha를 <1초에 차단)
 - Puppeteer·Chromium은 리서치·작성과 **병렬로** 저장소 밖 공용 캐시에 미리 설치(프리워밍)해 두면 QA 단계 대기가 사라진다.
-- 모든 화면에 `● DEMO DATA` 배지 유지, 수치는 시연용 가정치로 명시.
+- 모든 화면에 `● 시연 데이터` 배지 유지, 수치는 시연용 가정치로 명시.

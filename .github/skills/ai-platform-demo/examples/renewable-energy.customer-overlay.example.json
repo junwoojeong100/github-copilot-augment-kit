@@ -21,7 +21,7 @@
       "appName": "Northstar Nexus",
       "initials": "NE",
       "language": "ko",
-      "infrastructureLabel": "Microsoft Foundry · Reference Architecture",
+      "infrastructureLabel": "Microsoft Foundry · 참조 아키텍처",
       "demoNote": "모든 고객명·운영·재무·예측 수치는 Composition 예제를 위한 시연 데이터입니다."
     },
     "story": {
@@ -33,26 +33,26 @@
         },
         {
           "audience": "COO",
-          "message": "공급과 delivery exception을 조기에 대응"
+          "message": "공급과 납품 예외를 조기에 대응"
         },
         {
           "audience": "CFO",
-          "message": "계약과 working capital을 동일한 가치 언어로 비교"
+          "message": "계약과 운전자본을 동일한 가치 언어로 비교"
         },
         {
           "audience": "CIO",
-          "message": "Agent identity, evidence, approval을 통제"
+          "message": "에이전트 신원·증빙·승인을 통제"
         }
       ],
-      "climax": "Peak 수요 전에 forecast와 evidence exception이 동시에 발생하고 전문 Agent들이 delivery package를 생성합니다."
+      "climax": "피크 수요 전에 발전 예측과 증빙 예외가 동시에 발생하고 전문 에이전트들이 납품 의사결정 패키지를 생성합니다."
     },
     "dashboard": {
       "hero": {
         "icon": "✦",
-        "title": "Materials → Energy → Storage → Capital, 하나의 운영 루프",
-        "subtitle": "글로벌 저탄소 소재와 renewable generation, ESS, 계약 포트폴리오를 하나의 임원 운영 화면으로 연결합니다.",
+        "title": "소재 → 에너지 → ESS → 자본, 하나의 운영 루프",
+        "subtitle": "글로벌 저탄소 소재·재생에너지 발전·ESS·계약 포트폴리오를 하나의 임원 운영 화면으로 연결합니다.",
         "badge": {
-          "label": "Live portfolio demo",
+          "label": "실시간 포트폴리오 시연",
           "tone": "success"
         }
       }
@@ -60,45 +60,45 @@
     "operations": {
       "hero": {
         "icon": "◇",
-        "title": "Global Energy Corridor · 공급과 납품 흐름을 한 화면에서",
-        "subtitle": "Clean power source에서 material, manufacturing, generation, storage, customer delivery까지 evidence와 energy를 함께 추적합니다."
+        "title": "글로벌 에너지 흐름 · 공급과 납품을 한 화면에서",
+        "subtitle": "청정 전력원에서 소재·제조·발전·ESS·고객 납품까지 증빙과 에너지 흐름을 함께 추적합니다."
       },
       "flow": {
         "nodes": [
           {
-            "name": "Clean Power",
-            "subtitle": "Source",
+            "name": "청정 전력",
+            "subtitle": "에너지원",
             "metric": "97.6%",
-            "status": "availability",
-            "detail": "Renewable source availability and production plans are linked."
+            "status": "가용성",
+            "detail": "재생에너지원 가용성과 생산계획을 연결합니다."
           },
           {
-            "name": "Core Material",
-            "subtitle": "Production",
+            "name": "핵심 소재",
+            "subtitle": "생산",
             "metric": "94.8%",
-            "status": "run-rate",
-            "detail": "Material quality, energy, and evidence are monitored."
+            "status": "생산 속도",
+            "detail": "소재 품질·에너지·증빙을 감시합니다."
           },
           {
-            "name": "Manufacturing",
-            "subtitle": "Downstream",
+            "name": "제조",
+            "subtitle": "후공정",
             "metric": "92.7%",
-            "status": "readiness",
-            "detail": "Capacity, yield, and handoff windows are coordinated."
+            "status": "준비도",
+            "detail": "생산능력·수율·인계 일정을 조정합니다."
           },
           {
-            "name": "Generation",
-            "subtitle": "Renewable",
+            "name": "발전",
+            "subtitle": "재생에너지",
             "metric": "2.9 GW",
-            "status": "portfolio flow",
-            "detail": "Forecast and contracted delivery are combined."
+            "status": "포트폴리오 흐름",
+            "detail": "발전 예측과 계약 납품량을 통합합니다."
           },
           {
-            "name": "Storage / Grid",
-            "subtitle": "Delivery",
+            "name": "ESS / 계통",
+            "subtitle": "납품",
             "metric": "97.8%",
-            "status": "confidence",
-            "detail": "Storage reserve and grid commitment are optimized."
+            "status": "신뢰도",
+            "detail": "ESS 예비율과 계통 약정을 최적화합니다."
           }
         ]
       }
@@ -106,17 +106,17 @@
     "simulator": {
       "hero": {
         "icon": "△",
-        "title": "Energy Twin · 피크 전에 delivery confidence를 예측",
-        "subtitle": "Forecast confidence, storage reserve, load ramp를 조정해 commitment와 risk를 비교합니다.",
+        "title": "에너지 시뮬레이션 · 피크 전에 납품 신뢰도를 예측",
+        "subtitle": "발전 예측 신뢰도·ESS 예비율·부하 증가율을 조정해 납품 약정과 위험을 비교합니다.",
         "badge": {
-          "label": "Illustrative model",
+          "label": "시연용 모델",
           "tone": "info"
         }
       },
       "inputs": [
         {
           "id": "forecastConfidence",
-          "label": "Generation forecast confidence",
+          "label": "발전량 예측 신뢰도",
           "min": 70,
           "max": 99,
           "step": 1,
@@ -128,7 +128,7 @@
         },
         {
           "id": "reserveSoc",
-          "label": "Storage reserve SOC",
+          "label": "ESS 예비 SOC(충전율)",
           "min": 10,
           "max": 60,
           "step": 1,
@@ -140,7 +140,7 @@
         },
         {
           "id": "loadRamp",
-          "label": "Peak-load ramp",
+          "label": "피크 부하 증가율",
           "min": 0,
           "max": 40,
           "step": 1,
@@ -155,17 +155,17 @@
     "improvement": {
       "hero": {
         "icon": "◎",
-        "title": "Portfolio Optimizer · 공급·계통·탄소 리스크를 실행 과제로",
-        "subtitle": "Forecast, interconnection, storage, evidence, maintenance의 기여도를 분석하고 승인 가능한 action package로 전환합니다."
+        "title": "포트폴리오 개선 · 공급·계통·탄소 위험을 실행 과제로",
+        "subtitle": "발전 예측·계통 연계·ESS·증빙·정비의 기여도를 분석하고 승인 가능한 조치 패키지로 전환합니다."
       }
     },
     "finance": {
       "hero": {
         "icon": "₩",
-        "title": "Portfolio Economics · 청정에너지 전략을 자본 배분 언어로",
-        "subtitle": "Contract coverage, low-carbon premium, working-capital release를 조정해 portfolio value scenario를 비교합니다.",
+        "title": "재무 효과 · 청정에너지 전략을 자본 배분 언어로",
+        "subtitle": "계약 커버리지·저탄소 프리미엄·운전자본 회수를 조정해 포트폴리오 가치 시나리오를 비교합니다.",
         "badge": {
-          "label": "DEMO ASSUMPTIONS",
+          "label": "시연 가정",
           "tone": "warning"
         }
       }
@@ -173,8 +173,8 @@
     "agents": {
       "hero": {
         "icon": "✦",
-        "title": "Northstar Agent Studio · 전문성을 하나의 결정으로",
-        "subtitle": "각 Agent는 고객별 권한·평가셋·도구 정책 안에서만 동작하는 시연 구성입니다.",
+        "title": "Northstar AI 에이전트 · 전문성을 하나의 결정으로",
+        "subtitle": "각 에이전트는 고객별 권한·평가셋·도구 정책 안에서만 동작하는 시연 구성입니다.",
         "badge": {
           "label": "Foundry · Agent Framework",
           "tone": "violet"
@@ -183,159 +183,159 @@
       "profiles": [
         {
           "icon": "◇",
-          "name": "Material Operations Agent",
-          "shortName": "Material",
-          "subtitle": "Low-carbon material",
-          "intro": "Energy input, production run-rate, quality, evidence를 연결합니다.",
+          "name": "소재 운영 에이전트",
+          "shortName": "소재",
+          "subtitle": "저탄소 소재",
+          "intro": "에너지 투입·생산 속도·품질·증빙을 연결합니다.",
           "qa": [
             {
               "question": "오늘 소재 운영 상태는?",
-              "answer": "Run-rate와 clean-power availability가 <b>안정 범위</b>입니다."
+              "answer": "생산 속도와 청정 전력 가용성이 <b>안정 범위</b>입니다."
             },
             {
-              "question": "Evidence exception은?",
-              "answer": "2개 evidence item이 approval queue에서 검토 중입니다."
+              "question": "증빙 예외는?",
+              "answer": "증빙 2건이 승인 대기열에서 검토 중입니다."
             },
             {
-              "question": "Carbon premium을 높이려면?",
-              "answer": "Power-source evidence와 carbon methodology를 contract에 연결하세요."
+              "question": "탄소 프리미엄을 높이려면?",
+              "answer": "에너지원 증빙과 탄소 산정 방법론을 계약에 연결하세요."
             }
           ]
         },
         {
           "icon": "△",
-          "name": "Generation & Storage Agent",
-          "shortName": "Energy",
-          "subtitle": "Forecast · ESS · Grid",
-          "intro": "Forecast, reserve SOC, grid ramp를 연결해 delivery confidence를 관리합니다.",
+          "name": "발전·ESS 에이전트",
+          "shortName": "에너지",
+          "subtitle": "발전 예측 · ESS · 계통",
+          "intro": "발전 예측·예비 SOC·계통 부하를 연결해 납품 신뢰도를 관리합니다.",
           "qa": [
             {
-              "question": "Peak window는 안전한가?",
-              "answer": "현재 delivery confidence는 <b>97.8%</b>입니다."
+              "question": "피크 시간대는 안전한가?",
+              "answer": "현재 납품 신뢰도는 <b>97.8%</b>입니다."
             },
             {
-              "question": "Forecast가 낮아지면?",
-              "answer": "Commitment를 낮추고 storage reserve를 확대합니다."
+              "question": "발전 예측이 낮아지면?",
+              "answer": "납품 약정을 낮추고 ESS 예비율을 확대합니다."
             },
             {
-              "question": "Curtailment를 줄이려면?",
-              "answer": "Forecast regime과 reserve policy를 함께 최적화합니다."
+              "question": "출력제한을 줄이려면?",
+              "answer": "발전 예측 구간과 예비율 정책을 함께 최적화합니다."
             }
           ]
         },
         {
           "icon": "⬡",
-          "name": "Traceability Agent",
-          "shortName": "Evidence",
-          "subtitle": "Material · Power · Ownership",
-          "intro": "Material, power source, ownership, delivery evidence를 연결합니다.",
+          "name": "추적성 에이전트",
+          "shortName": "증빙",
+          "subtitle": "소재 · 전력 · 소유권",
+          "intro": "소재·에너지원·소유권·납품 증빙을 연결합니다.",
           "qa": [
             {
-              "question": "Evidence completeness는?",
-              "answer": "현재 시연 completeness는 <b>99.1%</b>입니다."
+              "question": "증빙 완성도는?",
+              "answer": "현재 시연 완성도는 <b>99.1%</b>입니다."
             },
             {
               "question": "감사 준비 시간을 줄이려면?",
-              "answer": "Release 전에 policy package를 자동 조립합니다."
+              "answer": "출고 전에 정책 패키지를 자동 조립합니다."
             },
             {
               "question": "어떤 증빙이 부족한가?",
-              "answer": "Power source와 handoff evidence를 우선 확인합니다."
+              "answer": "에너지원과 인계 증빙을 우선 확인합니다."
             }
           ]
         },
         {
           "icon": "₩",
-          "name": "Portfolio Finance Agent",
-          "shortName": "Finance",
-          "subtitle": "Capital allocation",
-          "intro": "Contract, premium, working capital을 투자위원회 언어로 번역합니다.",
+          "name": "포트폴리오 재무 에이전트",
+          "shortName": "재무",
+          "subtitle": "자본 배분",
+          "intro": "계약·프리미엄·운전자본을 투자위원회 언어로 번역합니다.",
           "qa": [
             {
               "question": "가장 큰 가치 레버는?",
-              "answer": "Contracted storage와 low-carbon premium의 조합입니다."
+              "answer": "ESS 계약 커버리지와 저탄소 프리미엄의 조합입니다."
             },
             {
-              "question": "Working capital 효과는?",
-              "answer": "Handoff alignment로 <b>6일 release</b>하는 데모입니다."
+              "question": "운전자본 효과는?",
+              "answer": "인계 일정을 맞춰 <b>6일을 회수</b>하는 시연입니다."
             },
             {
               "question": "투자 우선순위는?",
-              "answer": "Energy Twin, evidence automation, capital cockpit 순입니다."
+              "answer": "에너지 시뮬레이션, 증빙 자동화, 자본 배분 현황 순입니다."
             }
           ]
         },
         {
           "icon": "⌘",
-          "name": "Copilot Engineering Agent",
+          "name": "Copilot 개발 에이전트",
           "shortName": "Copilot",
-          "subtitle": "GitHub · Energy software",
-          "intro": "Repository research, plan, tests, pull request 흐름을 실행합니다.",
+          "subtitle": "GitHub · 에너지 소프트웨어",
+          "intro": "저장소 조사·계획·테스트·Pull Request 흐름을 실행합니다.",
           "qa": [
             {
               "question": "어떤 이슈를 맡길까?",
-              "answer": "Forecast guard와 evidence audit처럼 검증 기준이 명확한 작업이 적합합니다."
+              "answer": "발전 예측 보호 규칙과 증빙 감사처럼 검증 기준이 명확한 작업이 적합합니다."
             },
             {
-              "question": "Safety 변경도 가능한가?",
-              "answer": "Live-grid 변경은 사람이 구현과 승인을 주도합니다."
+              "question": "안전 관련 변경도 가능한가?",
+              "answer": "실계통 변경은 사람이 구현과 승인을 주도합니다."
             },
             {
-              "question": "Forecast PR을 만들어줘",
-              "answer": "Threshold, approval guard, audit test를 추가하는 Draft PR 시나리오입니다."
+              "question": "발전 예측 PR을 만들어줘",
+              "answer": "임계값·승인 보호 규칙·감사 테스트를 추가하는 Draft PR 시나리오입니다."
             }
           ]
         }
       ],
       "orchestration": {
-        "title": "Executive orchestration",
-        "button": "✦ Peak-risk scenario",
-        "running": "Agent 협업 중…",
+        "title": "임원 의사결정 협업",
+        "button": "✦ 피크 위험 시나리오",
+        "running": "에이전트 협업 중…",
         "complete": "✓ 다시 실행",
-        "coreLabel": "Northstar Orchestrator",
-        "intro": "<b>Executive scenario:</b> Peak 수요 전에 forecast와 evidence exception이 동시에 발생했습니다.",
+        "coreLabel": "Northstar 조정자",
+        "intro": "<b>임원 시나리오:</b> 피크 수요 전에 발전 예측과 증빙 예외가 동시에 발생했습니다.",
         "stages": [
           {
             "agentIndex": 0,
             "icon": "◇",
-            "name": "Material Agent",
-            "text": "Production 정상, evidence 우선 보완"
+            "name": "소재 운영 에이전트",
+            "text": "생산 정상, 증빙 우선 보완"
           },
           {
             "agentIndex": 1,
             "icon": "△",
-            "name": "Energy Agent",
-            "text": "Reserve SOC 조정, delivery confidence 회복"
+            "name": "에너지 에이전트",
+            "text": "예비 SOC 조정, 납품 신뢰도 회복"
           },
           {
             "agentIndex": 2,
             "icon": "⬡",
-            "name": "Traceability Agent",
-            "text": "Evidence package를 release gate에 연결"
+            "name": "추적성 에이전트",
+            "text": "증빙 패키지를 출고 승인 단계에 연결"
           },
           {
             "agentIndex": 3,
             "icon": "₩",
-            "name": "Finance Agent",
-            "text": "Value-at-risk와 contract coverage 계산"
+            "name": "재무 에이전트",
+            "text": "위험가치와 계약 커버리지 계산"
           },
           {
             "agentIndex": 4,
             "icon": "⌘",
-            "name": "Copilot Agent",
-            "text": "Forecast guard Draft PR 준비"
+            "name": "Copilot 에이전트",
+            "text": "발전 예측 보호 규칙 Draft PR 준비"
           }
         ],
-        "summary": "<b>Executive decision package가 준비되었습니다.</b><br>Storage reserve 조정, evidence 승인, contract rebalance, forecast guard PR을 제안합니다.",
+        "summary": "<b>임원 의사결정 패키지가 준비되었습니다.</b><br>ESS 예비율 조정, 증빙 승인, 계약 재조정, 발전 예측 보호 규칙 PR을 제안합니다.",
         "toastTitle": "멀티에이전트 협업 완료",
-        "toastText": "운영·공급망·재무·개발 decision package가 생성되었습니다."
+        "toastText": "운영·공급망·재무·개발 의사결정 패키지가 생성되었습니다."
       }
     },
     "governance": {
       "hero": {
         "icon": "⬡",
-        "title": "Trust & Sovereignty · 고객 운영 지식은 고객이 소유",
-        "subtitle": "Identity, governed retrieval, evidence, approval, trace를 목표 아키텍처로 매핑합니다."
+        "title": "신뢰·데이터 주권 · 고객 운영 지식은 고객이 소유",
+        "subtitle": "신원·통제된 검색·증빙·승인·추적을 목표 아키텍처로 매핑합니다."
       }
     }
   }
