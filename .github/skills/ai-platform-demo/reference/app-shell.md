@@ -1,7 +1,8 @@
-# App Shell · Router · Realtime (산업 중립 뼈대)
+# Golden Runtime Internals · Router · Realtime
 
-단일 HTML의 구조와 핵심 JS. **이 골격은 고객이 바뀌어도 거의 그대로** 쓰고, `ROUTES`와 `VIEWS`의
-내용만 산업에 맞게 채운다.
+단일 HTML의 구조와 핵심 JS를 설명하는 내부 참고 자료다. 실제 생성은 이 코드를 복사해 다시 작성하지
+않고 `runtime/`과 `scripts/render_demo.py`를 사용한다. 고객별 변경은 `demo-spec.json`에서 수행하며,
+이 문서는 bespoke extension이나 Runtime 유지보수 시에만 참고한다.
 
 ## 1. HTML 골격 (`<body>`)
 ```html
@@ -35,9 +36,9 @@
 ```js
 const ROUTES=[
   {id:'dashboard', ic:'📊', nm:'대시보드',  sb:'Overview',    crumb:'Overview'},
-  {id:'ops',       ic:'🚚', nm:'{{DOMAIN1}}', sb:'{{D1}} IQ', crumb:'{{D1}} IQ'},
-  {id:'predict',   ic:'🧪', nm:'{{DOMAIN2}}', sb:'{{D2}} IQ', crumb:'{{D2}} IQ'},
-  {id:'improve',   ic:'⚙️', nm:'{{DOMAIN3}}', sb:'{{D3}} IQ', crumb:'{{D3}} IQ'},
+  {id:'operations',ic:'🚚', nm:'{{DOMAIN1}}', sb:'{{D1}} IQ', crumb:'{{D1}} IQ'},
+  {id:'simulator', ic:'🧪', nm:'{{DOMAIN2}}', sb:'{{D2}} IQ', crumb:'{{D2}} IQ'},
+  {id:'improvement',ic:'⚙️',nm:'{{DOMAIN3}}', sb:'{{D3}} IQ', crumb:'{{D3}} IQ'},
   {id:'finance',   ic:'💰', nm:'재무 인사이트', sb:'Finance IQ', crumb:'Finance IQ'},
   {id:'devops',    ic:'🐙', nm:'개발 가속',   sb:'GitHub Copilot', crumb:'GitHub Copilot'},
   {id:'agents',    ic:'🧭', nm:'AI 에이전트', sb:'Agent Studio',   crumb:'Agent Studio'},

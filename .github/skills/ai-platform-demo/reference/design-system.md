@@ -1,14 +1,16 @@
-# Design System (검증된 자산 — 거의 그대로 사용)
+# Design System Reference
 
-다크 테마 SaaS 앱용 디자인 토큰과 컴포넌트. **브랜드 포인트 컬러(`--brand`)만 고객에 맞게 교체**하고
-나머지는 그대로 쓴다. 단일 HTML의 `<style>`에 인라인.
+이 문서는 Golden Runtime 컴포넌트의 시각 참고 자료다. 실제 source of truth는
+`runtime/runtime.css`이며, 고객별 결과는 `reference/adaptive-design-dna.md`와
+`demo-spec.json`의 palette·theme·density·shape token으로 결정한다. 브랜드 색 하나만 바꾸는 고정
+template 방식으로 사용하지 않는다.
 
 ## 1. 토큰 (`:root`)
 ```css
 :root{
   --bg:#0a0e17; --bg2:#0d1320; --panel:#111827; --panel2:#0f1726;
   --ink:#eef2f9; --ink2:#9fb0c8; --ink3:#64748b;
-  --brand:#e2231a; --brand2:#ff4b3e;        /* ← 고객 브랜드 컬러로 교체 (레드 기본) */
+  --brand:#e2231a; --brand2:#ff4b3e;        /* 예시 기본값; 고객 Design DNA가 role별 token을 override */
   --blue:#2b9bff; --blue2:#0a84ff; --cyan:#27e0d8;
   --green:#34e29b; --amber:#ffc24b; --violet:#9b7bff;
   --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.05);
@@ -165,6 +167,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 ```
 
 ## 컬러 사용 규칙
-- `--brand`: 로고/강조/위험 액션 버튼. **고객 브랜드 컬러로 교체하는 유일한 토큰.**
+- `--brand`: 로고·주요 강조 역할. 고객별 변경은 brand뿐 아니라 canvas·surface·ink·accent·semantic role을 함께 설계한다.
 - `--blue`: 주요 액션·링크·차트 기본. `--cyan`: 라이브/하이라이트. `--green/amber/bad`: 상태(정상/주의/위험).
 - 상태 매핑 일관: ok=green, warn=amber, bad=red, info=blue, AI/governance=violet.
