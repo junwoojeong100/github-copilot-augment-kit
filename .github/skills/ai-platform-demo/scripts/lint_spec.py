@@ -23,10 +23,68 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import render_demo  # noqa: E402
 
 ORCH_SUMMARY_RE = re.compile(r"decision package|의사결정 패키지", re.IGNORECASE)
+HANGUL_RE = re.compile(r"[가-힣]")
+KOREAN_COPY_EXCEPTIONS = {
+    "ai",
+    "api",
+    "copilot",
+    "crm",
+    "devops",
+    "erp",
+    "esg",
+    "ess",
+    "finops",
+    "github advanced security",
+    "github ai controls",
+    "github copilot",
+    "kpi",
+    "mes",
+    "microsoft entra id",
+    "microsoft foundry",
+    "microsoft purview",
+    "mlops",
+    "oee",
+    "pr",
+    "scm",
+    "soc",
+}
 
 
 def _reject_constant(value: str):
     raise render_demo.SpecError(f"non-finite JSON constant is not allowed: {value}")
+
+
+def _is_korean_copy(value: object) -> bool:
+    text = str(value or "").strip()
+    return bool(HANGUL_RE.search(text)) or text.casefold() in KOREAN_COPY_EXCEPTIONS
+
+
+def korean_copy_invariants(spec: dict) -> list[str]:
+    """Return Korean-first copy problems for executive-facing navigation and hero text."""
+    language = str(spec.get("meta", {}).get("language", "")).casefold()
+    if language != "ko" and not language.startswith("ko-"):
+        return []
+
+    problems: list[str] = []
+    for index, route in enumerate(spec.get("navigation", [])):
+        for field in ("name", "short", "crumb"):
+            value = route.get(field)
+            if not _is_korean_copy(value):
+                problems.append(
+                    f"navigation[{index}].{field} must use Korean-first executive copy "
+                    f"(official product names and common acronyms are allowed): {value!r}"
+                )
+
+    for route_id in render_demo.ROUTE_IDS:
+        hero = spec.get(route_id, {}).get("hero", {})
+        for field in ("title", "subtitle"):
+            value = hero.get(field)
+            if not _is_korean_copy(value):
+                problems.append(
+                    f"{route_id}.hero.{field} must use Korean-first executive copy "
+                    f"(official product names and common acronyms are allowed): {value!r}"
+                )
+    return problems
 
 
 def qa_invariants(spec: dict) -> list[str]:
@@ -76,6 +134,7 @@ def qa_invariants(spec: dict) -> list[str]:
             "treats a HIGH output as good/green, so frame the output as a positive score."
         )
 
+    problems.extend(korean_copy_invariants(spec))
     return problems
 
 

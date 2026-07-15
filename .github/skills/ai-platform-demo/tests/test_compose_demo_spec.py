@@ -309,11 +309,19 @@ class ComposeDemoSpecTests(unittest.TestCase):
             self.assertEqual(spec["meta"]["customer"], "Northstar Energy Holdings")
             self.assertEqual(spec["design"]["archetype"], "trusted-executive")
             self.assertNotIn("Contoso", spec_output.read_text(encoding="utf-8"))
-            self.assertIn("energy", spec["agents"]["placeholder"].lower())
+            self.assertIn("에너지", spec["agents"]["placeholder"])
             self.assertNotIn("품질·공정", spec["agents"]["placeholder"])
+            lint_result = subprocess.run(
+                [sys.executable, "-B", str(SCRIPTS / "lint_spec.py"), str(spec_output)],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(lint_result.returncode, 0, lint_result.stdout + lint_result.stderr)
             html = html_output.read_text(encoding="utf-8")
             self.assertIn("Northstar Nexus", html)
-            self.assertIn("renewable generation", html)
+            self.assertIn("재생에너지 발전", html)
+            self.assertIn("통합 운영 현황", html)
 
 
 if __name__ == "__main__":

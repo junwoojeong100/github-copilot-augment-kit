@@ -164,7 +164,7 @@ let browser;
     }, requiredIds[route] || []);
 
     const result = routeResults[route];
-    if (!result.demoBadge.includes('DEMO DATA')) failures.push(`${route}: DEMO DATA badge missing`);
+    if (!/시연 데이터|DEMO DATA/i.test(result.demoBadge)) failures.push(`${route}: demo-data badge missing`);
     if (result.forbiddenText) failures.push(`${route}: contains NaN/undefined/null%`);
     if (result.pageOverflow) failures.push(`${route}: horizontal page overflow`);
     if (result.unboundRows.length) failures.push(`${route}: unbound rows ${JSON.stringify(result.unboundRows)}`);

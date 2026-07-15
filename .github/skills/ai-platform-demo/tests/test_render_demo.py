@@ -141,7 +141,9 @@ class RenderDemoTests(unittest.TestCase):
         canvas = re.search(r"--canvas:\s*(#[0-9a-f]{6})\s*;", css, re.I).group(1)
         self.assertIn('<script id="demo-spec" type="application/json">', html)
         self.assertNotIn("<script src=", html)
-        self.assertIn("● DEMO DATA", html)
+        self.assertIn("● 시연 데이터", html)
+        self.assertIn("통합 운영 현황", html)
+        self.assertIn("임원용 AI 운영 데모", html)
         self.assertIn('<meta name="color-scheme" content="dark">', html)
         self.assertIn(f'<meta name="theme-color" content="{canvas}">', html)
         self.assertIn("color-scheme:dark", html)
@@ -150,6 +152,14 @@ class RenderDemoTests(unittest.TestCase):
         runtime = (SKILL_ROOT / "runtime" / "runtime.js").read_text(encoding="utf-8")
         self.assertIn("escapeHtml(data.margin.unit)", runtime)
         self.assertIn("data.composition.centerSegment ?? 1", runtime)
+
+    def test_english_runtime_copy_remains_available(self):
+        spec = copy.deepcopy(BASE)
+        spec["meta"]["language"] = "en"
+        html = render_demo.render(spec, SKILL_ROOT / "runtime")
+        self.assertIn("● DEMO DATA", html)
+        self.assertIn("Operations Intelligence", html)
+        self.assertIn("Executive AI Operations Demo", html)
 
     def test_runtime_owned_hero_html_is_rejected(self):
         self.invalid(

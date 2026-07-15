@@ -32,13 +32,35 @@
     locale,
     { minimumFractionDigits: decimals, maximumFractionDigits: decimals }
   );
+  const isKorean = locale.toLowerCase().startsWith('ko');
+  const uiText = isKorean
+    ? {
+        invalidSpec: '데모 사양을 불러올 수 없습니다.',
+        details: '상세 정보',
+        demoData: '시연 데이터',
+        live: '실시간',
+        demoPrediction: '시연 예측',
+        brandSubtitle: customer => `${customer} AI 통합 운영`,
+        executiveName: customer => `${customer} 임원`,
+        ready: appName => `${appName} 준비 완료`
+      }
+    : {
+        invalidSpec: 'Invalid demo specification.',
+        details: 'Details',
+        demoData: 'DEMO DATA',
+        live: 'LIVE',
+        demoPrediction: 'DEMO PREDICTION',
+        brandSubtitle: customer => `${customer} AI Operations`,
+        executiveName: customer => `${customer} Executive`,
+        ready: appName => `${appName} ready`
+      };
 
   let spec;
   try {
     spec = JSON.parse($('#demo-spec').textContent);
   } catch (error) {
     console.error('Invalid demo spec JSON', error);
-    document.body.innerHTML = '<main style="padding:32px;font-family:sans-serif">Invalid demo specification.</main>';
+    document.body.innerHTML = `<main style="padding:32px;font-family:sans-serif">${uiText.invalidSpec}</main>`;
     return;
   }
 
@@ -224,7 +246,7 @@
   function bindDetailRows(selector) {
     $$(selector).forEach(row => {
       row.onclick = () => toast(
-        row.dataset.title || 'Details',
+        row.dataset.title || uiText.details,
         row.dataset.detail || meta.demoNote,
         row.dataset.icon || '◇'
       );
@@ -300,7 +322,7 @@
               <div class="feed-icon">${escapeHtml(item.icon)}</div>
               <div>
                 <div class="feed-title">${escapeHtml(item.title)} · ${escapeHtml(item.text)}</div>
-                <div class="feed-meta">${index === 0 ? '방금 전' : `${index * 3}분 전`} · DEMO DATA</div>
+                <div class="feed-meta">${index === 0 ? (isKorean ? '방금 전' : 'Just now') : (isKorean ? `${index * 3}분 전` : `${index * 3} min ago`)} · ${uiText.demoData}</div>
               </div>
             </div>`).join('');
           $$('#dashFeed .feed-item').forEach((element, index) => {
@@ -387,7 +409,7 @@
             <div class="panel-head"><h3>${escapeHtml(data.flow.title)}</h3><span class="hint">${escapeHtml(data.flow.hint)}</span></div>
             <div class="flow-stage">
               ${operationFlowSvg(data.flow.nodes)}
-              <div class="flow-mover" id="flowMover">${escapeHtml(data.flow.moverLabel || 'LIVE')}</div>
+              <div class="flow-mover" id="flowMover">${escapeHtml(data.flow.moverLabel || uiText.live)}</div>
               <div class="flow-event" id="flowEvent">${escapeHtml(data.flow.events[0])}</div>
             </div>
             <div class="node-cards">
@@ -489,7 +511,7 @@
               </svg>
               <div class="gauge-center">
                 <div class="gauge-value" id="simValue"></div>
-                <div class="gauge-label">DEMO PREDICTION</div>
+                <div class="gauge-label">${uiText.demoPrediction}</div>
               </div>
             </div>
             <div class="mini-stats" id="simSecondary"></div>
@@ -1245,9 +1267,9 @@
   function setupShell() {
     $('#brandMark').textContent = meta.initials;
     $('#brandName').textContent = meta.appName;
-    $('#brandSub').textContent = `${meta.customer} AI Operations`;
+    $('#brandSub').textContent = uiText.brandSubtitle(meta.customer);
     $('#sideAvatar').textContent = meta.initials;
-    $('#sideUserName').textContent = `${meta.customer} 임원`;
+    $('#sideUserName').textContent = uiText.executiveName(meta.customer);
     $('#infraLabel').textContent = meta.infrastructureLabel;
     $('#learningLabel').textContent = spec.dashboard.learningLoop.label;
     $('#learningValue').textContent = `${formatNumber(spec.dashboard.learningLoop.value)} ${spec.dashboard.learningLoop.unit || ''}`.trim();
@@ -1298,7 +1320,7 @@
     }, spec.ambientIntervalMs || 11500);
   }
   setTimeout(() => toast(
-    `${meta.appName} 준비 완료`,
+    uiText.ready(meta.appName),
     meta.demoNote,
     meta.initials
   ), 1700);

@@ -35,23 +35,23 @@
   },
   "spec": {
     "navigation": [
-      {"id": "dashboard", "icon": "◫", "name": "Executive Cockpit", "short": "Overview", "crumb": "Global Portfolio"},
-      {"id": "operations", "icon": "◇", "name": "Global Value Chain", "short": "Live", "crumb": "Materials · Energy · Delivery"},
-      {"id": "simulator", "icon": "△", "name": "Energy Twin", "short": "Predict", "crumb": "Generation · Storage · Demand"},
-      {"id": "improvement", "icon": "◎", "name": "Portfolio Optimizer", "short": "Improve", "crumb": "Carbon · Supply · Reliability"},
-      {"id": "finance", "icon": "₩", "name": "Portfolio Economics", "short": "Finance", "crumb": "Capital Allocation"},
-      {"id": "devops", "icon": "⌘", "name": "Software Delivery", "short": "Copilot", "crumb": "Energy Software"},
-      {"id": "agents", "icon": "✦", "name": "Agent Studio", "short": "Orchestrate", "crumb": "Multi-Agent Operations"},
-      {"id": "governance", "icon": "⬡", "name": "Trust & Sovereignty", "short": "Govern", "crumb": "Evidence · Identity · Evaluation"}
+      {"id": "dashboard", "icon": "◫", "name": "경영 현황", "short": "전체", "crumb": "글로벌 포트폴리오"},
+      {"id": "operations", "icon": "◇", "name": "글로벌 가치사슬", "short": "실시간", "crumb": "소재 · 에너지 · 납품"},
+      {"id": "simulator", "icon": "△", "name": "에너지 시뮬레이션", "short": "예측", "crumb": "발전 · 저장 · 수요"},
+      {"id": "improvement", "icon": "◎", "name": "포트폴리오 개선", "short": "개선", "crumb": "탄소 · 공급 · 신뢰성"},
+      {"id": "finance", "icon": "₩", "name": "재무 효과", "short": "재무", "crumb": "자본 배분"},
+      {"id": "devops", "icon": "⌘", "name": "개발 가속", "short": "Copilot", "crumb": "에너지 소프트웨어"},
+      {"id": "agents", "icon": "✦", "name": "AI 에이전트", "short": "협업", "crumb": "멀티에이전트 운영"},
+      {"id": "governance", "icon": "⬡", "name": "신뢰·데이터 주권", "short": "통제", "crumb": "증빙 · 신원 · 평가"}
     ],
     "dashboard": {
       "kpis": [
         {
-          "label": "Global operating nodes",
+          "label": "글로벌 운영 거점",
           "value": 12,
           "decimals": 0,
-          "unit": "nodes",
-          "delta": "+3 coordinated",
+          "unit": "개",
+          "delta": "+3개 통합",
           "direction": "up",
           "icon": "◎",
           "color": "brand",
@@ -59,11 +59,11 @@
           "tick": {"min": 0, "max": 0.2, "floor": 12, "ceiling": 16}
         },
         {
-          "label": "Clean-energy flow",
+          "label": "청정에너지 공급량",
           "value": 2.8,
           "decimals": 1,
           "unit": "GW",
-          "delta": "+0.2 GW demo",
+          "delta": "+0.2 GW 시연",
           "direction": "up",
           "icon": "◇",
           "color": "accent",
@@ -71,11 +71,11 @@
           "tick": {"min": -0.03, "max": 0.05, "floor": 2.5, "ceiling": 3.2}
         },
         {
-          "label": "Delivery confidence",
+          "label": "납품 신뢰도",
           "value": 97.6,
           "decimals": 1,
           "unit": "%",
-          "delta": "+0.4%p coordinated",
+          "delta": "+0.4%p 통합",
           "direction": "up",
           "icon": "✓",
           "color": "success",
@@ -83,11 +83,11 @@
           "tick": {"min": -0.06, "max": 0.08, "floor": 95.5, "ceiling": 99}
         },
         {
-          "label": "Agent decisions",
+          "label": "에이전트 의사결정",
           "value": 720,
           "decimals": 0,
-          "unit": "today",
-          "delta": "+82 evaluated",
+          "unit": "오늘",
+          "delta": "+82건 평가",
           "direction": "up",
           "icon": "✦",
           "color": "violet",
@@ -96,8 +96,8 @@
         }
       ],
       "stream": {
-        "title": "Global delivery confidence",
-        "label": "Delivery confidence",
+        "title": "글로벌 납품 신뢰도",
+        "label": "납품 신뢰도",
         "unit": "%",
         "color": "accent",
         "values": [96.4, 96.6, 96.5, 96.8, 96.9, 97.0, 97.1, 97.0, 97.25, 97.35, 97.4, 97.55, 97.6],
@@ -106,107 +106,107 @@
         "tick": {"min": -0.09, "max": 0.12},
         "intervalMs": 1900
       },
-      "feedTitle": "Portfolio agent activity",
-      "feedHint": "Real-time DEMO DATA",
+      "feedTitle": "포트폴리오 에이전트 활동",
+      "feedHint": "실시간 시연 데이터",
       "feed": [
-        {"icon": "◇", "title": "Material Agent", "text": "Low-carbon material flow is within range."},
-        {"icon": "△", "title": "Energy Agent", "text": "Storage reserve policy was recalculated."},
-        {"icon": "⬡", "title": "Traceability Agent", "text": "Two evidence items entered review."},
-        {"icon": "◎", "title": "Reliability Agent", "text": "Maintenance impact was evaluated."}
+        {"icon": "◇", "title": "소재 운영 에이전트", "text": "저탄소 소재 흐름이 안정 범위입니다."},
+        {"icon": "△", "title": "에너지 에이전트", "text": "ESS 예비율 정책을 다시 계산했습니다."},
+        {"icon": "⬡", "title": "추적성 에이전트", "text": "증빙 2건이 검토 단계에 들어갔습니다."},
+        {"icon": "◎", "title": "신뢰성 에이전트", "text": "정비 영향 평가를 완료했습니다."}
       ],
       "cards": {
-        "title": "Executive control signals",
-        "hint": "Industry defaults",
+        "title": "경영 통제 신호",
+        "hint": "산업 기본값",
         "items": [
-          {"name": "Traceability", "value": "99.2%", "sub": "evidence completeness", "detail": "Material, energy, ownership, and delivery evidence are linked."},
-          {"name": "Carbon Signal", "value": "−31%", "sub": "embedded-carbon index", "detail": "Energy source and operating efficiency form a demo carbon index."},
-          {"name": "Project Execution", "value": "91.8%", "sub": "milestone confidence", "detail": "Development, procurement, and interconnection signals are combined."}
+          {"name": "추적성", "value": "99.2%", "sub": "증빙 완성도", "detail": "소재·에너지·소유권·납품 증빙을 연결합니다."},
+          {"name": "탄소 신호", "value": "−31%", "sub": "내재탄소 지수", "detail": "에너지원과 운영 효율을 결합한 시연용 탄소 지수입니다."},
+          {"name": "프로젝트 실행", "value": "91.8%", "sub": "마일스톤 신뢰도", "detail": "개발·조달·계통 연계 신호를 통합합니다."}
         ]
       },
       "table": {
-        "title": "Regional portfolio pulse",
-        "hint": "Click a row for details",
-        "headers": ["Region", "Portfolio role", "Signal", "Status"],
+        "title": "권역별 포트폴리오 현황",
+        "hint": "행을 클릭해 상세 보기",
+        "headers": ["권역", "포트폴리오 역할", "신호", "상태"],
         "rows": [
-          {"cells": ["Region A", "Core material", "95.8%"], "status": {"label": "Stable", "tone": "success"}, "detailTitle": "Core material region", "detail": "Clean-power input, production, and evidence are combined.", "icon": "◇"},
-          {"cells": ["Region B", "Manufacturing", "92.1%"], "status": {"label": "Ramp", "tone": "info"}, "detailTitle": "Manufacturing region", "detail": "Capacity, yield, and delivery slots are coordinated.", "icon": "△"},
-          {"cells": ["Region C", "Generation / ESS", "Peak 18:00"], "status": {"label": "Watch", "tone": "warning"}, "detailTitle": "Generation and storage region", "detail": "Forecast, storage reserve, and contracts are monitored.", "icon": "✦"},
-          {"cells": ["Region D", "Power / Development", "99.0%"], "status": {"label": "Stable", "tone": "success"}, "detailTitle": "Power and development region", "detail": "Industrial energy and project milestones are summarized.", "icon": "◎"}
+          {"cells": ["권역 A", "핵심 소재", "95.8%"], "status": {"label": "안정", "tone": "success"}, "detailTitle": "핵심 소재 권역", "detail": "청정에너지 투입·생산·증빙을 통합합니다.", "icon": "◇"},
+          {"cells": ["권역 B", "제조", "92.1%"], "status": {"label": "증설", "tone": "info"}, "detailTitle": "제조 권역", "detail": "생산능력·수율·납품 일정을 조정합니다.", "icon": "△"},
+          {"cells": ["권역 C", "발전 / ESS", "피크 18:00"], "status": {"label": "주의", "tone": "warning"}, "detailTitle": "발전·저장 권역", "detail": "발전 예측·ESS 예비율·계약을 함께 감시합니다.", "icon": "✦"},
+          {"cells": ["권역 D", "전력 / 개발", "99.0%"], "status": {"label": "안정", "tone": "success"}, "detailTitle": "전력·개발 권역", "detail": "산업 에너지와 프로젝트 마일스톤을 요약합니다.", "icon": "◎"}
         ]
       },
       "learningLoop": {
-        "label": "OWNED ENERGY LEARNING LOOP",
+        "label": "고객 소유 에너지 학습 루프",
         "value": 16820,
-        "unit": "assets",
-        "note": "dispatch patterns · evidence · project playbooks · evaluation"
+        "unit": "자산",
+        "note": "급전 패턴 · 증빙 · 프로젝트 플레이북 · 평가"
       }
     },
     "operations": {
       "kpis": [
-        {"label": "Material flow", "value": 94.8, "decimals": 1, "unit": "%", "delta": "+1.4% coordinated", "direction": "up", "icon": "◇", "color": "brand", "series": [88, 89, 90, 91, 92, 92.5, 93.8, 94.8], "tick": {"min": -0.35, "max": 0.45, "floor": 88, "ceiling": 101}},
-        {"label": "Delivery confidence", "value": 97.6, "decimals": 1, "unit": "%", "delta": "+0.3%p today", "direction": "up", "icon": "✓", "color": "success", "series": [96.5, 96.8, 96.9, 97.0, 97.2, 97.3, 97.4, 97.6], "tick": {"min": -0.06, "max": 0.08, "floor": 95.8, "ceiling": 99}},
-        {"label": "Evidence exceptions", "value": 4, "decimals": 0, "unit": "open", "delta": "−6 after matching", "direction": "down", "icon": "⬡", "color": "warning", "series": [13, 12, 10, 9, 8, 6, 5, 4]},
-        {"label": "Coordinated actions", "value": 24, "decimals": 0, "unit": "today", "delta": "+8 cross-portfolio", "direction": "up", "icon": "✦", "color": "violet", "series": [2, 5, 8, 11, 14, 18, 21, 24]}
+        {"label": "소재 흐름", "value": 94.8, "decimals": 1, "unit": "%", "delta": "+1.4% 통합", "direction": "up", "icon": "◇", "color": "brand", "series": [88, 89, 90, 91, 92, 92.5, 93.8, 94.8], "tick": {"min": -0.35, "max": 0.45, "floor": 88, "ceiling": 101}},
+        {"label": "납품 신뢰도", "value": 97.6, "decimals": 1, "unit": "%", "delta": "+0.3%p 오늘", "direction": "up", "icon": "✓", "color": "success", "series": [96.5, 96.8, 96.9, 97.0, 97.2, 97.3, 97.4, 97.6], "tick": {"min": -0.06, "max": 0.08, "floor": 95.8, "ceiling": 99}},
+        {"label": "증빙 예외", "value": 4, "decimals": 0, "unit": "건", "delta": "매칭 후 −6건", "direction": "down", "icon": "⬡", "color": "warning", "series": [13, 12, 10, 9, 8, 6, 5, 4]},
+        {"label": "통합 조치", "value": 24, "decimals": 0, "unit": "오늘", "delta": "포트폴리오 간 +8건", "direction": "up", "icon": "✦", "color": "violet", "series": [2, 5, 8, 11, 14, 18, 21, 24]}
       ],
       "flow": {
-        "title": "Cross-border clean-energy flow",
-        "hint": "Moving material / MWh",
-        "moverLabel": "FLOW",
+        "title": "국가 간 청정에너지 흐름",
+        "hint": "이동 중인 소재 / MWh",
+        "moverLabel": "흐름",
         "nodes": [
-          {"name": "Clean Power", "subtitle": "Source", "metric": "97.4%", "status": "availability", "detail": "Renewable energy availability and production plans are linked."},
-          {"name": "Core Material", "subtitle": "Production", "metric": "95.8%", "status": "run-rate", "detail": "Material quality, energy, and lot evidence are monitored."},
-          {"name": "Manufacturing", "subtitle": "Downstream", "metric": "92.1%", "status": "readiness", "detail": "Capacity, yield, and handoff windows are coordinated."},
-          {"name": "Generation", "subtitle": "Solar / Wind", "metric": "2.8 GW", "status": "portfolio flow", "detail": "Forecast and contracted delivery are combined."},
-          {"name": "Storage", "subtitle": "ESS", "metric": "28%", "status": "reserve SOC", "detail": "Storage reserve is optimized against demand and contracts."},
-          {"name": "Grid / Customer", "subtitle": "Delivery", "metric": "97.6%", "status": "confidence", "detail": "Portfolio delivery confidence is calculated."}
+          {"name": "청정 전력", "subtitle": "에너지원", "metric": "97.4%", "status": "가용성", "detail": "재생에너지 가용성과 생산계획을 연결합니다."},
+          {"name": "핵심 소재", "subtitle": "생산", "metric": "95.8%", "status": "생산 속도", "detail": "소재 품질·에너지·로트 증빙을 감시합니다."},
+          {"name": "제조", "subtitle": "후공정", "metric": "92.1%", "status": "준비도", "detail": "생산능력·수율·인계 일정을 조정합니다."},
+          {"name": "발전", "subtitle": "태양광 / 풍력", "metric": "2.8 GW", "status": "포트폴리오 흐름", "detail": "발전 예측과 계약 납품량을 통합합니다."},
+          {"name": "ESS", "subtitle": "에너지 저장", "metric": "28%", "status": "예비 SOC", "detail": "수요와 계약을 기준으로 ESS 예비율을 최적화합니다."},
+          {"name": "계통 / 고객", "subtitle": "납품", "metric": "97.6%", "status": "신뢰도", "detail": "포트폴리오 납품 신뢰도를 계산합니다."}
         ],
         "events": [
-          "Clean-power forecast locked",
-          "Material lot and evidence attached",
-          "Manufacturing slot confirmed",
-          "Generation forecast synchronized",
-          "Storage reserve recalculated",
-          "Delivery commitment ready"
+          "청정 전력 예측 확정",
+          "소재 로트와 증빙 연결",
+          "제조 일정 확정",
+          "발전량 예측 동기화",
+          "ESS 예비율 재계산",
+          "납품 약정 준비 완료"
         ]
       },
       "action": {
-        "button": "✦ AI re-orchestrate",
-        "running": "Analyzing portfolio…",
-        "complete": "✓ Re-orchestration complete",
-        "runningEvent": "Forecast, evidence, storage, and contract signals are being combined",
-        "completeEvent": "Delivery package created · awaiting approval",
-        "recommendationLabel": "Current recommendation",
-        "recommendationBefore": "<b>Increase storage reserve and resolve evidence exceptions.</b><br>Expected delivery-confidence improvement: +0.2%p",
-        "recommendationAfter": "<b>Approval package ready.</b><br>Reserve +4%p · handoff adjusted · evidence items prioritized",
+        "button": "✦ AI 재조정",
+        "running": "포트폴리오 분석 중…",
+        "complete": "✓ 재조정 완료",
+        "runningEvent": "예측·증빙·ESS·계약 신호를 통합하고 있습니다",
+        "completeEvent": "납품 패키지 생성 · 승인 대기",
+        "recommendationLabel": "현재 권고안",
+        "recommendationBefore": "<b>ESS 예비율을 높이고 증빙 예외를 해소하세요.</b><br>예상 납품 신뢰도 개선: +0.2%p",
+        "recommendationAfter": "<b>승인 패키지가 준비되었습니다.</b><br>예비율 +4%p · 인계 일정 조정 · 증빙 우선순위 지정",
         "kpiUpdates": {"1": 97.9, "2": 1, "3": 27},
         "durationMs": 1100,
-        "toastTitle": "Delivery package created",
-        "toastText": "Three portfolio actions reached the approval gate.",
+        "toastTitle": "납품 패키지 생성",
+        "toastText": "포트폴리오 조치 3건이 승인 단계에 도달했습니다.",
         "toastIcon": "✦"
       },
       "table": {
-        "title": "Live portfolio exceptions",
-        "hint": "Click a row for details",
-        "headers": ["Asset / Flow", "Signal", "Status"],
+        "title": "실시간 포트폴리오 예외",
+        "hint": "행을 클릭해 상세 보기",
+        "headers": ["자산 / 흐름", "신호", "상태"],
         "rows": [
-          {"cells": ["Material lot", "Evidence 98.9%"], "status": {"label": "Review", "tone": "warning"}, "detailTitle": "Material evidence", "detail": "Two evidence items require review before release.", "icon": "⬡"},
-          {"cells": ["Manufacturing handoff", "+5 h"], "status": {"label": "Coordinate", "tone": "info"}, "detailTitle": "Manufacturing handoff", "detail": "Production and delivery slots are being aligned.", "icon": "△"},
-          {"cells": ["Generation portfolio", "92.6%"], "status": {"label": "Normal", "tone": "success"}, "detailTitle": "Generation readiness", "detail": "Forecast and asset readiness are within range.", "icon": "◇"},
-          {"cells": ["Storage reserve", "SOC 28%"], "status": {"label": "AI policy", "tone": "violet"}, "detailTitle": "Storage reserve", "detail": "Reserve policy was recalculated for the peak window.", "icon": "✦"},
-          {"cells": ["Industrial energy", "99.0%"], "status": {"label": "Stable", "tone": "success"}, "detailTitle": "Industrial energy", "detail": "Maintenance and demand signals are stable.", "icon": "◎"}
+          {"cells": ["소재 로트", "증빙 98.9%"], "status": {"label": "검토", "tone": "warning"}, "detailTitle": "소재 증빙", "detail": "출고 전에 증빙 2건을 검토해야 합니다.", "icon": "⬡"},
+          {"cells": ["제조 인계", "+5시간"], "status": {"label": "조정", "tone": "info"}, "detailTitle": "제조 인계", "detail": "생산과 납품 일정을 맞추고 있습니다.", "icon": "△"},
+          {"cells": ["발전 포트폴리오", "92.6%"], "status": {"label": "정상", "tone": "success"}, "detailTitle": "발전 준비도", "detail": "예측과 자산 준비도가 안정 범위입니다.", "icon": "◇"},
+          {"cells": ["ESS 예비율", "SOC 28%"], "status": {"label": "AI 정책", "tone": "violet"}, "detailTitle": "ESS 예비율", "detail": "피크 시간대에 맞춰 예비율 정책을 다시 계산했습니다.", "icon": "✦"},
+          {"cells": ["산업 에너지", "99.0%"], "status": {"label": "안정", "tone": "success"}, "detailTitle": "산업 에너지", "detail": "정비와 수요 신호가 안정적입니다.", "icon": "◎"}
         ]
       }
     },
     "simulator": {
-      "inputsTitle": "Energy variables",
-      "inputsHint": "Adjust the scenario",
+      "inputsTitle": "에너지 변수",
+      "inputsHint": "시나리오를 조정하세요",
       "inputs": [
-        {"id": "forecastConfidence", "label": "Generation forecast confidence", "min": 70, "max": 99, "step": 1, "value": 94, "decimals": 0, "unit": "%", "optimum": 97, "weight": 0.22},
-        {"id": "reserveSoc", "label": "Storage reserve SOC", "min": 10, "max": 60, "step": 1, "value": 28, "decimals": 0, "unit": "%", "optimum": 28, "weight": 0.1},
-        {"id": "loadRamp", "label": "Peak-load ramp", "min": 0, "max": 40, "step": 1, "value": 12, "decimals": 0, "unit": "%", "optimum": 8, "weight": 0.14}
+        {"id": "forecastConfidence", "label": "발전량 예측 신뢰도", "min": 70, "max": 99, "step": 1, "value": 94, "decimals": 0, "unit": "%", "optimum": 97, "weight": 0.22},
+        {"id": "reserveSoc", "label": "ESS 예비 SOC(충전율)", "min": 10, "max": 60, "step": 1, "value": 28, "decimals": 0, "unit": "%", "optimum": 28, "weight": 0.1},
+        {"id": "loadRamp", "label": "피크 부하 증가율", "min": 0, "max": 40, "step": 1, "value": 12, "decimals": 0, "unit": "%", "optimum": 8, "weight": 0.14}
       ],
       "output": {
-        "label": "Delivery Confidence",
+        "label": "납품 신뢰도",
         "unit": "%",
         "base": 99.3,
         "min": 86,
@@ -214,130 +214,130 @@
         "decimals": 2,
         "goodThreshold": 97,
         "warningThreshold": 93,
-        "goodLabel": "Commit",
-        "warningLabel": "Rebalance",
-        "dangerLabel": "Hold"
+        "goodLabel": "실행",
+        "warningLabel": "재조정",
+        "dangerLabel": "보류"
       },
       "secondary": [
-        {"label": "Curtailed energy", "base": 4.2, "unit": " MWh", "decimals": 1, "weights": {"forecastConfidence": -0.18, "reserveSoc": -0.04, "loadRamp": 0.22}},
-        {"label": "Merchant exposure", "base": 8.4, "unit": "%", "decimals": 1, "weights": {"forecastConfidence": -0.12, "reserveSoc": -0.09, "loadRamp": 0.18}},
-        {"label": "Avoided carbon", "base": 410, "unit": " tCO₂", "decimals": 0, "weights": {"forecastConfidence": 1.8, "reserveSoc": 0.7, "loadRamp": -1.1}}
+        {"label": "출력제한 에너지", "base": 4.2, "unit": " MWh", "decimals": 1, "weights": {"forecastConfidence": -0.18, "reserveSoc": -0.04, "loadRamp": 0.22}},
+        {"label": "시장 노출도", "base": 8.4, "unit": "%", "decimals": 1, "weights": {"forecastConfidence": -0.12, "reserveSoc": -0.09, "loadRamp": 0.18}},
+        {"label": "탄소 회피량", "base": 410, "unit": " tCO₂", "decimals": 0, "weights": {"forecastConfidence": 1.8, "reserveSoc": 0.7, "loadRamp": -1.1}}
       ],
       "recommendations": [
-        {"inputId": "forecastConfidence", "operator": "<", "threshold": 88, "message": "<b>Forecast confidence is low.</b><br>Reduce commitments and increase storage reserve."},
-        {"inputId": "reserveSoc", "operator": "<", "threshold": 20, "message": "<b>Storage reserve is insufficient.</b><br>Adjust the charge schedule before the peak window."},
-        {"inputId": "loadRamp", "operator": ">", "threshold": 24, "message": "<b>Peak-load ramp is high.</b><br>Rebalance storage dispatch and merchant position."},
-        {"inputId": "reserveSoc", "operator": "default", "threshold": 0, "message": "<b>The scenario is within commit range.</b>"}
+        {"inputId": "forecastConfidence", "operator": "<", "threshold": 88, "message": "<b>발전량 예측 신뢰도가 낮습니다.</b><br>납품 약정을 줄이고 ESS 예비율을 높이세요."},
+        {"inputId": "reserveSoc", "operator": "<", "threshold": 20, "message": "<b>ESS 예비율이 부족합니다.</b><br>피크 시간 전에 충전 일정을 조정하세요."},
+        {"inputId": "loadRamp", "operator": ">", "threshold": 24, "message": "<b>피크 부하 증가율이 높습니다.</b><br>ESS 급전과 시장 포지션을 재조정하세요."},
+        {"inputId": "reserveSoc", "operator": "default", "threshold": 0, "message": "<b>현재 시나리오는 실행 가능 범위입니다.</b>"}
       ],
-      "defaultRecommendation": "<b>The scenario is within commit range.</b>",
+      "defaultRecommendation": "<b>현재 시나리오는 실행 가능 범위입니다.</b>",
       "histogram": {
-        "title": "Predicted delivery distribution",
-        "hint": "Recalculated from the scenario",
-        "leftLabel": "shortfall",
-        "centerLabel": "commit",
-        "rightLabel": "surplus"
+        "title": "예상 납품 분포",
+        "hint": "시나리오에 따라 재계산",
+        "leftLabel": "부족",
+        "centerLabel": "약정",
+        "rightLabel": "잉여"
       },
       "history": {
-        "title": "Recent energy-twin scenarios",
-        "hint": "Click a row for details",
-        "headers": ["Scenario", "Confidence", "Risk", "Decision"],
+        "title": "최근 에너지 시뮬레이션",
+        "hint": "행을 클릭해 상세 보기",
+        "headers": ["시나리오", "신뢰도", "위험", "결정"],
         "rows": [
-          {"cells": ["Peak baseline", "97.6%", "Low"], "status": {"label": "Commit", "tone": "success"}, "detailTitle": "Peak baseline", "detail": "Current forecast and reserve policy are applied.", "icon": "△"},
-          {"cells": ["Weather shock", "91.8%", "High"], "status": {"label": "Rebalance", "tone": "danger"}, "detailTitle": "Weather shock", "detail": "Generation forecast confidence is reduced.", "icon": "△"},
-          {"cells": ["Reserve optimized", "98.2%", "Low"], "status": {"label": "Commit", "tone": "success"}, "detailTitle": "Reserve optimized", "detail": "Storage reserve is increased before the peak.", "icon": "✦"},
-          {"cells": ["Load ramp +28%", "93.9%", "Medium"], "status": {"label": "Validate", "tone": "warning"}, "detailTitle": "Load ramp", "detail": "Demand increases rapidly during the delivery window.", "icon": "◇"}
+          {"cells": ["피크 기준", "97.6%", "낮음"], "status": {"label": "실행", "tone": "success"}, "detailTitle": "피크 기준", "detail": "현재 예측과 ESS 예비율 정책을 적용합니다.", "icon": "△"},
+          {"cells": ["기상 충격", "91.8%", "높음"], "status": {"label": "재조정", "tone": "danger"}, "detailTitle": "기상 충격", "detail": "발전량 예측 신뢰도가 낮아진 상황입니다.", "icon": "△"},
+          {"cells": ["예비율 최적화", "98.2%", "낮음"], "status": {"label": "실행", "tone": "success"}, "detailTitle": "예비율 최적화", "detail": "피크 전에 ESS 예비율을 높인 시나리오입니다.", "icon": "✦"},
+          {"cells": ["부하 증가 +28%", "93.9%", "중간"], "status": {"label": "검증", "tone": "warning"}, "detailTitle": "부하 증가", "detail": "납품 시간대에 수요가 빠르게 증가합니다.", "icon": "◇"}
         ]
       },
-      "assumption": "This is an illustrative interaction model, not a production energy forecast."
+      "assumption": "실제 운영 예측이 아닌 인터랙션 시연용 계산 모델입니다."
     },
     "improvement": {
       "kpis": [
-        {"label": "Ranked portfolio factors", "value": 6, "decimals": 0, "unit": "factors", "delta": "+3 cross-asset signals", "direction": "up", "icon": "◎", "color": "brand", "series": [1, 2, 2, 3, 4, 4, 5, 6]},
-        {"label": "Expected curtailment reduction", "value": 18, "decimals": 0, "unit": "%", "delta": "+7%p coordinated", "direction": "up", "icon": "↓", "color": "success", "series": [2, 4, 6, 8, 10, 13, 15, 18]},
-        {"label": "Evidence-exception reduction", "value": 41, "decimals": 0, "unit": "%", "delta": "−2 review cycles", "direction": "down", "icon": "⬡", "color": "accent", "series": [4, 8, 12, 17, 23, 30, 36, 41]},
-        {"label": "Owned portfolio playbooks", "value": 1084, "decimals": 0, "unit": "items", "delta": "+24 this month", "direction": "up", "icon": "▤", "color": "violet", "series": [780, 820, 860, 900, 945, 990, 1040, 1084]}
+        {"label": "포트폴리오 기여요인", "value": 6, "decimals": 0, "unit": "개", "delta": "자산 간 신호 +3개", "direction": "up", "icon": "◎", "color": "brand", "series": [1, 2, 2, 3, 4, 4, 5, 6]},
+        {"label": "예상 출력제한 감소", "value": 18, "decimals": 0, "unit": "%", "delta": "통합 조정 +7%p", "direction": "up", "icon": "↓", "color": "success", "series": [2, 4, 6, 8, 10, 13, 15, 18]},
+        {"label": "증빙 예외 감소", "value": 41, "decimals": 0, "unit": "%", "delta": "검토 2회 감소", "direction": "down", "icon": "⬡", "color": "accent", "series": [4, 8, 12, 17, 23, 30, 36, 41]},
+        {"label": "고객 소유 플레이북", "value": 1084, "decimals": 0, "unit": "개", "delta": "이번 달 +24개", "direction": "up", "icon": "▤", "color": "violet", "series": [780, 820, 860, 900, 945, 990, 1040, 1084]}
       ],
-      "stepsTitle": "Agent reasoning trace",
-      "stepsHint": "Explainable steps",
+      "stepsTitle": "에이전트 판단 과정",
+      "stepsHint": "설명 가능한 단계",
       "steps": [
-        {"title": "Signal alignment", "text": "Generation, storage, evidence, contracts, and maintenance are aligned."},
-        {"title": "Portfolio comparison", "text": "Regional and asset signals are compared with operating baselines."},
-        {"title": "Contribution analysis", "text": "Forecast, grid, reserve, evidence, and maintenance impacts are ranked."},
-        {"title": "Action package", "text": "Storage, delivery, evidence, and maintenance actions are generated."},
-        {"title": "Private evaluation", "text": "Customer-owned delivery, carbon, and approval tests are executed."},
-        {"title": "Approval gate", "text": "Operations, finance, and compliance owners review staged actions."}
+        {"title": "신호 정렬", "text": "발전·ESS·증빙·계약·정비 신호를 시간 기준으로 맞춥니다."},
+        {"title": "포트폴리오 비교", "text": "권역과 자산 신호를 운영 기준선과 비교합니다."},
+        {"title": "기여도 분석", "text": "예측·계통·예비율·증빙·정비 영향을 순위화합니다."},
+        {"title": "조치 패키지", "text": "ESS·납품·증빙·정비 조치를 생성합니다."},
+        {"title": "고객 전용 평가", "text": "고객 소유 납품·탄소·승인 평가를 실행합니다."},
+        {"title": "승인 단계", "text": "운영·재무·컴플라이언스 책임자가 단계별 조치를 검토합니다."}
       ],
-      "factorsTitle": "Top contributing factors",
-      "factorsHint": "Animated after analysis",
+      "factorsTitle": "주요 기여요인",
+      "factorsHint": "분석 후 표시",
       "factors": [
-        {"label": "Forecast error", "value": "29%", "width": 84, "color": "brand"},
-        {"label": "Interconnection constraint", "value": "24%", "width": 69, "color": "info"},
-        {"label": "Storage reserve policy", "value": "19%", "width": 54, "color": "accent"},
-        {"label": "Evidence handoff", "value": "16%", "width": 45, "color": "warning"},
-        {"label": "Maintenance window", "value": "12%", "width": 34, "color": "violet"}
+        {"label": "발전량 예측 오차", "value": "29%", "width": 84, "color": "brand"},
+        {"label": "계통 연계 제약", "value": "24%", "width": 69, "color": "info"},
+        {"label": "ESS 예비율 정책", "value": "19%", "width": 54, "color": "accent"},
+        {"label": "증빙 인계", "value": "16%", "width": 45, "color": "warning"},
+        {"label": "정비 시간대", "value": "12%", "width": 34, "color": "violet"}
       ],
-      "impactsTitle": "Expected portfolio impact",
-      "impactsHint": "Click a card to inspect assumptions",
+      "impactsTitle": "예상 포트폴리오 효과",
+      "impactsHint": "카드를 클릭해 가정 확인",
       "impacts": [
-        {"label": "CURTAILMENT", "value": "−18%", "sub": "energy-twin scenario", "detail": "Forecast and reserve policy are brought within target range."},
-        {"label": "EVIDENCE EXCEPTIONS", "value": "−41%", "sub": "approval workflow", "detail": "Evidence collection and review order are redesigned."},
-        {"label": "WORKING CAPITAL", "value": "−5 days", "sub": "cross-border flow", "detail": "Handoff and contract milestones are aligned."},
-        {"label": "LEARNING ASSET", "value": "+1 playbook", "sub": "customer-owned IP", "detail": "Validated outcomes become a reusable portfolio playbook."}
+        {"label": "출력제한", "value": "−18%", "sub": "에너지 시뮬레이션", "detail": "예측과 ESS 예비율 정책을 목표 범위로 조정합니다."},
+        {"label": "증빙 예외", "value": "−41%", "sub": "승인 절차", "detail": "증빙 수집과 검토 순서를 재설계합니다."},
+        {"label": "운전자본", "value": "−5일", "sub": "국가 간 흐름", "detail": "인계와 계약 마일스톤을 맞춥니다."},
+        {"label": "학습 자산", "value": "+1 플레이북", "sub": "고객 소유 지식재산", "detail": "검증된 결과를 재사용 가능한 포트폴리오 플레이북으로 전환합니다."}
       ],
       "board": {
-        "title": "Portfolio improvement board",
-        "hint": "Every card is clickable",
+        "title": "포트폴리오 개선 현황",
+        "hint": "모든 카드 클릭 가능",
         "columns": [
           {
-            "name": "DISCOVERED",
+            "name": "발견",
             "items": [
-              {"text": "Forecast bias · PEAK-18", "title": "Forecast bias", "detail": "Weather-regime forecast error needs additional evaluation."},
-              {"text": "Evidence gap · LOT-0715", "title": "Evidence gap", "detail": "Power-source and ownership evidence need review."}
+              {"text": "예측 편향 · PEAK-18", "title": "예측 편향", "detail": "기상 구간별 예측 오차를 추가 평가해야 합니다."},
+              {"text": "증빙 누락 · LOT-0715", "title": "증빙 누락", "detail": "에너지원과 소유권 증빙을 검토해야 합니다."}
             ]
           },
           {
-            "name": "VALIDATING",
+            "name": "검증 중",
             "items": [
-              {"text": "Storage reserve +4%p", "title": "Storage staged policy", "detail": "Reserve policy is applied to a limited delivery window."},
-              {"text": "Manufacturing handoff +5h", "title": "Handoff validation", "detail": "Production, shipment, and delivery windows are compared."}
+              {"text": "ESS 예비율 +4%p", "title": "ESS 단계 적용 정책", "detail": "제한된 납품 시간대에 예비율 정책을 적용합니다."},
+              {"text": "제조 인계 +5시간", "title": "인계 검증", "detail": "생산·출하·납품 시간대를 비교합니다."}
             ]
           },
           {
-            "name": "OWNED PLAYBOOK",
+            "name": "고객 소유 플레이북",
             "items": [
-              {"text": "Evidence package v8", "title": "Traceability playbook", "detail": "Material, energy, ownership, and delivery evidence order is stored."},
-              {"text": "Peak dispatch v12", "title": "Peak dispatch playbook", "detail": "Forecast, reserve, and approval criteria are stored."}
+              {"text": "증빙 패키지 v8", "title": "추적성 플레이북", "detail": "소재·에너지·소유권·납품 증빙 순서를 저장합니다."},
+              {"text": "피크 급전 v12", "title": "피크 급전 플레이북", "detail": "예측·예비율·승인 기준을 저장합니다."}
             ]
           }
         ]
       },
       "action": {
-        "button": "◎ Run portfolio analysis",
-        "running": "Analyzing portfolio…",
-        "complete": "✓ Analysis complete · Run again",
-        "summaryBefore": "<b>Waiting for analysis.</b><br>Run the workflow to generate portfolio factors and actions.",
-        "summaryAfter": "<b>Forecast and interconnection explain 53% of the scenario.</b><br>Increase reserve, resolve evidence, and adjust the handoff window.",
+        "button": "◎ 포트폴리오 분석 실행",
+        "running": "포트폴리오 분석 중…",
+        "complete": "✓ 분석 완료 · 다시 실행",
+        "summaryBefore": "<b>분석 대기 중입니다.</b><br>워크플로를 실행해 기여요인과 조치를 생성하세요.",
+        "summaryAfter": "<b>예측과 계통 연계가 시나리오의 53%를 설명합니다.</b><br>ESS 예비율을 높이고 증빙과 인계 일정을 조정하세요.",
         "durationMs": 1850,
         "autoRun": true,
-        "toastTitle": "Portfolio analysis complete",
-        "toastText": "Three portfolio actions and one playbook were generated.",
+        "toastTitle": "포트폴리오 분석 완료",
+        "toastText": "포트폴리오 조치 3건과 플레이북 1개를 생성했습니다.",
         "toastIcon": "◎"
       }
     },
     "finance": {
-      "leversTitle": "Investment committee levers",
-      "leversHint": "Adjust three variables",
+      "leversTitle": "투자위원회 조정 변수",
+      "leversHint": "3개 변수를 조정하세요",
       "levers": [
-        {"id": "contractCoverage", "label": "Contracted storage coverage", "min": 30, "max": 90, "step": 1, "value": 62, "decimals": 0, "unit": "%"},
-        {"id": "greenPremium", "label": "Low-carbon premium capture", "min": 0, "max": 30, "step": 1, "value": 12, "decimals": 0, "unit": "%"},
-        {"id": "cashRelease", "label": "Working-capital release", "min": 0, "max": 20, "step": 1, "value": 6, "decimals": 0, "unit": " days"}
+        {"id": "contractCoverage", "label": "ESS 계약 커버리지", "min": 30, "max": 90, "step": 1, "value": 62, "decimals": 0, "unit": "%"},
+        {"id": "greenPremium", "label": "저탄소 프리미엄 확보율", "min": 0, "max": 30, "step": 1, "value": 12, "decimals": 0, "unit": "%"},
+        {"id": "cashRelease", "label": "운전자본 회수", "min": 0, "max": 20, "step": 1, "value": 6, "decimals": 0, "unit": "일"}
       ],
       "margin": {
-        "label": "Illustrative portfolio value margin",
+        "label": "시연 포트폴리오 가치 마진",
         "base": 17.4,
         "unit": "%",
         "decimals": 1,
-        "note": "Demo scenario · not company guidance",
+        "note": "시연 시나리오 · 회사 공식 전망 아님",
         "impacts": {
           "$replace": {
             "contractCoverage": 0.045,
@@ -347,76 +347,76 @@
         },
         "goodThreshold": 20,
         "warningThreshold": 16,
-        "goodLabel": "Compounding value",
-        "warningLabel": "Balanced portfolio",
-        "lowLabel": "Exposure weighted"
+        "goodLabel": "가치 선순환",
+        "warningLabel": "균형 포트폴리오",
+        "lowLabel": "시장 노출 중심"
       },
       "summaryMetrics": [
-        {"label": "Contracted value", "base": 410, "unit": "억", "decimals": 0, "impacts": {"contractCoverage": 4.6, "greenPremium": 1.2}},
-        {"label": "Cash release", "base": 130, "unit": "억", "decimals": 0, "impacts": {"cashRelease": 18.5}},
-        {"label": "Portfolio value index", "base": 116, "unit": "", "decimals": 0, "impacts": {"contractCoverage": 0.34, "greenPremium": 0.52, "cashRelease": 0.41}}
+        {"label": "계약 가치", "base": 410, "unit": "억", "decimals": 0, "impacts": {"contractCoverage": 4.6, "greenPremium": 1.2}},
+        {"label": "현금 회수", "base": 130, "unit": "억", "decimals": 0, "impacts": {"cashRelease": 18.5}},
+        {"label": "포트폴리오 가치 지수", "base": 116, "unit": "", "decimals": 0, "impacts": {"contractCoverage": 0.34, "greenPremium": 0.52, "cashRelease": 0.41}}
       ],
       "composition": {
-        "title": "Portfolio value composition",
-        "hint": "Illustrative mix",
-        "centerLabel": "projects / storage",
+        "title": "포트폴리오 가치 구성",
+        "hint": "시연 구성",
+        "centerLabel": "프로젝트 / ESS",
         "centerSegment": 2,
         "segments": [
-          {"label": "Core materials", "base": 34, "color": "brand", "impacts": {"greenPremium": 0.22}},
-          {"label": "Manufacturing", "base": 22, "color": "accent", "impacts": {"greenPremium": 0.12}},
-          {"label": "Projects / storage", "base": 31, "color": "info", "impacts": {"contractCoverage": 0.28}},
-          {"label": "Power / other", "base": 13, "color": "violet", "impacts": {"cashRelease": 0.08}}
+          {"label": "핵심 소재", "base": 34, "color": "brand", "impacts": {"greenPremium": 0.22}},
+          {"label": "제조", "base": 22, "color": "accent", "impacts": {"greenPremium": 0.12}},
+          {"label": "프로젝트 / ESS", "base": 31, "color": "info", "impacts": {"contractCoverage": 0.28}},
+          {"label": "전력 / 기타", "base": 13, "color": "violet", "impacts": {"cashRelease": 0.08}}
         ]
       },
       "watchlist": {
-        "title": "Autonomous portfolio watchlist",
-        "hint": "Click a row for details",
-        "headers": ["Signal", "Variance", "AI comment", "Status"],
+        "title": "AI 포트폴리오 감시 목록",
+        "hint": "행을 클릭해 상세 보기",
+        "headers": ["신호", "변동", "AI 설명", "상태"],
         "rows": [
-          {"cells": ["Storage contract coverage", "+4.0%p", "Project pipeline"], "status": {"label": "Opportunity", "tone": "success"}, "detailTitle": "Contract coverage", "detail": "Contracted capacity and merchant exposure are compared.", "icon": "₩"},
-          {"cells": ["Low-carbon premium", "+2.5%p", "Traceable supply"], "status": {"label": "Model", "tone": "info"}, "detailTitle": "Low-carbon premium", "detail": "Energy-source evidence and customer value are linked.", "icon": "◇"},
-          {"cells": ["Grid milestone", "+8.8%", "Schedule risk"], "status": {"label": "Review", "tone": "warning"}, "detailTitle": "Grid milestone", "detail": "Interconnection schedule and value at risk are monitored.", "icon": "△"},
-          {"cells": ["Working capital", "−3.1 days", "Handoff aligned"], "status": {"label": "Improving", "tone": "success"}, "detailTitle": "Working capital", "detail": "Cross-border handoff and invoice milestones are aligned.", "icon": "◎"},
-          {"cells": ["Agent run cost", "+2.0%", "Volume driven"], "status": {"label": "Controlled", "tone": "violet"}, "detailTitle": "AI operating cost", "detail": "Model, tool, and trace costs are tracked separately.", "icon": "✦"}
+          {"cells": ["ESS 계약 커버리지", "+4.0%p", "프로젝트 파이프라인"], "status": {"label": "기회", "tone": "success"}, "detailTitle": "계약 커버리지", "detail": "계약 용량과 시장 노출도를 비교합니다.", "icon": "₩"},
+          {"cells": ["저탄소 프리미엄", "+2.5%p", "추적 가능한 공급"], "status": {"label": "모델링", "tone": "info"}, "detailTitle": "저탄소 프리미엄", "detail": "에너지원 증빙과 고객 가치를 연결합니다.", "icon": "◇"},
+          {"cells": ["계통 마일스톤", "+8.8%", "일정 위험"], "status": {"label": "검토", "tone": "warning"}, "detailTitle": "계통 마일스톤", "detail": "계통 연계 일정과 위험가치를 감시합니다.", "icon": "△"},
+          {"cells": ["운전자본", "−3.1일", "인계 정렬"], "status": {"label": "개선", "tone": "success"}, "detailTitle": "운전자본", "detail": "국가 간 인계와 청구 마일스톤을 맞춥니다.", "icon": "◎"},
+          {"cells": ["에이전트 실행 비용", "+2.0%", "사용량 영향"], "status": {"label": "통제", "tone": "violet"}, "detailTitle": "AI 운영 비용", "detail": "모델·도구·추적 비용을 분리해 관리합니다.", "icon": "✦"}
         ]
       },
-      "explanation": "<b>Scenario value margin {{value}}</b><br>Contract coverage, low-carbon premium, and working capital are compared.",
-      "assumption": "All finance values are illustrative demo assumptions."
+      "explanation": "<b>시나리오 가치 마진 {{value}}</b><br>계약 커버리지·저탄소 프리미엄·운전자본을 비교합니다.",
+      "assumption": "모든 재무 값은 시연용 가정치입니다."
     },
     "devops": {
       "hero": {
         "icon": "⌘",
-        "title": "Energy Software Delivery · Issue to governed pull request",
-        "subtitle": "GitHub Copilot cloud agent researches, plans, tests, and prepares changes for forecast, evidence, and storage software."
+        "title": "에너지 소프트웨어 개발 가속 · Issue에서 검증된 Pull Request까지",
+        "subtitle": "GitHub Copilot cloud agent가 발전 예측·증빙·ESS 소프트웨어를 조사하고 계획·테스트·변경 준비를 수행합니다."
       },
       "kpis": [
-        {"label": "Median lead time", "value": 4.2, "decimals": 1, "unit": "days", "delta": "−36% demo baseline", "direction": "down", "icon": "◷", "color": "brand", "series": [8.9, 8.2, 7.5, 6.7, 5.9, 5.2, 4.7, 4.2]},
-        {"label": "Agent pull requests", "value": 34, "decimals": 0, "unit": "month", "delta": "+24 reviewed", "direction": "up", "icon": "⑂", "color": "info", "series": [3, 6, 10, 14, 19, 24, 29, 34]},
-        {"label": "Security checks", "value": 100, "decimals": 0, "unit": "%", "delta": "code · secret · dependency", "direction": "up", "icon": "⬡", "color": "success", "series": [84, 89, 93, 96, 98, 99, 100, 100]},
-        {"label": "Review turnaround", "value": 6.0, "decimals": 1, "unit": "hours", "delta": "−2.0 h with context", "direction": "down", "icon": "✓", "color": "violet", "series": [12, 11, 10.3, 9.4, 8.6, 7.5, 6.7, 6.0]}
+        {"label": "중앙값 리드타임", "value": 4.2, "decimals": 1, "unit": "일", "delta": "시연 기준 −36%", "direction": "down", "icon": "◷", "color": "brand", "series": [8.9, 8.2, 7.5, 6.7, 5.9, 5.2, 4.7, 4.2]},
+        {"label": "에이전트 Pull Request", "value": 34, "decimals": 0, "unit": "월", "delta": "+24건 검토", "direction": "up", "icon": "⑂", "color": "info", "series": [3, 6, 10, 14, 19, 24, 29, 34]},
+        {"label": "보안 검사", "value": 100, "decimals": 0, "unit": "%", "delta": "코드 · 시크릿 · 의존성", "direction": "up", "icon": "⬡", "color": "success", "series": [84, 89, 93, 96, 98, 99, 100, 100]},
+        {"label": "리뷰 소요시간", "value": 6.0, "decimals": 1, "unit": "시간", "delta": "맥락 제공 시 −2.0시간", "direction": "down", "icon": "✓", "color": "violet", "series": [12, 11, 10.3, 9.4, 8.6, 7.5, 6.7, 6.0]}
       ],
-      "stepsTitle": "Copilot cloud agent session",
-      "stepsHint": "GitHub Actions-powered environment",
+      "stepsTitle": "Copilot cloud agent 작업",
+      "stepsHint": "GitHub Actions 기반 환경",
       "steps": [
-        {"title": "Research repository", "text": "Instructions, forecast schema, evidence model, and tests are inspected."},
-        {"title": "Create implementation plan", "text": "Threshold, approval, and rollback boundaries are defined."},
-        {"title": "Implement on branch", "text": "Typed policy configuration and audit events are added."},
-        {"title": "Run tests and security gates", "text": "Unit, integration, code, secret, and dependency checks run."},
-        {"title": "Open draft pull request", "text": "Rationale, risk, and validation results are attached."}
+        {"title": "저장소 조사", "text": "지침·예측 스키마·증빙 모델·테스트를 확인합니다."},
+        {"title": "구현 계획 작성", "text": "임계값·승인·롤백 경계를 정의합니다."},
+        {"title": "브랜치에서 구현", "text": "형식화된 정책 구성과 감사 이벤트를 추가합니다."},
+        {"title": "테스트·보안 게이트 실행", "text": "단위·통합·코드·시크릿·의존성 검사를 실행합니다."},
+        {"title": "Draft Pull Request 생성", "text": "변경 근거·위험·검증 결과를 첨부합니다."}
       ],
-      "issuesTitle": "Energy software backlog",
-      "issuesHint": "Select an issue and assign it to Copilot",
-      "issueHeaders": ["Issue", "Product", "Type", "Risk", "Status"],
+      "issuesTitle": "에너지 소프트웨어 작업 목록",
+      "issuesHint": "Issue를 선택해 Copilot에 배정하세요",
+      "issueHeaders": ["Issue", "제품", "유형", "위험", "상태"],
       "issues": [
         {
           "id": "#612",
-          "title": "Forecast-confidence guard",
-          "product": "Energy Twin",
-          "type": "Reliability",
-          "risk": "Medium",
-          "status": {"label": "Ready", "tone": "info"},
+          "title": "발전 예측 신뢰도 보호 규칙",
+          "product": "에너지 시뮬레이션",
+          "type": "신뢰성",
+          "risk": "중간",
+          "status": {"label": "준비", "tone": "info"},
           "highRisk": false,
-          "context": "Generation forecast, storage reserve, and commitment schemas are used.",
+          "context": "발전량 예측·ESS 예비율·납품 약정 스키마를 사용합니다.",
           "diffLines": [
             {"type": "comment", "text": "// energy/forecast/confidence-guard.ts"},
             {"type": "delete", "text": "- const COMMIT_THRESHOLD = 0.90;"},
@@ -427,13 +427,13 @@
         },
         {
           "id": "#604",
-          "title": "Evidence-package audit",
-          "product": "Traceability",
-          "type": "Governance",
-          "risk": "Low",
-          "status": {"label": "Scoped", "tone": "success"},
+          "title": "증빙 패키지 감사",
+          "product": "추적성",
+          "type": "거버넌스",
+          "risk": "낮음",
+          "status": {"label": "범위 확정", "tone": "success"},
           "highRisk": false,
-          "context": "Material, power-source, ownership, and delivery evidence are used.",
+          "context": "소재·에너지원·소유권·납품 증빙을 사용합니다.",
           "diffLines": [
             {"type": "comment", "text": "// traceability/evidence-policy.ts"},
             {"type": "add", "text": "+ type EvidenceSet = { lotId: string; source: string; owner: string };"},
@@ -443,13 +443,13 @@
         },
         {
           "id": "#598",
-          "title": "Storage approval log",
-          "product": "Storage Operations",
-          "type": "Audit",
-          "risk": "Low",
-          "status": {"label": "Scoped", "tone": "success"},
+          "title": "ESS 승인 기록",
+          "product": "ESS 운영",
+          "type": "감사",
+          "risk": "낮음",
+          "status": {"label": "범위 확정", "tone": "success"},
           "highRisk": false,
-          "context": "Reserve policy, recommendation, and approver trace are used.",
+          "context": "예비율 정책·권고안·승인자 추적 정보를 사용합니다.",
           "diffLines": [
             {"type": "comment", "text": "// storage/dispatch/approval-log.ts"},
             {"type": "add", "text": "+ record({ beforeSoc, afterSoc, forecastId, approverId });"},
@@ -459,13 +459,13 @@
         },
         {
           "id": "#587",
-          "title": "Live-grid rollback telemetry",
-          "product": "Grid Operations",
-          "type": "Safety",
-          "risk": "High",
-          "status": {"label": "Human lead", "tone": "warning"},
+          "title": "실계통 롤백 텔레메트리",
+          "product": "계통 운영",
+          "type": "안전",
+          "risk": "높음",
+          "status": {"label": "사람 주도", "tone": "warning"},
           "highRisk": true,
-          "context": "Copilot researches and plans; a grid operator implements and approves.",
+          "context": "Copilot은 조사와 계획을 지원하고 계통 운영자가 구현·승인합니다.",
           "diffLines": [
             {"type": "comment", "text": "// grid/safety/rollback.ts"},
             {"type": "add", "text": "+ if (deployment.isLiveGrid) requireHumanApproval(changeSet);"},
@@ -474,95 +474,95 @@
           ]
         }
       ],
-      "assumption": "Issues, code, pull requests, and productivity metrics are demo data."
+      "assumption": "Issue·코드·Pull Request·생산성 지표는 모두 시연 데이터입니다."
     },
     "agents": {
-      "listTitle": "Domain agents",
-      "listHint": "Every row is clickable",
-      "governedLabel": "Governed",
-      "placeholder": "Ask about energy, storage, evidence, finance, or software",
-      "sendLabel": "Send",
-      "fallback": "<b>{{agent}}</b>입니다. Energy, storage, traceability, finance, software 중 하나로 질문을 구체화해 주세요."
+      "listTitle": "전문 에이전트",
+      "listHint": "모든 행 클릭 가능",
+      "governedLabel": "정책 적용",
+      "placeholder": "에너지·ESS·증빙·재무·소프트웨어에 대해 질문하세요",
+      "sendLabel": "보내기",
+      "fallback": "<b>{{agent}}</b>입니다. 에너지·ESS·추적성·재무·소프트웨어 중 하나로 질문을 구체화해 주세요."
     },
     "governance": {
       "cards": [
-        {"icon": "◈", "title": "PRIVATE EVALUATION", "value": "92.6", "sub": "energy & evidence checks", "detail": "Delivery, evidence, carbon, approval, and rollback are evaluated."},
-        {"icon": "▤", "title": "GOVERNED EVIDENCE", "value": "16,820", "sub": "patterns · evidence · playbooks", "detail": "Operating patterns and evidence packages are versioned."},
-        {"icon": "⬡", "title": "POLICY COVERAGE", "value": "100%", "sub": "reference architecture coverage", "detail": "Identity, retrieval, tools, approval, and trace are covered."}
+        {"icon": "◈", "title": "고객 전용 평가", "value": "92.6", "sub": "에너지·증빙 검사", "detail": "납품·증빙·탄소·승인·롤백을 평가합니다."},
+        {"icon": "▤", "title": "통제된 증빙", "value": "16,820", "sub": "패턴 · 증빙 · 플레이북", "detail": "운영 패턴과 증빙 패키지를 버전 관리합니다."},
+        {"icon": "⬡", "title": "정책 적용 범위", "value": "100%", "sub": "참조 아키텍처 범위", "detail": "신원·검색·도구·승인·추적 통제를 포함합니다."}
       ],
       "controls": {
-        "title": "Enterprise control plane",
-        "hint": "Click a row for details",
-        "headers": ["Control", "Microsoft / GitHub service", "Demo policy", "Status"],
+        "title": "전사 통제 체계",
+        "hint": "행을 클릭해 상세 보기",
+        "headers": ["통제 영역", "Microsoft / GitHub 서비스", "시연 정책", "상태"],
         "rows": [
-          {"cells": ["Identity", "Microsoft Entra Agent ID · RBAC", "Per-agent least privilege"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Agent identity", "detail": "Each agent receives scoped identity and permissions.", "icon": "⬡"},
-          {"cells": ["Knowledge", "Foundry IQ · Azure AI Search", "ACL-aware grounding"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Knowledge grounding", "detail": "Evidence and operating knowledge are retrieved with access filters.", "icon": "▤"},
-          {"cells": ["Data", "Microsoft Purview", "Classify · protect · audit"], "status": {"label": "Designed", "tone": "info"}, "detailTitle": "Data governance", "detail": "Sensitivity and AI data posture controls are mapped.", "icon": "◈"},
-          {"cells": ["Safety", "Azure AI Content Safety", "Filter · evaluate · red team"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Safety evaluation", "detail": "External responses and internal actions are evaluated separately.", "icon": "✓"},
-          {"cells": ["Runtime", "Microsoft Defender · VNet isolation", "Threat and posture signals"], "status": {"label": "Designed", "tone": "info"}, "detailTitle": "Runtime security", "detail": "Runtime and tool connections are monitored.", "icon": "⬡"},
-          {"cells": ["Engineering", "GitHub AI Controls · GitHub Advanced Security", "Session audit · merge gate"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Engineering governance", "detail": "Agent sessions and code changes require review.", "icon": "⌘"},
-          {"cells": ["Observability", "Foundry · Application Insights", "Trace every decision"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Observability", "detail": "Decision, retrieval, tool, approval, and latency are traced.", "icon": "✦"}
+          {"cells": ["신원", "Microsoft Entra Agent ID · RBAC", "에이전트별 최소 권한"], "status": {"label": "적용", "tone": "success"}, "detailTitle": "에이전트 신원", "detail": "각 에이전트에 범위가 제한된 신원과 권한을 부여합니다.", "icon": "⬡"},
+          {"cells": ["지식", "Foundry IQ · Azure AI Search", "ACL 기반 근거 검색"], "status": {"label": "적용", "tone": "success"}, "detailTitle": "지식 근거화", "detail": "접근 권한 필터를 적용해 증빙과 운영 지식을 검색합니다.", "icon": "▤"},
+          {"cells": ["데이터", "Microsoft Purview", "분류 · 보호 · 감사"], "status": {"label": "설계", "tone": "info"}, "detailTitle": "데이터 거버넌스", "detail": "민감도와 AI 데이터 보안 태세 통제를 매핑합니다.", "icon": "◈"},
+          {"cells": ["안전", "Azure AI Content Safety", "필터 · 평가 · 레드팀"], "status": {"label": "적용", "tone": "success"}, "detailTitle": "안전성 평가", "detail": "외부 응답과 내부 실행 조치를 분리해 평가합니다.", "icon": "✓"},
+          {"cells": ["실행 환경", "Microsoft Defender · VNet 격리", "위협·보안 태세 신호"], "status": {"label": "설계", "tone": "info"}, "detailTitle": "실행 환경 보안", "detail": "실행 환경과 도구 연결을 감시합니다.", "icon": "⬡"},
+          {"cells": ["개발", "GitHub AI Controls · GitHub Advanced Security", "세션 감사 · 병합 게이트"], "status": {"label": "적용", "tone": "success"}, "detailTitle": "개발 거버넌스", "detail": "에이전트 세션과 코드 변경에 리뷰를 요구합니다.", "icon": "⌘"},
+          {"cells": ["관찰성", "Foundry · Application Insights", "모든 의사결정 추적"], "status": {"label": "적용", "tone": "success"}, "detailTitle": "관찰성", "detail": "의사결정·검색·도구·승인·지연시간을 추적합니다.", "icon": "✦"}
         ]
       },
       "memories": {
-        "title": "Customer-owned evidence register",
-        "hint": "Owned assets",
-        "headers": ["Asset", "Count", "Ownership"],
+        "title": "고객 소유 증빙 자산",
+        "hint": "고객 소유 자산",
+        "headers": ["자산", "수량", "소유권"],
         "rows": [
-          {"cells": ["Energy dispatch patterns", "4,980"], "status": {"label": "Owned", "tone": "success"}, "detailTitle": "Dispatch patterns", "detail": "Forecast, reserve, and load-ramp patterns are stored.", "icon": "△"},
-          {"cells": ["Traceability evidence sets", "3,860"], "status": {"label": "Owned", "tone": "success"}, "detailTitle": "Evidence sets", "detail": "Material, energy, ownership, and delivery evidence are stored.", "icon": "⬡"},
-          {"cells": ["Project playbooks", "2,140"], "status": {"label": "Owned", "tone": "success"}, "detailTitle": "Project playbooks", "detail": "Milestone, interconnection, and maintenance decisions are stored.", "icon": "◎"},
-          {"cells": ["Agent evaluation cases", "5,840"], "status": {"label": "Owned", "tone": "success"}, "detailTitle": "Evaluation cases", "detail": "Delivery, carbon, approval, and rollback cases are stored.", "icon": "◈"}
+          {"cells": ["에너지 급전 패턴", "4,980"], "status": {"label": "고객 소유", "tone": "success"}, "detailTitle": "급전 패턴", "detail": "예측·예비율·부하 증가 패턴을 저장합니다.", "icon": "△"},
+          {"cells": ["추적성 증빙 세트", "3,860"], "status": {"label": "고객 소유", "tone": "success"}, "detailTitle": "증빙 세트", "detail": "소재·에너지·소유권·납품 증빙을 저장합니다.", "icon": "⬡"},
+          {"cells": ["프로젝트 플레이북", "2,140"], "status": {"label": "고객 소유", "tone": "success"}, "detailTitle": "프로젝트 플레이북", "detail": "마일스톤·계통 연계·정비 의사결정을 저장합니다.", "icon": "◎"},
+          {"cells": ["에이전트 평가 사례", "5,840"], "status": {"label": "고객 소유", "tone": "success"}, "detailTitle": "평가 사례", "detail": "납품·탄소·승인·롤백 사례를 저장합니다.", "icon": "◈"}
         ]
       },
       "learningLoop": {
-        "title": "Customer-owned learning loop",
-        "hint": "Click a step for details",
+        "title": "고객 소유 학습 루프",
+        "hint": "단계를 클릭해 상세 보기",
         "steps": [
-          {"icon": "◇", "title": "SENSE", "sub": "Material · Energy · Project", "detail": "Operating, evidence, and project signals are collected."},
-          {"icon": "△", "title": "SIMULATE", "sub": "Energy & portfolio twin", "detail": "Delivery, carbon, and value at risk are compared before action."},
-          {"icon": "⬡", "title": "APPROVE", "sub": "Policy-gated action", "detail": "Operations, finance, and compliance owners approve staged actions."},
-          {"icon": "✦", "title": "LEARN", "sub": "Compounding customer IP", "detail": "Validated outcomes become evidence, patterns, playbooks, and evaluations."}
+          {"icon": "◇", "title": "감지", "sub": "소재 · 에너지 · 프로젝트", "detail": "운영·증빙·프로젝트 신호를 수집합니다."},
+          {"icon": "△", "title": "시뮬레이션", "sub": "에너지·포트폴리오 모델", "detail": "실행 전에 납품·탄소·위험가치를 비교합니다."},
+          {"icon": "⬡", "title": "승인", "sub": "정책 기반 실행", "detail": "운영·재무·컴플라이언스 책임자가 단계별 조치를 승인합니다."},
+          {"icon": "✦", "title": "학습", "sub": "축적되는 고객 지식재산", "detail": "검증된 결과를 증빙·패턴·플레이북·평가 자산으로 전환합니다."}
         ]
       },
       "evaluation": {
-        "title": "Evaluation trace",
-        "hint": "Demo results",
-        "button": "⬡ Run private evaluation",
-        "running": "Running evaluation…",
-        "complete": "✓ Evaluation complete · Run again",
+        "title": "평가 실행 내역",
+        "hint": "시연 결과",
+        "button": "⬡ 고객 전용 평가 실행",
+        "running": "평가 실행 중…",
+        "complete": "✓ 평가 완료 · 다시 실행",
         "initialScore": 92.6,
         "finalScore": 95.2,
         "readyLines": [
-          "[READY] evaluation-set: energy-private-v12",
-          "[READY] checks: delivery / evidence / carbon / approval / rollback",
-          "[READY] boundary: customer-owned evaluation assets",
-          "[WAIT ] run private evaluation"
+          "[준비] 평가 세트: energy-private-v12",
+          "[준비] 검사: 납품 / 증빙 / 탄소 / 승인 / 롤백",
+          "[준비] 경계: 고객 소유 평가 자산",
+          "[대기] 고객 전용 평가 실행"
         ],
         "runLines": [
-          "[RUN  ] agent-identity ........ PASS",
-          "[RUN  ] evidence-retrieval ... PASS",
-          "[RUN  ] delivery-reasoning ... PASS",
-          "[RUN  ] carbon-claim guard ... PASS",
-          "[RUN  ] action approval ...... PASS",
-          "[RUN  ] grid rollback ........ PASS",
-          "[DONE ] score: 95.2 / 100"
+          "[실행] 에이전트 신원 ........ 통과",
+          "[실행] 증빙 검색 ............ 통과",
+          "[실행] 납품 판단 ............ 통과",
+          "[실행] 탄소 주장 보호 ....... 통과",
+          "[실행] 실행 승인 ............ 통과",
+          "[실행] 계통 롤백 ............ 통과",
+          "[완료] 점수: 95.2 / 100"
         ],
-        "toastTitle": "Private evaluation passed",
-        "toastText": "Energy and evidence checks passed."
+        "toastTitle": "고객 전용 평가 통과",
+        "toastText": "에너지·증빙 검사를 통과했습니다."
       },
-      "assumption": "This is a target architecture, not a claim about the customer's current deployment."
+      "assumption": "현재 고객 배포 현황에 대한 주장이 아닌 목표 아키텍처 시연입니다."
     },
     "ambientNotifications": [
-      {"title": "Material Agent", "text": "Clean-power input and production plan are within range.", "icon": "◇"},
-      {"title": "Energy Agent", "text": "Storage reserve policy reached the approval queue.", "icon": "△"},
-      {"title": "Traceability Agent", "text": "Two evidence items are prioritized for review.", "icon": "⬡"},
-      {"title": "Copilot session", "text": "Forecast-confidence tests are ready.", "icon": "⌘"}
+      {"title": "소재 운영 에이전트", "text": "청정 전력 투입과 생산계획이 안정 범위입니다.", "icon": "◇"},
+      {"title": "에너지 에이전트", "text": "ESS 예비율 정책이 승인 대기열에 도달했습니다.", "icon": "△"},
+      {"title": "추적성 에이전트", "text": "증빙 2건을 우선 검토 대상으로 지정했습니다.", "icon": "⬡"},
+      {"title": "Copilot 작업", "text": "발전 예측 신뢰도 테스트가 준비되었습니다.", "icon": "⌘"}
     ],
     "ambientIntervalMs": 11500,
     "notification": {
-      "title": "Energy portfolio alerts",
-      "text": "Evidence 2 · storage 1 · approval 1 are waiting.",
+      "title": "에너지 포트폴리오 알림",
+      "text": "증빙 2건 · ESS 1건 · 승인 1건이 대기 중입니다.",
       "icon": "◇"
     }
   }

@@ -6,7 +6,7 @@
     "appName": "Contoso Precision IQ",
     "initials": "CP",
     "language": "ko",
-    "infrastructureLabel": "Microsoft Foundry · Reference Architecture",
+    "infrastructureLabel": "Microsoft Foundry · 참조 아키텍처",
     "demoNote": "모든 회사명·라인·수치·재무 결과는 Golden Runtime 검증을 위한 시연용 가정치입니다."
   },
   "design": {
@@ -41,7 +41,7 @@
       },
       {
         "audience": "CIO",
-        "message": "Identity·policy·trace를 갖춘 Agent 운영 체계 확보"
+        "message": "신원·정책·추적을 갖춘 에이전트 운영 체계 확보"
       }
     ],
     "climax": "품질 이상을 여섯 Agent가 공동 분석해 공정 보정, 고객 지원, 재무 효과, 코드 변경안을 하나의 승인 패키지로 만든다."
@@ -50,58 +50,58 @@
     {
       "id": "dashboard",
       "icon": "◫",
-      "name": "Executive Cockpit",
-      "short": "Overview",
-      "crumb": "Overview"
+      "name": "경영 현황",
+      "short": "전체",
+      "crumb": "전사 현황"
     },
     {
       "id": "operations",
       "icon": "◇",
-      "name": "Line Control",
-      "short": "Live",
-      "crumb": "Operations · Closed Loop"
+      "name": "생산 운영",
+      "short": "실시간",
+      "crumb": "생산 · 폐루프 보정"
     },
     {
       "id": "simulator",
       "icon": "△",
-      "name": "Process Twin",
-      "short": "Predict",
-      "crumb": "Simulation · Before Production"
+      "name": "공정 예측",
+      "short": "예측",
+      "crumb": "생산 전 시뮬레이션"
     },
     {
       "id": "improvement",
       "icon": "◎",
-      "name": "Closed-Loop Optimizer",
-      "short": "Improve",
-      "crumb": "Root Cause · Improvement"
+      "name": "공정 개선",
+      "short": "개선",
+      "crumb": "근본원인 · 개선 과제"
     },
     {
       "id": "finance",
       "icon": "₩",
-      "name": "Portfolio Economics",
-      "short": "Finance",
-      "crumb": "Executive What-if"
+      "name": "재무 효과",
+      "short": "재무",
+      "crumb": "경영 시나리오"
     },
     {
       "id": "devops",
       "icon": "⌘",
-      "name": "Software Delivery",
+      "name": "개발 가속",
       "short": "Copilot",
       "crumb": "GitHub Copilot"
     },
     {
       "id": "agents",
       "icon": "✦",
-      "name": "Agent Studio",
-      "short": "Orchestrate",
-      "crumb": "Multi-Agent Operations"
+      "name": "AI 에이전트",
+      "short": "협업",
+      "crumb": "멀티에이전트 운영"
     },
     {
       "id": "governance",
       "icon": "⬡",
-      "name": "Trust & Sovereignty",
-      "short": "Govern",
-      "crumb": "Identity · Data · Evaluation"
+      "name": "신뢰·데이터 주권",
+      "short": "통제",
+      "crumb": "신원 · 데이터 · 평가"
     }
   ],
   "dashboard": {
@@ -110,7 +110,7 @@
       "title": "정량 측정 데이터를 전사 학습 자산으로",
       "subtitle": "검사에서 생성되는 정량 데이터를 품질·공정·서비스·소프트웨어 의사결정으로 연결합니다. 알고리즘과 공정 노하우는 고객이 소유하고 Agent는 학습 루프를 더 빠르게 실행합니다.",
       "badge": {
-        "label": "Global demo live",
+        "label": "글로벌 실시간 시연",
         "tone": "success"
       }
     },
@@ -119,7 +119,7 @@
         "label": "연결된 데모 라인",
         "value": 128,
         "decimals": 0,
-        "unit": "lines",
+        "unit": "개 라인",
         "delta": "+6 이번 분기",
         "direction": "up",
         "icon": "▦",
@@ -145,8 +145,8 @@
         "label": "실시간 검사 처리량",
         "value": 42860,
         "decimals": 0,
-        "unit": "/min",
-        "delta": "+3.8% vs baseline",
+        "unit": "/분",
+        "delta": "기준 대비 +3.8%",
         "direction": "up",
         "icon": "◈",
         "color": "accent",
@@ -168,11 +168,11 @@
         }
       },
       {
-        "label": "First-Pass Yield",
+        "label": "초도 합격률(FPY)",
         "value": 98.42,
         "decimals": 2,
         "unit": "%",
-        "delta": "+0.31%p AI assist",
+        "delta": "AI 지원 +0.31%p",
         "direction": "up",
         "icon": "✓",
         "color": "success",
@@ -197,8 +197,8 @@
         "label": "Agent 실행 액션",
         "value": 1284,
         "decimals": 0,
-        "unit": "today",
-        "delta": "+147 validated",
+        "unit": "오늘",
+        "delta": "+147건 검증",
         "direction": "up",
         "icon": "✦",
         "color": "violet",
@@ -221,7 +221,7 @@
       }
     ],
     "stream": {
-      "title": "Global inspection intelligence",
+      "title": "글로벌 검사 인텔리전스",
       "label": "FPY",
       "unit": "%",
       "color": "brand",
@@ -254,73 +254,73 @@
       },
       "intervalMs": 1900
     },
-    "feedTitle": "Agent activity feed",
+    "feedTitle": "에이전트 활동",
     "feedHint": "실시간 시연 이벤트",
     "feedIntervalMs": 3600,
     "feed": [
       {
         "icon": "△",
-        "title": "Process Twin",
+        "title": "공정 예측",
         "text": "Placement offset risk가 0.18% 감소했습니다."
       },
       {
         "icon": "✓",
-        "title": "Quality Agent",
+        "title": "품질 에이전트",
         "text": "검토 후보 18건을 우선순위화했습니다."
       },
       {
         "icon": "◇",
-        "title": "Process Optimizer",
+        "title": "공정 개선 에이전트",
         "text": "승인 대기 중인 보정 권고안이 생성되었습니다."
       },
       {
         "icon": "⌘",
-        "title": "Copilot Engineering",
+        "title": "Copilot 개발",
         "text": "Telemetry issue의 테스트가 완료되었습니다."
       },
       {
         "icon": "⬡",
-        "title": "Governance",
+        "title": "거버넌스",
         "text": "Private evaluation 24개 항목을 재실행했습니다."
       },
       {
         "icon": "✦",
-        "title": "Orchestrator",
-        "text": "품질 시나리오를 Finance Agent에 위임했습니다."
+        "title": "에이전트 조정자",
+        "text": "품질 시나리오를 재무 에이전트에 위임했습니다."
       }
     ],
     "cards": {
-      "title": "Executive agent health",
-      "hint": "Foundry reference architecture",
+      "title": "경영 관점 에이전트 상태",
+      "hint": "Foundry 참조 아키텍처",
       "items": [
         {
-          "name": "Quality",
+          "name": "품질",
           "value": "99.7%",
-          "sub": "evaluation pass",
+          "sub": "평가 통과",
           "detail": "정량 측정 신호를 기반으로 defect drift와 false call을 감시하는 데모입니다."
         },
         {
-          "name": "Process",
+          "name": "공정",
           "value": "38 ms",
-          "sub": "decision latency",
+          "sub": "의사결정 지연",
           "detail": "공정 권고안을 제안하고 승인 게이트를 통과한 액션만 실행하는 데모입니다."
         },
         {
-          "name": "Service",
+          "name": "서비스",
           "value": "24/7",
-          "sub": "demo monitoring",
+          "sub": "시연 모니터링",
           "detail": "설치 장비 이벤트와 서비스 플레이북을 연결하는 글로벌 지원 시나리오입니다."
         }
       ]
     },
     "table": {
-      "title": "Region / segment pulse",
+      "title": "권역·사업군 현황",
       "hint": "행을 클릭해 상세 보기",
       "headers": [
-        "Region",
-        "Focus",
+        "권역",
+        "중점 영역",
         "FPY",
-        "Signal"
+        "신호"
       ],
       "rows": [
         {
@@ -330,7 +330,7 @@
             "98.71%"
           ],
           "status": {
-            "label": "Stable",
+            "label": "안정",
             "tone": "success"
           },
           "detailTitle": "Korea · Advanced Packaging",
@@ -344,7 +344,7 @@
             "98.08%"
           ],
           "status": {
-            "label": "Watch",
+            "label": "주의",
             "tone": "warning"
           },
           "detailTitle": "Europe · EV / Power",
@@ -358,7 +358,7 @@
             "97.94%"
           ],
           "status": {
-            "label": "Investigating",
+            "label": "분석 중",
             "tone": "info"
           },
           "detailTitle": "Americas · AI Infrastructure",
@@ -372,7 +372,7 @@
             "98.55%"
           ],
           "status": {
-            "label": "Stable",
+            "label": "안정",
             "tone": "success"
           },
           "detailTitle": "Asia · High-Mix SMT",
@@ -382,25 +382,25 @@
       ]
     },
     "learningLoop": {
-      "label": "OWNED LEARNING LOOP",
+      "label": "고객 소유 학습 루프",
       "value": 24680,
-      "unit": "assets",
+      "unit": "자산",
       "note": "검증된 공정 패턴 · 평가 항목 · 개선 플레이북"
     }
   },
   "operations": {
     "hero": {
       "icon": "◇",
-      "title": "Line Control · 측정에서 승인된 보정까지",
-      "subtitle": "Printer → Inspection → Placement → Optical Review의 정량 신호를 한 흐름으로 연결합니다. AI 권고안은 승인 정책을 통과한 뒤 폐루프 액션으로 전환됩니다."
+      "title": "생산 운영 · 측정에서 승인된 보정까지",
+      "subtitle": "인쇄 → 검사 → 실장 → 광학 검토의 정량 신호를 한 흐름으로 연결합니다. AI 권고안은 승인 정책을 통과한 뒤 폐루프 액션으로 전환됩니다."
     },
     "kpis": [
       {
-        "label": "Boards per hour",
+        "label": "시간당 보드 생산량",
         "value": 1842,
         "decimals": 0,
         "unit": "bph",
-        "delta": "+4.2% optimized",
+        "delta": "최적화 +4.2%",
         "direction": "up",
         "icon": "▦",
         "color": "brand",
@@ -422,11 +422,11 @@
         }
       },
       {
-        "label": "First-Pass Yield",
+        "label": "초도 합격률(FPY)",
         "value": 98.36,
         "decimals": 2,
         "unit": "%",
-        "delta": "+0.24%p today",
+        "delta": "오늘 +0.24%p",
         "direction": "up",
         "icon": "✓",
         "color": "success",
@@ -448,11 +448,11 @@
         }
       },
       {
-        "label": "False-call rate",
+        "label": "오검출률",
         "value": 0.72,
         "decimals": 2,
         "unit": "%",
-        "delta": "−0.18%p AI review",
+        "delta": "AI 검토 −0.18%p",
         "direction": "down",
         "icon": "◉",
         "color": "accent",
@@ -468,11 +468,11 @@
         ]
       },
       {
-        "label": "Closed-loop corrections",
+        "label": "폐루프 보정",
         "value": 36,
         "decimals": 0,
-        "unit": "today",
-        "delta": "+11 validated",
+        "unit": "오늘",
+        "delta": "+11건 검증",
         "direction": "up",
         "icon": "◎",
         "color": "violet",
@@ -489,43 +489,43 @@
       }
     ],
     "flow": {
-      "title": "Closed-loop production flow",
+      "title": "폐루프 생산 흐름",
       "hint": "움직이는 제품 · 실시간 시연",
       "moverLabel": "PCB",
       "nodes": [
         {
-          "name": "Printer",
-          "subtitle": "Deposit",
+          "name": "인쇄",
+          "subtitle": "도포",
           "metric": "99.1%",
-          "status": "material stability",
+          "status": "소재 안정성",
           "detail": "Deposit volume과 tool condition의 상관관계를 분석하는 시나리오입니다."
         },
         {
-          "name": "3D Inspection",
-          "subtitle": "Measure",
+          "name": "3D 검사",
+          "subtitle": "측정",
           "metric": "42.8k",
-          "status": "measurements/min",
+          "status": "분당 측정량",
           "detail": "높이·면적·체적·형상의 정량 측정 신호를 생성합니다."
         },
         {
-          "name": "Placement",
-          "subtitle": "Assemble",
+          "name": "실장",
+          "subtitle": "조립",
           "metric": "18 μm",
-          "status": "placement drift",
+          "status": "실장 편차",
           "detail": "Offset, rotation, polarity trend를 바탕으로 보정안을 제안합니다."
         },
         {
-          "name": "Optical Review",
-          "subtitle": "Inspect",
+          "name": "광학 검토",
+          "subtitle": "검사",
           "metric": "0.31%",
-          "status": "defect candidate",
+          "status": "불량 후보",
           "detail": "검사 결과를 Process Twin과 AI review로 전달합니다."
         },
         {
-          "name": "AI Review",
-          "subtitle": "Classify",
+          "name": "AI 검토",
+          "subtitle": "분류",
           "metric": "0.72%",
-          "status": "false-call rate",
+          "status": "오검출률",
           "detail": "False call 후보를 필터링하고 작업자 검토 항목을 우선순위화합니다."
         }
       ],
@@ -543,7 +543,7 @@
       "complete": "✓ 재최적화 완료",
       "runningEvent": "AI 재최적화 · 측정·공정 신호 통합 분석 중",
       "completeEvent": "공정 권고안 생성 · 담당자 승인 대기",
-      "recommendationLabel": "Current recommendation",
+      "recommendationLabel": "현재 권고안",
       "recommendationBefore": "<b>Placement X-offset −6 μm</b><br>예상 FPY +0.12%p · 승인 후 폐루프 적용",
       "recommendationAfter": "<b>보정안 승인 준비 완료</b><br>Printer pressure −1.8% · Placement X-offset −6 μm · 예상 FPY +0.15%p",
       "kpiUpdates": {
@@ -557,12 +557,12 @@
       "toastIcon": "◎"
     },
     "table": {
-      "title": "Live station status",
+      "title": "실시간 설비 상태",
       "hint": "행 클릭 가능",
       "headers": [
-        "Station",
-        "Signal",
-        "Status"
+        "설비",
+        "신호",
+        "상태"
       ],
       "rows": [
         {
@@ -571,7 +571,7 @@
             "+0.7σ"
           ],
           "status": {
-            "label": "Normal",
+            "label": "정상",
             "tone": "success"
           },
           "detailTitle": "Volume drift",
@@ -584,7 +584,7 @@
             "18 μm"
           ],
           "status": {
-            "label": "Review",
+            "label": "검토",
             "tone": "warning"
           },
           "detailTitle": "Placement offset",
@@ -597,7 +597,7 @@
             "99.4%"
           ],
           "status": {
-            "label": "Normal",
+            "label": "정상",
             "tone": "success"
           },
           "detailTitle": "Coverage",
@@ -610,7 +610,7 @@
             "18 items"
           ],
           "status": {
-            "label": "AI triage",
+            "label": "AI 분류",
             "tone": "info"
           },
           "detailTitle": "AI review queue",
@@ -623,7 +623,7 @@
             "1 action"
           ],
           "status": {
-            "label": "Approval",
+            "label": "승인",
             "tone": "violet"
           },
           "detailTitle": "Approval gate",
@@ -636,19 +636,19 @@
   "simulator": {
     "hero": {
       "icon": "△",
-      "title": "Process Twin · 생산 전에 수율과 리스크를 예측",
-      "subtitle": "Material volume, placement offset, AI review threshold를 바꾸며 결과를 비교합니다. 공식은 Golden Runtime 검증용이며 실제 배포 시 고객 데이터와 평가셋으로 교체됩니다.",
+      "title": "공정 예측 · 생산 전에 수율과 위험을 예측",
+      "subtitle": "소재 체적·실장 편차·AI 검토 임계값을 바꾸며 결과를 비교합니다. 공식은 Golden Runtime 검증용이며 실제 배포 시 고객 데이터와 평가셋으로 교체됩니다.",
       "badge": {
-        "label": "Illustrative model",
+        "label": "시연용 모델",
         "tone": "info"
       }
     },
-    "inputsTitle": "Process variables",
+    "inputsTitle": "공정 변수",
     "inputsHint": "슬라이더를 직접 조작하세요",
     "inputs": [
       {
         "id": "materialVolume",
-        "label": "Material volume target",
+        "label": "소재 체적 목표",
         "min": 80,
         "max": 120,
         "step": 1,
@@ -660,7 +660,7 @@
       },
       {
         "id": "placementOffset",
-        "label": "Placement offset",
+        "label": "실장 편차",
         "min": 0,
         "max": 80,
         "step": 1,
@@ -672,7 +672,7 @@
       },
       {
         "id": "reviewThreshold",
-        "label": "AI review threshold",
+        "label": "AI 검토 임계값",
         "min": 55,
         "max": 95,
         "step": 1,
@@ -684,7 +684,7 @@
       }
     ],
     "output": {
-      "label": "Predicted First-Pass Yield",
+      "label": "예상 초도 합격률(FPY)",
       "unit": "%",
       "base": 99.24,
       "min": 91.2,
@@ -698,7 +698,7 @@
     },
     "secondary": [
       {
-        "label": "False call",
+        "label": "오검출",
         "base": 1.1,
         "unit": "%",
         "decimals": 2,
@@ -709,7 +709,7 @@
         }
       },
       {
-        "label": "Escape risk",
+        "label": "미검출 위험",
         "base": 0.15,
         "unit": "%",
         "decimals": 2,
@@ -720,7 +720,7 @@
         }
       },
       {
-        "label": "Confidence",
+        "label": "신뢰도",
         "base": 94,
         "unit": "%",
         "decimals": 0,
@@ -759,20 +759,20 @@
     ],
     "defaultRecommendation": "<b>현재 조건은 안정 범위입니다.</b>",
     "histogram": {
-      "title": "Predicted quality distribution",
+      "title": "예상 품질 분포",
       "hint": "조건 변경에 따라 재계산",
-      "leftLabel": "under target",
-      "centerLabel": "target",
-      "rightLabel": "over target"
+      "leftLabel": "목표 미달",
+      "centerLabel": "목표",
+      "rightLabel": "목표 초과"
     },
     "history": {
-      "title": "Recent twin scenarios",
+      "title": "최근 공정 시나리오",
       "hint": "행 클릭 가능",
       "headers": [
-        "Scenario",
+        "시나리오",
         "FPY",
-        "Risk",
-        "Decision"
+        "위험",
+        "결정"
       ],
       "rows": [
         {
@@ -782,7 +782,7 @@
             "Low"
           ],
           "status": {
-            "label": "Release",
+            "label": "출하",
             "tone": "success"
           },
           "detailTitle": "AI server baseline",
@@ -796,7 +796,7 @@
             "High"
           ],
           "status": {
-            "label": "Hold",
+            "label": "보류",
             "tone": "danger"
           },
           "detailTitle": "Material drift",
@@ -810,7 +810,7 @@
             "Low"
           ],
           "status": {
-            "label": "Release",
+            "label": "출하",
             "tone": "success"
           },
           "detailTitle": "Offset corrected",
@@ -824,7 +824,7 @@
             "Medium"
           ],
           "status": {
-            "label": "Validate",
+            "label": "검증",
             "tone": "warning"
           },
           "detailTitle": "Aggressive review threshold",
@@ -838,16 +838,16 @@
   "improvement": {
     "hero": {
       "icon": "◎",
-      "title": "Closed-Loop Optimizer · 원인 분석을 실행 가능한 플레이북으로",
-      "subtitle": "검사·장비 신호를 통합하고 Agent가 기여요인을 설명한 뒤 개선안과 검증 과제를 생성합니다. 승인된 결과는 고객 소유의 공정 기억으로 누적됩니다."
+      "title": "폐루프 공정 개선 · 원인 분석을 실행 가능한 플레이북으로",
+      "subtitle": "검사·장비 신호를 통합하고 에이전트가 기여요인을 설명한 뒤 개선안과 검증 과제를 생성합니다. 승인된 결과는 고객 소유의 공정 기억으로 누적됩니다."
     },
     "kpis": [
       {
-        "label": "Ranked root causes",
+        "label": "근본원인 순위",
         "value": 6,
         "decimals": 0,
-        "unit": "factors",
-        "delta": "+2 cross-line signals",
+        "unit": "개",
+        "delta": "라인 간 신호 +2개",
         "direction": "up",
         "icon": "◎",
         "color": "brand",
@@ -863,11 +863,11 @@
         ]
       },
       {
-        "label": "Expected defect reduction",
+        "label": "예상 불량 감소",
         "value": 340,
         "decimals": 0,
         "unit": "ppm",
-        "delta": "+29% scenario",
+        "delta": "시나리오 +29%",
         "direction": "up",
         "icon": "↓",
         "color": "success",
@@ -883,11 +883,11 @@
         ]
       },
       {
-        "label": "Stabilization time",
+        "label": "안정화 시간",
         "value": 18,
         "decimals": 0,
-        "unit": "min",
-        "delta": "−42 min vs manual",
+        "unit": "분",
+        "delta": "수동 대비 −42분",
         "direction": "down",
         "icon": "◷",
         "color": "accent",
@@ -903,11 +903,11 @@
         ]
       },
       {
-        "label": "Owned playbooks",
+        "label": "고객 소유 플레이북",
         "value": 1428,
         "decimals": 0,
-        "unit": "items",
-        "delta": "+36 this month",
+        "unit": "개",
+        "delta": "이번 달 +36개",
         "direction": "up",
         "icon": "▤",
         "color": "violet",
@@ -923,141 +923,141 @@
         ]
       }
     ],
-    "stepsTitle": "Agent reasoning trace",
+    "stepsTitle": "에이전트 판단 과정",
     "stepsHint": "설명 가능한 단계",
     "steps": [
       {
-        "title": "Signal alignment",
+        "title": "신호 정렬",
         "text": "Volume, placement offset, false call을 time-window로 정렬"
       },
       {
-        "title": "Cross-line comparison",
+        "title": "라인 간 비교",
         "text": "동일 product family의 정상 라인 11개와 분포 비교"
       },
       {
-        "title": "Contribution analysis",
+        "title": "기여도 분석",
         "text": "Tool wear, material drift, vibration의 기여도 계산"
       },
       {
-        "title": "Action proposal",
+        "title": "조치 제안",
         "text": "Printer pressure 및 placement offset 보정안 생성"
       },
       {
-        "title": "Private evaluation",
+        "title": "고객 전용 평가",
         "text": "고객 소유 평가셋으로 품질·안전 재검증"
       },
       {
-        "title": "Approval gate",
+        "title": "승인 단계",
         "text": "공정 담당자 승인 후 staged rollout 준비"
       }
     ],
-    "factorsTitle": "Top contributing factors",
+    "factorsTitle": "주요 기여요인",
     "factorsHint": "분석 실행 시 애니메이션",
     "factors": [
       {
-        "label": "Tool wear",
+        "label": "공구 마모",
         "value": "34%",
         "width": 82,
         "color": "brand"
       },
       {
-        "label": "Material viscosity drift",
+        "label": "소재 점도 편차",
         "value": "27%",
         "width": 66,
         "color": "accent"
       },
       {
-        "label": "Placement X-offset",
+        "label": "실장 X축 편차",
         "value": "19%",
         "width": 48,
         "color": "info"
       },
       {
-        "label": "Feeder vibration",
+        "label": "피더 진동",
         "value": "12%",
         "width": 31,
         "color": "warning"
       },
       {
-        "label": "Review threshold",
+        "label": "검토 임계값",
         "value": "8%",
         "width": 20,
         "color": "violet"
       }
     ],
-    "impactsTitle": "Expected impact",
+    "impactsTitle": "예상 효과",
     "impactsHint": "카드를 클릭해 가정 확인",
     "impacts": [
       {
-        "label": "FIRST-PASS YIELD",
+        "label": "초도 합격률",
         "value": "+0.29%p",
-        "sub": "after staged validation",
+        "sub": "단계별 검증 후",
         "detail": "제안된 두 파라미터가 목표 범위에 들어온다는 시연 가정입니다."
       },
       {
-        "label": "REWORK HOURS",
+        "label": "재작업 시간",
         "value": "−128 h",
-        "sub": "monthly scenario",
+        "sub": "월간 시나리오",
         "detail": "불량 감소를 재작업 시간으로 환산한 데모 가정치입니다."
       },
       {
-        "label": "CHANGEOVER",
+        "label": "품목 전환",
         "value": "−42 min",
-        "sub": "per product family",
+        "sub": "제품군 기준",
         "detail": "Program과 플레이북 재사용으로 안정화 시간을 줄이는 시나리오입니다."
       },
       {
-        "label": "LEARNING ASSET",
+        "label": "학습 자산",
         "value": "+1 playbook",
-        "sub": "customer-owned IP",
+        "sub": "고객 소유 지식재산",
         "detail": "검증된 개선 결과가 평가셋과 공정 플레이북으로 누적되는 시나리오입니다."
       }
     ],
     "board": {
-      "title": "Improvement board",
+      "title": "개선 과제 현황",
       "hint": "모든 카드 클릭 가능",
       "columns": [
         {
-          "name": "DISCOVERED",
+          "name": "발견",
           "items": [
             {
-              "text": "Tool wear signature · LINE-07",
-              "title": "Tool wear signature",
+              "text": "공구 마모 패턴 · LINE-07",
+              "title": "공구 마모 패턴",
               "detail": "Volume 분포와 cleaning cycle의 상관관계를 추가 검증합니다."
             },
             {
-              "text": "Review threshold drift · AIR-01",
-              "title": "Threshold drift",
+              "text": "검토 임계값 편차 · AIR-01",
+              "title": "임계값 편차",
               "detail": "Review threshold 변경 이력을 평가셋과 대조합니다."
             }
           ]
         },
         {
-          "name": "VALIDATING",
+          "name": "검증 중",
           "items": [
             {
-              "text": "Printer pressure −1.8%",
-              "title": "Printer staged test",
+              "text": "인쇄 압력 −1.8%",
+              "title": "인쇄 단계별 테스트",
               "detail": "Printer pressure −1.8%를 샘플 lot에만 적용합니다."
             },
             {
-              "text": "Placement X-offset −6 μm",
-              "title": "Placement staged test",
+              "text": "실장 X축 편차 −6 μm",
+              "title": "실장 단계별 테스트",
               "detail": "X-offset 보정 후 optical 분포를 비교합니다."
             }
           ]
         },
         {
-          "name": "OWNED PLAYBOOK",
+          "name": "고객 소유 플레이북",
           "items": [
             {
-              "text": "High-mix changeover v12",
-              "title": "High-mix stabilization",
+              "text": "다품종 전환 v12",
+              "title": "다품종 안정화",
               "detail": "Auto-programming과 초기 검증 절차가 저장되었습니다."
             },
             {
-              "text": "AI-server package guardrail",
-              "title": "AI server package family",
+              "text": "AI 서버 패키지 보호 규칙",
+              "title": "AI 서버 패키지 제품군",
               "detail": "동일 product family의 정상 분포와 승인 기준이 저장되었습니다."
             }
           ]
@@ -1065,14 +1065,14 @@
       ]
     },
     "action": {
-      "button": "◎ Root-cause 분석 실행",
+      "button": "◎ 근본원인 분석 실행",
       "running": "분석 중…",
       "complete": "✓ 분석 완료 · 다시 실행",
       "summaryBefore": "<b>분석 대기</b><br>버튼을 눌러 기여요인과 개선 액션을 생성하세요.",
       "summaryAfter": "<b>Tool wear + material drift가 61%를 설명합니다.</b><br>Printer pressure −1.8%, placement X-offset −6 μm의 staged validation을 권고합니다.",
       "durationMs": 1850,
       "autoRun": true,
-      "toastTitle": "Root-cause 분석 완료",
+      "toastTitle": "근본원인 분석 완료",
       "toastText": "2개 공정 액션과 1개 검증 플레이북을 생성했습니다.",
       "toastIcon": "◎"
     }
@@ -1080,19 +1080,19 @@
   "finance": {
     "hero": {
       "icon": "₩",
-      "title": "Portfolio Economics · 운영 신호를 경영 레버로 번역",
-      "subtitle": "High-value product mix, software/service attach, 고객 품질비용 절감 가정을 바꾸며 전략 시나리오를 비교합니다. 금액과 마진은 모두 데모 계산 결과입니다.",
+      "title": "재무 효과 · 운영 신호를 경영 변수로 번역",
+      "subtitle": "고부가 제품 구성·소프트웨어 및 서비스 결합률·고객 품질비용 절감 가정을 바꾸며 전략 시나리오를 비교합니다. 금액과 마진은 모두 시연 계산 결과입니다.",
       "badge": {
-        "label": "DEMO ASSUMPTIONS",
+        "label": "시연 가정",
         "tone": "warning"
       }
     },
-    "leversTitle": "Executive what-if levers",
+    "leversTitle": "경영 시나리오 조정 변수",
     "leversHint": "3개 변수를 조정하세요",
     "levers": [
       {
         "id": "premiumMix",
-        "label": "High-value product mix",
+        "label": "고부가 제품 구성",
         "min": 20,
         "max": 65,
         "step": 1,
@@ -1102,7 +1102,7 @@
       },
       {
         "id": "serviceAttach",
-        "label": "Software / service attach",
+        "label": "소프트웨어 / 서비스 결합률",
         "min": 20,
         "max": 75,
         "step": 1,
@@ -1112,7 +1112,7 @@
       },
       {
         "id": "qualityReduction",
-        "label": "Customer quality-cost reduction",
+        "label": "고객 품질비용 절감",
         "min": 0,
         "max": 40,
         "step": 1,
@@ -1122,11 +1122,11 @@
       }
     ],
     "margin": {
-      "label": "Scenario operating margin",
+      "label": "시나리오 영업이익률",
       "base": 23.8,
       "unit": "%",
       "decimals": 1,
-      "note": "Illustrative scenario · not company guidance",
+      "note": "시연 시나리오 · 회사 공식 전망 아님",
       "impacts": {
         "premiumMix": 0.075,
         "serviceAttach": 0.055,
@@ -1134,13 +1134,13 @@
       },
       "goodThreshold": 26,
       "warningThreshold": 22,
-      "goodLabel": "Compounding value",
-      "warningLabel": "Balanced growth",
-      "lowLabel": "Hardware weighted"
+      "goodLabel": "가치 선순환",
+      "warningLabel": "균형 성장",
+      "lowLabel": "하드웨어 중심"
     },
     "summaryMetrics": [
       {
-        "label": "Recurring value",
+        "label": "반복 가치",
         "base": 326,
         "unit": "억",
         "decimals": 0,
@@ -1150,7 +1150,7 @@
         }
       },
       {
-        "label": "Quality savings",
+        "label": "품질비용 절감",
         "base": 94,
         "unit": "억",
         "decimals": 0,
@@ -1159,7 +1159,7 @@
         }
       },
       {
-        "label": "Value index",
+        "label": "가치 지수",
         "base": 118,
         "unit": "",
         "decimals": 0,
@@ -1171,13 +1171,13 @@
       }
     ],
     "composition": {
-      "title": "Value composition",
-      "hint": "Illustrative mix",
-      "centerLabel": "software / service",
+      "title": "가치 구성",
+      "hint": "시연 구성",
+      "centerLabel": "소프트웨어 / 서비스",
       "centerSegment": 1,
       "segments": [
         {
-          "label": "Inspection systems",
+          "label": "검사 시스템",
           "base": 56,
           "color": "brand",
           "impacts": {
@@ -1185,7 +1185,7 @@
           }
         },
         {
-          "label": "Operations software",
+          "label": "운영 소프트웨어",
           "base": 24,
           "color": "accent",
           "impacts": {
@@ -1193,7 +1193,7 @@
           }
         },
         {
-          "label": "Global service",
+          "label": "글로벌 서비스",
           "base": 13,
           "color": "info",
           "impacts": {
@@ -1201,7 +1201,7 @@
           }
         },
         {
-          "label": "Data-driven expansion",
+          "label": "데이터 기반 확장",
           "base": 7,
           "color": "violet",
           "impacts": {
@@ -1212,13 +1212,13 @@
       ]
     },
     "watchlist": {
-      "title": "Autonomous finance watchlist",
+      "title": "AI 재무 감시 목록",
       "hint": "행 클릭 가능",
       "headers": [
-        "Signal",
-        "Variance",
-        "AI comment",
-        "Status"
+        "신호",
+        "변동",
+        "AI 설명",
+        "상태"
       ],
       "rows": [
         {
@@ -1228,7 +1228,7 @@
             "Installed-base cohort"
           ],
           "status": {
-            "label": "Opportunity",
+            "label": "기회",
             "tone": "success"
           },
           "detailTitle": "Service attach opportunity",
@@ -1242,7 +1242,7 @@
             "Premium demand"
           ],
           "status": {
-            "label": "Model",
+            "label": "모델링",
             "tone": "info"
           },
           "detailTitle": "High-value product mix",
@@ -1256,7 +1256,7 @@
             "Supplier cluster"
           ],
           "status": {
-            "label": "Review",
+            "label": "검토",
             "tone": "warning"
           },
           "detailTitle": "Expedite cost anomaly",
@@ -1270,7 +1270,7 @@
             "Quality trend"
           ],
           "status": {
-            "label": "Improving",
+            "label": "개선",
             "tone": "success"
           },
           "detailTitle": "Warranty reserve scenario",
@@ -1284,7 +1284,7 @@
             "Volume driven"
           ],
           "status": {
-            "label": "Controlled",
+            "label": "통제",
             "tone": "violet"
           },
           "detailTitle": "Cloud and inference cost",
@@ -1299,16 +1299,16 @@
   "devops": {
     "hero": {
       "icon": "⌘",
-      "title": "Software Delivery · Issue에서 검증된 Pull Request까지",
+      "title": "개발 가속 · Issue에서 검증된 Pull Request까지",
       "subtitle": "GitHub Copilot cloud agent가 저장소를 조사하고 계획·코드·테스트·PR을 비동기로 수행합니다. GitHub AI Controls, GitHub Advanced Security, 리뷰 승인 정책이 사람의 책임 경계를 유지합니다."
     },
     "kpis": [
       {
-        "label": "Median lead time",
+        "label": "중앙값 리드타임",
         "value": 3.8,
         "decimals": 1,
-        "unit": "days",
-        "delta": "−41% demo baseline",
+        "unit": "일",
+        "delta": "시연 기준 −41%",
         "direction": "down",
         "icon": "◷",
         "color": "brand",
@@ -1324,11 +1324,11 @@
         ]
       },
       {
-        "label": "Agent pull requests",
+        "label": "에이전트 Pull Request",
         "value": 42,
         "decimals": 0,
-        "unit": "month",
-        "delta": "+31 reviewed",
+        "unit": "월",
+        "delta": "+31건 검토",
         "direction": "up",
         "icon": "⑂",
         "color": "info",
@@ -1344,11 +1344,11 @@
         ]
       },
       {
-        "label": "Security checks",
+        "label": "보안 검사",
         "value": 100,
         "decimals": 0,
         "unit": "%",
-        "delta": "+code / secret / dependency",
+        "delta": "코드 / 시크릿 / 의존성",
         "direction": "up",
         "icon": "⬡",
         "color": "success",
@@ -1364,11 +1364,11 @@
         ]
       },
       {
-        "label": "Review turnaround",
+        "label": "리뷰 소요시간",
         "value": 5.2,
         "decimals": 1,
-        "unit": "hours",
-        "delta": "−2.4 h with context",
+        "unit": "시간",
+        "delta": "맥락 제공 시 −2.4시간",
         "direction": "down",
         "icon": "✓",
         "color": "violet",
@@ -1384,31 +1384,31 @@
         ]
       }
     ],
-    "stepsTitle": "Copilot cloud agent session",
-    "stepsHint": "GitHub Actions-powered environment",
+    "stepsTitle": "Copilot cloud agent 작업",
+    "stepsHint": "GitHub Actions 기반 환경",
     "steps": [
       {
-        "title": "Research repository",
+        "title": "저장소 조사",
         "text": "custom instructions, telemetry schema, tests 파악"
       },
       {
-        "title": "Create implementation plan",
+        "title": "구현 계획 작성",
         "text": "drift guard와 rollback 경계 정의"
       },
       {
-        "title": "Implement on branch",
+        "title": "브랜치에서 구현",
         "text": "typed threshold config와 audit event 추가"
       },
       {
-        "title": "Run tests and security gates",
-        "text": "unit, integration, code scanning, secret scanning"
+        "title": "테스트·보안 게이트 실행",
+        "text": "단위·통합 테스트, 코드 스캐닝, 시크릿 스캐닝"
       },
       {
-        "title": "Open draft pull request",
+        "title": "Draft Pull Request 생성",
         "text": "변경 근거, 리스크, 검증 결과 첨부"
       }
     ],
-    "issuesTitle": "Engineering backlog",
+    "issuesTitle": "개발 작업 목록",
     "issuesHint": "행을 선택한 뒤 이슈를 배정하세요",
     "issueHeaders": [
       "Issue",
@@ -1420,12 +1420,12 @@
     "issues": [
       {
         "id": "#482",
-        "title": "Telemetry drift guard",
+        "title": "텔레메트리 편차 보호 규칙",
         "product": "Operations IQ",
         "type": "Reliability",
         "risk": "Medium",
         "status": {
-          "label": "Ready",
+          "label":           "준비",
           "tone": "info"
         },
         "highRisk": false,
@@ -1459,12 +1459,12 @@
       },
       {
         "id": "#476",
-        "title": "Review threshold audit",
+        "title": "검토 임계값 감사",
         "product": "AI Review",
         "type": "Governance",
         "risk": "Low",
         "status": {
-          "label": "Scoped",
+          "label": "범위 확정",
           "tone": "success"
         },
         "highRisk": false,
@@ -1494,12 +1494,12 @@
       },
       {
         "id": "#469",
-        "title": "Product-family test matrix",
+        "title": "제품군 테스트 매트릭스",
         "product": "Auto Program",
         "type": "Test",
         "risk": "Low",
         "status": {
-          "label": "Scoped",
+          "label": "범위 확정",
           "tone": "success"
         },
         "highRisk": false,
@@ -1529,12 +1529,12 @@
       },
       {
         "id": "#455",
-        "title": "Rollback telemetry",
+        "title": "롤백 텔레메트리",
         "product": "Process Optimizer",
         "type": "Safety",
         "risk": "High",
         "status": {
-          "label": "Human lead",
+          "label": "사람 주도",
           "tone": "warning"
         },
         "highRisk": true,
@@ -1567,23 +1567,23 @@
       "button": "⌘ Copilot에 이슈 배정",
       "running": "Copilot 작업 중…",
       "complete": "✓ 세션 완료 · 다시 실행",
-      "readyLabel": "Ready",
-      "humanLedLabel": "Human-led",
-      "notCreated": "PR not created",
-      "humanRequired": "Human lead required",
-      "awaiting": "Awaiting assignment",
-      "agentRunning": "Agent running",
-      "policyChecks": "Policy checks",
+      "readyLabel": "준비",
+      "humanLedLabel":       "사람 주도",
+      "notCreated":       "PR 미생성",
+      "humanRequired":       "사람 주도 필요",
+      "awaiting":       "배정 대기",
+      "agentRunning":       "에이전트 실행 중",
+      "policyChecks":       "정책 검사",
       "prBase": 719,
       "planReady": "Implementation plan ready · {{issue}}",
       "prReady": "Draft PR #{{number}} · {{title}}",
-      "humanImplementation": "Human implementation",
-      "checksPassed": "All checks passed",
+      "humanImplementation":       "사람이 구현",
+      "checksPassed":       "모든 검사 통과",
       "humanResult": "Safety-critical 변경으로 Copilot은 조사와 계획만 수행했습니다.",
       "prResult": "Unit/integration tests와 GitHub Advanced Security gate를 통과한 데모입니다.",
-      "planStatus": "Plan ready",
+      "planStatus":       "계획 준비",
       "prStatus": "Draft PR",
-      "humanToastTitle": "Human-led plan ready",
+      "humanToastTitle":       "사람 주도 계획 준비",
       "humanToastText": "고위험 변경은 엔지니어가 구현합니다.",
       "prToastTitle": "Draft PR 생성",
       "prToastText": "리뷰 가능한 변경과 검증 결과가 준비되었습니다.",
@@ -1594,25 +1594,25 @@
   "agents": {
     "hero": {
       "icon": "✦",
-      "title": "Agent Studio · 한 질문에 전문 Agent가 협업",
-      "subtitle": "Microsoft Foundry Agent Service의 prompt agent와 hosted agent 패턴을 가정한 데모입니다. 각 Agent는 고객의 권한·평가셋·도구 정책 안에서만 동작하며 실행 액션은 승인 게이트를 거칩니다.",
+      "title": "AI 에이전트 · 한 질문에 전문 에이전트가 협업",
+      "subtitle": "Microsoft Foundry Agent Service의 prompt agent와 hosted agent 패턴을 가정한 시연입니다. 각 에이전트는 고객의 권한·평가셋·도구 정책 안에서만 동작하며 실행 조치는 승인 단계를 거칩니다.",
       "badge": {
         "label": "Agent Framework · A2A",
         "tone": "violet"
       }
     },
-    "listTitle": "Domain agents",
+    "listTitle": "전문 에이전트",
     "listHint": "모든 행 클릭 가능",
-    "governedLabel": "Governed",
+    "governedLabel": "정책 적용",
     "placeholder": "품질·공정·서비스에 대해 질문하세요",
     "sendLabel": "보내기",
     "fallback": "<b>{{agent}}</b>입니다. 추천 질문을 누르거나 품질, 공정, 제품, 서비스, 재무, 소프트웨어 중 하나로 질문을 구체화해 주세요.",
     "profiles": [
       {
         "icon": "✓",
-        "name": "Quality Agent",
-        "shortName": "Quality",
-        "subtitle": "AI Review · Measurement",
+        "name": "품질 에이전트",
+        "shortName": "품질",
+        "subtitle": "AI 검토 · 정량 측정",
         "intro": "정량 측정과 AI Review 신호를 바탕으로 <b>defect drift, false call, escape risk</b>를 설명합니다.",
         "qa": [
           {
@@ -1631,9 +1631,9 @@
       },
       {
         "icon": "◎",
-        "name": "Process Agent",
-        "shortName": "Process",
-        "subtitle": "Operations · Closed Loop",
+        "name": "공정 에이전트",
+        "shortName": "공정",
+        "subtitle": "생산 운영 · 폐루프",
         "intro": "검사와 장비 신호를 연결해 <b>공정 보정안과 staged validation</b> 계획을 만듭니다.",
         "qa": [
           {
@@ -1652,9 +1652,9 @@
       },
       {
         "icon": "△",
-        "name": "Product Agent",
-        "shortName": "Product",
-        "subtitle": "Advanced Product Family",
+        "name": "제품 에이전트",
+        "shortName": "제품",
+        "subtitle": "첨단 제품군",
         "intro": "고밀도 product family에서 <b>metrology와 package risk</b>를 분석합니다.",
         "qa": [
           {
@@ -1673,9 +1673,9 @@
       },
       {
         "icon": "◇",
-        "name": "Global Service Agent",
-        "shortName": "Service",
-        "subtitle": "Installed Base · Support",
+        "name": "글로벌 서비스 에이전트",
+        "shortName": "서비스",
+        "subtitle": "설치 기반 · 지원",
         "intro": "글로벌 설치 기반의 알림, 서비스 케이스, 플레이북을 연결해 <b>선제 지원 시나리오</b>를 제공합니다.",
         "qa": [
           {
@@ -1694,9 +1694,9 @@
       },
       {
         "icon": "₩",
-        "name": "Finance Agent",
-        "shortName": "Finance",
-        "subtitle": "Portfolio Economics",
+        "name": "재무 에이전트",
+        "shortName": "재무",
+        "subtitle": "포트폴리오 재무 효과",
         "intro": "품질·공정 결과를 <b>margin, recurring value, customer quality cost</b> 관점으로 번역합니다.",
         "qa": [
           {
@@ -1715,9 +1715,9 @@
       },
       {
         "icon": "⌘",
-        "name": "Copilot Engineering Agent",
+        "name": "Copilot 개발 에이전트",
         "shortName": "Copilot",
-        "subtitle": "GitHub · Software Delivery",
+        "subtitle": "GitHub · 개발 가속",
         "intro": "GitHub Copilot cloud agent로 <b>repository research → plan → branch → tests → PR</b> 흐름을 실행합니다.",
         "qa": [
           {
@@ -1736,51 +1736,51 @@
       }
     ],
     "orchestration": {
-      "title": "Orchestration",
-      "button": "✦ Executive scenario",
+      "title": "멀티에이전트 협업",
+      "button": "✦ 임원 시나리오",
       "running": "협업 중…",
       "complete": "✓ 시나리오 다시 실행",
-      "coreLabel": "Orchestrator",
-      "intro": "<b>Executive scenario:</b> AI-server board line의 false call과 placement drift가 동시에 증가했습니다. 전문 Agent 협업을 시작합니다.",
+      "coreLabel": "에이전트 조정자",
+      "intro": "<b>임원 시나리오:</b> AI 서버 보드 라인의 오검출과 실장 편차가 동시에 증가했습니다. 전문 에이전트 협업을 시작합니다.",
       "stages": [
         {
           "agentIndex": 0,
           "icon": "✓",
-          "name": "Quality Agent",
+          "name": "품질 에이전트",
           "text": "False call 1.42%, material drift와 threshold 변화가 61% 설명"
         },
         {
           "agentIndex": 1,
           "icon": "◎",
-          "name": "Process Agent",
+          "name": "공정 에이전트",
           "text": "Printer pressure −1.8%, placement X-offset −6 μm 제안"
         },
         {
           "agentIndex": 2,
           "icon": "△",
-          "name": "Product Agent",
+          "name": "제품 에이전트",
           "text": "고밀도 product-family의 coverage 재검증"
         },
         {
           "agentIndex": 3,
           "icon": "◇",
-          "name": "Service Agent",
+          "name": "서비스 에이전트",
           "text": "글로벌 설치 기반 3개 segment 선제 점검"
         },
         {
           "agentIndex": 4,
           "icon": "₩",
-          "name": "Finance Agent",
+          "name": "재무 에이전트",
           "text": "월간 quality-cost 절감 7.8억원 데모 시나리오"
         },
         {
           "agentIndex": 5,
           "icon": "⌘",
-          "name": "Copilot Agent",
+          "name": "Copilot 에이전트",
           "text": "Telemetry guard Draft PR과 approval test 준비"
         }
       ],
-      "summary": "<b>Executive decision package가 준비되었습니다.</b><br>1) 공정 보정안 staged validation, 2) product-family private evaluation, 3) 글로벌 선제 지원, 4) telemetry guard Draft PR. 모든 실행은 승인 게이트를 유지합니다.<div class=\"message-stats\"><div><div class=\"message-stat-label\">EXPECTED FPY</div><div class=\"message-stat-value\">+0.15%p</div></div><div><div class=\"message-stat-label\">QUALITY COST</div><div class=\"message-stat-value\">−7.8억</div></div><div><div class=\"message-stat-label\">CODE CHANGE</div><div class=\"message-stat-value\">Draft PR</div></div></div>",
+      "summary": "<b>임원 의사결정 패키지가 준비되었습니다.</b><br>1) 공정 보정안 단계별 검증, 2) 제품군 고객 전용 평가, 3) 글로벌 선제 지원, 4) 텔레메트리 보호 규칙 Draft PR. 모든 실행은 승인 단계를 유지합니다.<div class=\"message-stats\"><div><div class=\"message-stat-label\">예상 FPY</div><div class=\"message-stat-value\">+0.15%p</div></div><div><div class=\"message-stat-label\">품질비용</div><div class=\"message-stat-value\">−7.8억</div></div><div><div class=\"message-stat-label\">코드 변경</div><div class=\"message-stat-value\">Draft PR</div></div></div>",
       "toastTitle": "멀티에이전트 협업 완료",
       "toastText": "품질·공정·서비스·재무·개발 의사결정 패키지가 생성되었습니다."
     }
@@ -1788,34 +1788,34 @@
   "governance": {
     "hero": {
       "icon": "⬡",
-      "title": "Trust & Sovereignty · 모델은 활용하고 전문성은 소유",
+      "title": "신뢰·데이터 주권 · 모델은 활용하고 전문성은 소유",
       "subtitle": "Microsoft Foundry Agent Service, Microsoft Entra ID, Azure AI Search, Azure AI Content Safety, Microsoft Purview, Microsoft Defender, Application Insights, GitHub AI Controls를 통제 계층으로 매핑합니다."
     },
     "cards": [
       {
         "icon": "◈",
-        "title": "PRIVATE EVALUATION",
+        "title": "고객 전용 평가",
         "value": "93.4",
-        "sub": "24 domain checks · demo score",
+        "sub": "도메인 검사 24개 · 시연 점수",
         "detail": "고객 소유의 defect, false-call, escape, rollback 항목으로 Agent 품질을 평가합니다."
       },
       {
         "icon": "▤",
-        "title": "GOVERNED MEMORY",
+        "title": "통제된 운영 기억",
         "value": "24,680",
-        "sub": "patterns · playbooks · eval items",
+        "sub": "패턴 · 플레이북 · 평가 항목",
         "detail": "검증된 공정 패턴, 서비스 해결책, 평가 결과를 versioned asset으로 관리합니다."
       },
       {
         "icon": "⬡",
-        "title": "POLICY COVERAGE",
+        "title": "정책 적용 범위",
         "value": "100%",
-        "sub": "reference architecture coverage",
+        "sub": "참조 아키텍처 적용 범위",
         "detail": "Agent identity, data access, tool permission, action approval, audit trace를 포함한 시연 정책 범위입니다."
       }
     ],
     "controls": {
-      "title": "Enterprise control plane",
+      "title": "전사 통제 체계",
       "hint": "제품별 역할 매핑 · 행 클릭 가능",
       "headers": [
         "Control",
@@ -1831,7 +1831,7 @@
             "Per-agent least privilege"
           ],
           "status": {
-            "label": "Mapped",
+            "label": "적용",
             "tone": "success"
           },
           "detailTitle": "Agent identity",
@@ -1845,7 +1845,7 @@
             "ACL-aware retrieval"
           ],
           "status": {
-            "label": "Mapped",
+            "label": "적용",
             "tone": "success"
           },
           "detailTitle": "Knowledge grounding",
@@ -1859,7 +1859,7 @@
             "Classify · protect · audit"
           ],
           "status": {
-            "label": "Designed",
+            "label": "설계",
             "tone": "info"
           },
           "detailTitle": "Data governance",
@@ -1873,7 +1873,7 @@
             "Filter · evaluate · red team"
           ],
           "status": {
-            "label": "Mapped",
+            "label": "적용",
             "tone": "success"
           },
           "detailTitle": "Safety evaluation",
@@ -1887,7 +1887,7 @@
             "Threat and posture signals"
           ],
           "status": {
-            "label": "Designed",
+            "label": "설계",
             "tone": "info"
           },
           "detailTitle": "Runtime security",
@@ -1901,7 +1901,7 @@
             "Session audit · merge gate"
           ],
           "status": {
-            "label": "Mapped",
+            "label": "적용",
             "tone": "success"
           },
           "detailTitle": "Engineering governance",
@@ -1915,7 +1915,7 @@
             "Trace every decision"
           ],
           "status": {
-            "label": "Mapped",
+            "label": "적용",
             "tone": "success"
           },
           "detailTitle": "Observability",
@@ -1925,7 +1925,7 @@
       ]
     },
     "memories": {
-      "title": "Owned memory register",
+      "title": "고객 소유 지식 자산",
       "hint": "고객 소유 자산",
       "headers": [
         "Asset",
@@ -1939,7 +1939,7 @@
             "8,420"
           ],
           "status": {
-            "label": "Owned",
+            "label": "고객 소유",
             "tone": "success"
           },
           "detailTitle": "Measurement pattern library",
@@ -1952,7 +1952,7 @@
             "1,428"
           ],
           "status": {
-            "label": "Owned",
+            "label": "고객 소유",
             "tone": "success"
           },
           "detailTitle": "Improvement playbooks",
@@ -1965,7 +1965,7 @@
             "6,214"
           ],
           "status": {
-            "label": "Owned",
+            "label": "고객 소유",
             "tone": "success"
           },
           "detailTitle": "Service resolution memory",
@@ -1978,7 +1978,7 @@
             "8,618"
           ],
           "status": {
-            "label": "Owned",
+            "label": "고객 소유",
             "tone": "success"
           },
           "detailTitle": "Agent evaluation cases",
@@ -1988,37 +1988,37 @@
       ]
     },
     "learningLoop": {
-      "title": "Customer-owned learning loop",
+      "title": "고객 소유 학습 루프",
       "hint": "각 단계를 클릭해 설명 확인",
       "steps": [
         {
           "icon": "◇",
-          "title": "MEASURE",
-          "sub": "Quantitative data",
+          "title": "측정",
+          "sub": "정량 데이터",
           "detail": "Inspection이 높이·체적·면적·형상의 정량 데이터를 생성합니다."
         },
         {
           "icon": "◈",
-          "title": "EVALUATE",
-          "sub": "Customer-owned tests",
+          "title": "평가",
+          "sub": "고객 소유 테스트",
           "detail": "Private evaluation이 품질, false-call, escape, approval 준수를 검증합니다."
         },
         {
           "icon": "◎",
-          "title": "ACT",
-          "sub": "Policy-gated execution",
+          "title": "실행",
+          "sub": "정책 기반 실행",
           "detail": "승인된 공정 액션과 Copilot PR만 staged execution으로 진행합니다."
         },
         {
           "icon": "✦",
-          "title": "LEARN",
-          "sub": "Compounding domain IP",
+          "title": "학습",
+          "sub": "축적되는 도메인 지식재산",
           "detail": "검증 결과가 pattern, playbook, evaluation case로 누적됩니다."
         }
       ]
     },
     "evaluation": {
-      "title": "Evaluation trace",
+      "title": "평가 실행 내역",
       "hint": "실행 결과는 시연 데이터",
       "button": "⬡ Private evaluation 실행",
       "running": "평가 실행 중…",
@@ -2047,29 +2047,29 @@
   },
   "ambientNotifications": [
     {
-      "title": "Quality Agent",
+      "title": "품질 에이전트",
       "text": "검토 후보 4건을 우선순위화했습니다.",
       "icon": "✓"
     },
     {
-      "title": "Process approval",
+      "title": "공정 승인",
       "text": "Placement offset 보정안이 승인 대기 중입니다.",
       "icon": "◎"
     },
     {
-      "title": "Private evaluation",
+      "title": "고객 전용 평가",
       "text": "24개 domain check가 준비되었습니다.",
       "icon": "⬡"
     },
     {
-      "title": "Copilot session",
+      "title": "Copilot 작업",
       "text": "Telemetry issue의 테스트 컨텍스트를 수집했습니다.",
       "icon": "⌘"
     }
   ],
   "ambientIntervalMs": 11500,
   "notification": {
-    "title": "Demo alerts",
+    "title": "시연 알림",
     "text": "품질 2건 · 공정 1건 · 승인 1건이 대기 중입니다.",
     "icon": "◇"
   }

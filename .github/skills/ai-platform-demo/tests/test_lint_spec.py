@@ -52,6 +52,19 @@ class LintSpecTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("finalScore", result.stdout)
 
+    def test_english_only_korean_navigation_is_caught(self):
+        spec = json.loads(BASE.read_text(encoding="utf-8"))
+        spec["navigation"][0].update(
+            name="Executive Cockpit",
+            short="Overview",
+            crumb="Global Overview",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            result = run_lint(write_temp(spec, directory))
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("Korean-first executive copy", result.stdout)
+        self.assertIn("navigation[0].name", result.stdout)
+
     def test_structural_error_is_caught(self):
         spec = json.loads(BASE.read_text(encoding="utf-8"))
         spec["navigation"] = spec["navigation"][:7]  # break the fixed 8-route contract

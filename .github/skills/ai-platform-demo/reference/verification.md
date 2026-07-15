@@ -78,7 +78,7 @@ const fullQa=process.env.FULL_QA!=='0';
 const routes=fullQa
   ? allRoutes // FULL_QA는 VERIFY_ROUTES와 무관하게 항상 8개를 검사
   : validatedVerifyRoutes;
-// 각 route의 required DOM ID, DEMO DATA, overflow, click handler, 안정화 후 screenshot 검사
+// 각 route의 required DOM ID, 시연 데이터, overflow, click handler, 안정화 후 screenshot 검사
 // FULL_QA: operations/simulator/improvement/finance/devops(low/high risk)/agents/governance interaction
 // 모든 Agent 전환, 지연 채팅 격리, orchestration, 빠른 8-route 전환, console/page error 검사
 ```
