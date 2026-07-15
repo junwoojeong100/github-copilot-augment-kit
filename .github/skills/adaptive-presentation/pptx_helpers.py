@@ -52,9 +52,24 @@ def add_slide(prs, blank_layout, bg: RGBColor | None = None):
 
 
 def soft_shadow(shape, color: str = "9AA6B8", blur: int = 90000, dist: int = 38000, alpha: int = 38000):
-    """도형에 부드러운 외곽 그림자(옵션). 색/강도는 인자."""
+    """도형에 부드러운 외곽 그림자(옵션). 색/강도는 인자.
+
+    기존 effectLst(예: python-pptx의 shadow.inherit=False가 만든 빈 요소)를 **재사용**해
+    한 spPr 안에 effectLst가 둘 이상 생기지 않게 한다. effectLst가 중복되면 OOXML 스키마 위반이라
+    PowerPoint가 파일 열 때 복구(repair)를 요구한다(LibreOffice·unzip은 관대해 통과).
+    """
     spPr = shape._element.spPr
-    effect = spPr.makeelement(qn("a:effectLst"), {})
+    effect = spPr.find(qn("a:effectLst"))
+    if effect is None:
+        effect = spPr.makeelement(qn("a:effectLst"), {})
+        ln = spPr.find(qn("a:ln"))
+        if ln is not None:
+            ln.addnext(effect)  # effectLst는 스키마상 a:ln 다음에 온다
+        else:
+            spPr.append(effect)
+    else:
+        for child in list(effect):
+            effect.remove(child)
     shdw = spPr.makeelement(qn("a:outerShdw"),
                             {"blurRad": str(blur), "dist": str(dist), "dir": "5400000", "rotWithShape": "0"})
     clr = spPr.makeelement(qn("a:srgbClr"), {"val": color.lstrip("#").upper()})
@@ -62,7 +77,6 @@ def soft_shadow(shape, color: str = "9AA6B8", blur: int = 90000, dist: int = 380
     clr.append(a)
     shdw.append(clr)
     effect.append(shdw)
-    spPr.append(effect)
     return shape
 
 

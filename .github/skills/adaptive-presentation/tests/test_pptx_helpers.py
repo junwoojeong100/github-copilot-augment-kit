@@ -53,6 +53,17 @@ class PptxHelpersTests(unittest.TestCase):
     def test_default_font_is_overridable_string(self):
         self.assertIsInstance(H.DEFAULT_FONT, str)
 
+    def test_shadow_produces_single_effectlst(self):
+        """그림자는 effectLst를 중복 생성하지 않아야 한다(PowerPoint repair 방지)."""
+        from pptx.oxml.ns import qn
+        prs, blank = H.new_deck()
+        s = H.add_slide(prs, blank)
+        sp = H.box(s, 1, 1, 3, 2, fill=H.hexc("FFFFFF"), shadow=True)
+        spPr = sp._element.spPr
+        effs = spPr.findall(qn("a:effectLst"))
+        self.assertEqual(len(effs), 1, "shadow must reuse the single effectLst")
+        self.assertEqual(len(effs[0].findall(qn("a:outerShdw"))), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
