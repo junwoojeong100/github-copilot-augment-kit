@@ -61,7 +61,9 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 
 - 조사 subagent가 슬라이드 코드나 Design DNA를 작성하지 않는다.
 - 메인 에이전트가 잠긴 `deck-spec.md`를 기준으로 생성 스크립트를 한 번에 작성한다.
-- 검증된 primitive와 audit/render 도구는 재사용하되 팔레트·시각 은유·레이아웃은 매 요청에서 새로 만든다.
+- `pptx_compiler`의 검증된 primitive·semantic blueprint와 audit/render 도구를 재사용한다.
+- Compiler에는 기본 테마를 두지 않고 팔레트·타이포·시각 은유·layout rhythm은 매 요청에서 새로 만든다.
+- Compiler preflight로 경계·텍스트 하한·레이아웃 다양성을 먼저 차단한 뒤 외부 audit/render QA를 수행한다.
 - 여러 에이전트가 같은 생성 스크립트를 동시에 수정하지 않는다.
 
 ## 6. QA 최적화
