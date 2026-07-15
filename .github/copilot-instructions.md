@@ -21,4 +21,4 @@
 ## 스킬
 - google-web-search: 실시간 웹·공식 문서 검색
 - ai-platform-demo: 고객·산업별 인터랙티브 AI 운영 데모
-- adaptive-presentation: 주제·청중별 적응형 PPTX 제작
+- adaptive-presentation: 조사·스토리라인 중심 PPTX 제작(고정 템플릿 없이 python-pptx 자유 생성)
