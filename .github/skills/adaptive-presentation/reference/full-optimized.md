@@ -42,6 +42,9 @@
 합친 후에만 서사를 시작한다. 기존 원장이 있으면 사업 영역처럼 안정적인 사실은 출처를 재확인하고,
 가격·제품 상태·규제·최근 뉴스처럼 변동성이 큰 사실은 항상 새로 확인한다.
 
+조사 자체는 캐시로 생략하지 않는다. 이전 Fact Ledger와 canonical URL은 검색 출발점으로만 사용하고,
+발표에 들어가는 외부 사실은 매 요청 시점의 공식 원문으로 다시 검증한다.
+
 ## 4. 도구 캐시와 사전 준비
 
 ```text
@@ -62,15 +65,17 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 - 조사 subagent가 슬라이드 코드나 Design DNA를 작성하지 않는다.
 - 메인 에이전트가 잠긴 `deck-spec.md`를 기준으로 생성 스크립트를 한 번에 작성한다.
 - `pptx_compiler`의 검증된 primitive·semantic blueprint와 audit/render 도구를 재사용한다.
+- 표준 슬라이드는 시각 토큰이 없는 `DeckRecipe`와 certified component로 조립한다.
+- Recipe selector는 family 사용량·최근 반복·density·slot 수를 반영하고 핵심 슬라이드는 explicit override/custom builder로 구성한다.
 - Compiler에는 기본 테마를 두지 않고 팔레트·타이포·시각 은유·layout rhythm은 매 요청에서 새로 만든다.
 - Compiler preflight로 경계·텍스트 하한·레이아웃 다양성을 먼저 차단한 뒤 외부 audit/render QA를 수행한다.
 - 여러 에이전트가 같은 생성 스크립트를 동시에 수정하지 않는다.
 
 ## 6. QA 최적화
 
-1. 최초 PPTX 생성 후 구조 감사와 전체 렌더를 읽기 전용 병렬 작업으로 실행한다.
+1. `verify_deck.py`로 구조 감사와 전체 렌더를 읽기 전용 병렬 실행한다.
 2. 최초 전체 렌더는 `--keep-pdf`로 세션 QA 폴더에 PDF를 유지한다.
-3. contact sheet에서 의심 슬라이드를 찾고, PPTX가 바뀌기 전에는 `--reuse-pdf`로 원본 크기 JPEG를 만든다.
+3. audit risk score로 선택된 슬라이드를 같은 PDF로 자동 상세 렌더하고 contact sheet와 함께 사람이 확인한다.
 4. 모든 결함을 `defects.md`에 모은 뒤 생성 스크립트를 한 번에 수정한다.
 5. PPTX를 재생성하고 구조 감사와 변경 슬라이드 검사를 수행한다.
 6. 변경이 있었다면 마지막에 전체 렌더와 전체 contact sheet를 다시 생성한다. 변경이 없으면 최초 전체

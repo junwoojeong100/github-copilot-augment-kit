@@ -3,6 +3,9 @@
 `pptx_compiler`는 고정 템플릿이 아니라 **PowerPoint 생성 메커니즘을 재사용하는 렌더링 엔진**이다.
 매 덱의 서사와 시각 언어는 계속 새로 설계하며, 반복 구현하던 좌표·텍스트·도형·검증 코드만 가져다 쓴다.
 
+표준 슬라이드 조립은 `reference/deck-recipe.md`의 Recipe layer가 담당한다. Recipe 역시 디자인을
+보유하지 않으며 Compiler를 호출하기 전에 현재 요청의 Design DNA가 반드시 필요하다.
+
 ## 1. 책임 경계
 
 ```text
@@ -16,6 +19,7 @@ Compiler가 재사용하는 것:
 
 - PowerPoint 문서와 화면비 생성
 - 텍스트 크기 추정과 최소 크기 보호
+- 실제 설치 font를 찾을 수 있을 때 Pillow 기반 glyph width 측정
 - 도형·선·화살표·배지·상태 칩
 - `cover`/`contain` 이미지 배치와 crop
 - 출처와 페이지 헤더 처리

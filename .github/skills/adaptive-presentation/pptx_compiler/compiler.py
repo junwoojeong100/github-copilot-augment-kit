@@ -12,6 +12,7 @@ from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 from pptx.util import Inches, Pt
 
+from .font_metrics import FontMetrics
 from .layouts import BlueprintLibrary
 from .models import (
     ContentItem,
@@ -55,27 +56,6 @@ def _weighted_text_width(text: str, size_pt: float) -> float:
         else:
             units += 0.55
     return units * size_pt
-
-
-def _estimated_lines(
-    text: str,
-    width_in: float,
-    size_pt: float,
-    word_wrap: bool,
-) -> int:
-    available_points = max(1.0, width_in * 72)
-    paragraphs = text.split("\n")
-    lines = 0
-    for paragraph in paragraphs:
-        if not paragraph:
-            lines += 1
-            continue
-        if not word_wrap:
-            lines += 1
-            continue
-        estimated = _weighted_text_width(paragraph, size_pt) / available_points
-        lines += max(1, math.ceil(estimated * 1.08))
-    return lines
 
 
 class SlideCanvas:
@@ -134,6 +114,7 @@ class SlideCanvas:
         font: str | None = None,
         line_spacing: float = 1.05,
         word_wrap: bool = True,
+        adapt_color: bool = False,
     ):
         return self.compiler.text(
             self.slide,
@@ -151,6 +132,7 @@ class SlideCanvas:
             font=font,
             line_spacing=line_spacing,
             word_wrap=word_wrap,
+            adapt_color=adapt_color,
         )
 
     def rich_text(
@@ -159,6 +141,7 @@ class SlideCanvas:
         spans: Sequence[TextSpan],
         *,
         background: str | None = None,
+        adapt_color: bool = False,
         align=PP_ALIGN.LEFT,
         valign=MSO_ANCHOR.TOP,
         margin: float = 0.03,
@@ -168,6 +151,7 @@ class SlideCanvas:
             self._resolve(region),
             spans,
             background=background,
+            adapt_color=adapt_color,
             align=align,
             valign=valign,
             margin=margin,
@@ -264,6 +248,7 @@ class SlideCanvas:
                 color=item.color_role,
                 background=panel_fill,
                 bold=True,
+                adapt_color=True,
                 valign=MSO_ANCHOR.MIDDLE,
             )
             if item.detail:
@@ -309,6 +294,7 @@ class SlideCanvas:
                 background="surface_alt" if self.frame.inverse else "surface",
                 bold=True,
                 size_pt=14,
+                adapt_color=True,
                 valign=MSO_ANCHOR.MIDDLE,
             )
             self.compiler.text(
@@ -363,6 +349,8 @@ class SlideCanvas:
         column_widths: Sequence[float] | None = None,
         header_fill: str = "ink",
     ) -> None:
+        if not headers:
+            raise LayoutError("Matrix requires at least one header.")
         if len(headers) > 5 or len(rows) + 1 > 6:
             raise LayoutError("Matrix blueprints are limited to 6 rows x 5 columns.")
         if any(len(row) != len(headers) for row in rows):
@@ -373,6 +361,16 @@ class SlideCanvas:
         else:
             if len(column_widths) != len(headers):
                 raise LayoutError("column_widths must match the header count.")
+            if any(
+                isinstance(width, bool)
+                or not isinstance(width, (int, float))
+                or not math.isfinite(width)
+                or width <= 0
+                for width in column_widths
+            ):
+                raise LayoutError(
+                    "column_widths must contain finite positive numbers."
+                )
             total = sum(column_widths)
             widths = [region.w * width / total for width in column_widths]
 
@@ -510,6 +508,7 @@ class SlideCanvas:
                 background=panel_fill,
                 bold=True,
                 size_pt=14,
+                adapt_color=True,
                 font=self.compiler.design.typography.mono_font,
                 valign=MSO_ANCHOR.MIDDLE,
                 margin=0,
@@ -522,6 +521,7 @@ class SlideCanvas:
                 color=item.color_role,
                 background=panel_fill,
                 bold=True,
+                adapt_color=True,
                 align=PP_ALIGN.CENTER,
             )
             self.compiler.text(
@@ -548,6 +548,7 @@ class SlideCompiler:
         title: str = "",
         subject: str = "",
         author: str = "GitHub Copilot",
+        font_metrics: FontMetrics | None = None,
     ):
         self.design = design
         self.presentation = Presentation()
@@ -556,6 +557,7 @@ class SlideCompiler:
         self.presentation.core_properties.title = title
         self.presentation.core_properties.subject = subject
         self.presentation.core_properties.author = author
+        self.font_metrics = font_metrics or FontMetrics()
         self.blueprints = BlueprintLibrary(
             design.layout,
             spacing=design.shapes.spacing,
@@ -819,6 +821,7 @@ class SlideCompiler:
         font: str | None = None,
         line_spacing: float = 1.05,
         word_wrap: bool = True,
+        adapt_color: bool = False,
     ):
         self._assert_bounds(region)
         if not text and role != "source":
@@ -831,6 +834,7 @@ class SlideCompiler:
             )
         requested = size_pt or self.design.typography.size_for(role)
         minimum = min_size_pt or self.design.typography.minimum_for(role)
+        font_name = font or self.design.typography.font_for(role)
         fitted = self._fit_font_size(
             text,
             region,
@@ -839,12 +843,21 @@ class SlideCompiler:
             margin,
             line_spacing,
             word_wrap,
+            font_name,
+            bold,
         )
-        font_name = font or self.design.typography.font_for(role)
         color_role = (
             color
             or (self._best_text_role(background) if background else "ink")
         )
+        if adapt_color and background:
+            color_role = self.readable_text_role(
+                color_role,
+                background,
+                role=role,
+                size_pt=fitted,
+                bold=bold,
+            )
         color_hex = self.design.palette.resolve(color_role)
         self._check_contrast(
             slide,
@@ -902,6 +915,7 @@ class SlideCompiler:
         spans: Sequence[TextSpan],
         *,
         background: str | None = None,
+        adapt_color: bool = False,
         align=PP_ALIGN.LEFT,
         valign=MSO_ANCHOR.TOP,
         margin: float = 0.03,
@@ -913,6 +927,11 @@ class SlideCompiler:
             span.size_pt or self.design.typography.size_for(span.role)
             for span in spans
         ]
+        fonts = [
+            span.font or self.design.typography.font_for(span.role)
+            for span in spans
+        ]
+        bolds = [span.bold for span in spans]
         minimum_scale = max(
             self.design.typography.minimum_for(span.role) / size
             for span, size in zip(spans, base_sizes)
@@ -920,6 +939,8 @@ class SlideCompiler:
         scale = self._fit_rich_text_scale(
             spans,
             base_sizes,
+            fonts,
+            bolds,
             region,
             minimum_scale,
             margin,
@@ -943,18 +964,27 @@ class SlideCompiler:
         paragraph.alignment = align
         for span, base_size in zip(spans, base_sizes):
             rendered_size = round(base_size * scale, 1)
+            color_role = span.color_role
+            if adapt_color and background:
+                color_role = self.readable_text_role(
+                    color_role,
+                    background,
+                    role=span.role,
+                    size_pt=rendered_size,
+                    bold=span.bold,
+                )
             run = paragraph.add_run()
             run.text = span.text
             run.font.name = span.font or self.design.typography.font_for(span.role)
             run.font.size = Pt(rendered_size)
             run.font.bold = span.bold
-            run.font.color.rgb = _rgb(self.design.palette.resolve(span.color_role))
+            run.font.color.rgb = _rgb(self.design.palette.resolve(color_role))
             self._check_contrast(
                 slide,
                 role=span.role,
                 size_pt=rendered_size,
                 bold=span.bold,
-                color=span.color_role,
+                color=color_role,
                 background=background,
             )
             self._record(slide).text.append(
@@ -1083,6 +1113,7 @@ class SlideCompiler:
             color=item.color_role,
             background=fill,
             bold=True,
+            adapt_color=True,
         )
         if item.detail:
             self.text(
@@ -1226,6 +1257,7 @@ class SlideCompiler:
                 background=frame.background_role,
                 bold=True,
                 size_pt=14,
+                adapt_color=True,
                 valign=MSO_ANCHOR.MIDDLE,
                 word_wrap=False,
             )
@@ -1367,16 +1399,31 @@ class SlideCompiler:
         margin: float,
         line_spacing: float,
         word_wrap: bool,
+        font_name: str,
+        bold: bool,
     ) -> float:
         available_width = region.w - margin * 2
         available_width_points = max(1.0, available_width * 72)
         available_height_points = max(1.0, (region.h - margin * 2) * 72)
         candidate = requested
         while candidate >= minimum - 0.001:
-            lines = _estimated_lines(text, available_width, candidate, word_wrap)
+            lines = self._estimated_lines(
+                text,
+                available_width,
+                candidate,
+                word_wrap,
+                font_name,
+                bold,
+            )
             required_height = lines * candidate * line_spacing * 1.05
             horizontal_fits = word_wrap or all(
-                _weighted_text_width(paragraph, candidate) <= available_width_points
+                self._measure_text_width(
+                    paragraph,
+                    font_name,
+                    candidate,
+                    bold=bold,
+                )
+                <= available_width_points
                 for paragraph in text.split("\n")
             )
             if horizontal_fits and required_height <= available_height_points:
@@ -1396,6 +1443,22 @@ class SlideCompiler:
             ),
         )
 
+    def readable_text_role(
+        self,
+        preferred: str,
+        background: str,
+        *,
+        role: str,
+        size_pt: float,
+        bold: bool,
+    ) -> str:
+        background_hex = self.design.palette.resolve(background)
+        preferred_hex = self.design.palette.resolve(preferred)
+        minimum = self._minimum_contrast(role, size_pt, bold)
+        if contrast_ratio(background_hex, preferred_hex) >= minimum:
+            return preferred
+        return self._best_text_role(background)
+
     def _check_contrast(
         self,
         slide,
@@ -1410,12 +1473,7 @@ class SlideCompiler:
             return
         color_hex = self.design.palette.resolve(color)
         background_hex = self.design.palette.resolve(background)
-        large_text = size_pt >= 18 or (bold and size_pt >= 14)
-        minimum_contrast = (
-            4.5
-            if role in {"body", "code"} or not large_text
-            else 3.0
-        )
+        minimum_contrast = self._minimum_contrast(role, size_pt, bold)
         ratio = contrast_ratio(background_hex, color_hex)
         if ratio < minimum_contrast:
             self._issues.append(
@@ -1426,10 +1484,21 @@ class SlideCompiler:
                 )
             )
 
+    def _minimum_contrast(
+        self,
+        role: str,
+        size_pt: float,
+        bold: bool,
+    ) -> float:
+        large_text = size_pt >= 18 or (bold and size_pt >= 14)
+        return 4.5 if role in {"body", "code"} or not large_text else 3.0
+
     def _fit_rich_text_scale(
         self,
         spans: Sequence[TextSpan],
         base_sizes: Sequence[float],
+        fonts: Sequence[str],
+        bolds: Sequence[bool],
         region: Region,
         minimum_scale: float,
         margin: float,
@@ -1440,13 +1509,20 @@ class SlideCompiler:
         while scale >= minimum_scale - 0.001:
             line_widths = [0.0]
             line_sizes = [0.0]
-            for span, base_size in zip(spans, base_sizes):
+            for span, base_size, font_name, bold in zip(
+                spans,
+                base_sizes,
+                fonts,
+                bolds,
+            ):
                 rendered_size = base_size * scale
                 chunks = span.text.split("\n")
                 for index, chunk in enumerate(chunks):
-                    line_widths[-1] += _weighted_text_width(
+                    line_widths[-1] += self._measure_text_width(
                         chunk,
+                        font_name,
                         rendered_size,
+                        bold=bold,
                     )
                     line_sizes[-1] = max(line_sizes[-1], rendered_size)
                     if index < len(chunks) - 1:
@@ -1467,6 +1543,50 @@ class SlideCompiler:
         raise TextOverflowError(
             f"Rich text cannot fit region {region} without crossing a minimum size."
         )
+
+    def _estimated_lines(
+        self,
+        text: str,
+        width_in: float,
+        size_pt: float,
+        word_wrap: bool,
+        font_name: str,
+        bold: bool,
+    ) -> int:
+        available_points = max(1.0, width_in * 72)
+        lines = 0
+        for paragraph in text.split("\n"):
+            if not paragraph:
+                lines += 1
+                continue
+            if not word_wrap:
+                lines += 1
+                continue
+            measured = self._measure_text_width(
+                paragraph,
+                font_name,
+                size_pt,
+                bold=bold,
+            )
+            lines += max(1, math.ceil(measured / available_points * 1.08))
+        return lines
+
+    def _measure_text_width(
+        self,
+        text: str,
+        font_name: str,
+        size_pt: float,
+        *,
+        bold: bool = False,
+    ) -> float:
+        measured = self.font_metrics.measure_points(
+            text,
+            font_name,
+            size_pt,
+            bold=bold,
+        )
+        fallback = _weighted_text_width(text, size_pt)
+        return measured if measured is not None else fallback * (1.12 if bold else 1.0)
 
     def _assert_bounds(self, region: Region) -> None:
         layout = self.design.layout
