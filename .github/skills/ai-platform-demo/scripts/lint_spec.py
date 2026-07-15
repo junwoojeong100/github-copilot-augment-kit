@@ -2,7 +2,7 @@
 """Fast pre-QA lint for a demo-spec.json.
 
 Runs render_demo's full structural / semantic / security validation, then checks the
-interaction and timing invariants that the browser QA (scripts/verify_demo.js) enforces.
+interaction invariants that the browser QA (scripts/verify_demo.js) enforces.
 This catches the common gotchas in under a second instead of a ~2 minute Puppeteer cycle.
 
 The timing thresholds mirror the fixed Golden Runtime plus the waits in verify_demo.js.
@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -21,14 +22,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import render_demo  # noqa: E402
 
-# Maximum action durationMs before the browser QA reads the result. verify_demo.js sleeps
-# for a fixed time after clicking, so keep a margin below that wait or the interaction will
-# still be running when QA checks it.
-ACTION_DURATION_MAX = {
-    ("operations", "action"): 1200,   # QA re-reads #opsRecommendation ~1300ms after #reopt
-    ("improvement", "action"): 2000,  # #factorBars fill at durationMs; QA checks at ~2200ms
-    ("devops", "action"): 2600,       # QA waits ~2800ms for the assign -> PR flow
-}
 ORCH_SUMMARY_RE = re.compile(r"decision package|의사결정 패키지", re.IGNORECASE)
 
 
@@ -39,14 +32,6 @@ def _reject_constant(value: str):
 def qa_invariants(spec: dict) -> list[str]:
     """Return a list of QA-invariant problems (empty means all satisfied)."""
     problems: list[str] = []
-
-    for (section, action), limit in ACTION_DURATION_MAX.items():
-        duration = spec.get(section, {}).get(action, {}).get("durationMs")
-        if isinstance(duration, (int, float)) and not isinstance(duration, bool) and duration > limit:
-            problems.append(
-                f"{section}.{action}.durationMs={duration} exceeds {limit}: the interaction may not "
-                "finish before browser QA checks it — reduce durationMs."
-            )
 
     ops = spec.get("operations", {}).get("action", {})
     if ops.get("recommendationBefore") == ops.get("recommendationAfter"):
@@ -65,11 +50,22 @@ def qa_invariants(spec: dict) -> list[str]:
     governance = spec.get("governance", {})
     cards = governance.get("cards", [])
     final_score = governance.get("evaluation", {}).get("finalScore")
-    if cards and final_score is not None and str(cards[0].get("value")) == str(final_score):
-        problems.append(
-            "governance.cards[0].value equals evaluation.finalScore: the evaluation score will not "
-            "visibly change on run — set cards[0].value to the initial score."
-        )
+    if cards and final_score is not None:
+        try:
+            visible_score = float(cards[0].get("value"))
+            final_numeric = float(final_score)
+        except (TypeError, ValueError):
+            pass
+        else:
+            if (
+                math.isfinite(visible_score)
+                and math.isfinite(final_numeric)
+                and math.isclose(visible_score, final_numeric, rel_tol=0, abs_tol=1e-9)
+            ):
+                problems.append(
+                    "governance.cards[0].value equals evaluation.finalScore: the evaluation score "
+                    "will not visibly change on run — set cards[0].value to the initial score."
+                )
 
     output = spec.get("simulator", {}).get("output", {})
     good = output.get("goodThreshold")

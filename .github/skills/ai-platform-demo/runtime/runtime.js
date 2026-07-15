@@ -21,8 +21,15 @@
     character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]
   );
   const normalizeText = value => String(value ?? '').replace(/\s/g, '').toLowerCase();
+  const locale = (() => {
+    try {
+      return Intl.getCanonicalLocales(document.documentElement.lang || 'ko-KR')[0] || 'ko-KR';
+    } catch {
+      return 'ko-KR';
+    }
+  })();
   const formatNumber = (value, decimals = 0) => Number(value).toLocaleString(
-    'ko-KR',
+    locale,
     { minimumFractionDigits: decimals, maximumFractionDigits: decimals }
   );
 
@@ -35,9 +42,9 @@
     return;
   }
 
-  // Design is fixed (Microsoft-tone) in runtime.css :root — no per-customer color/theme derivation.
+  // Design is fixed to a GitHub Primer dark-dimmed inspired soft-dark palette in runtime.css :root.
   // Per customer only the menu (routes) and data change; the visual design stays constant.
-  document.body.dataset.theme = 'light';
+  document.body.dataset.theme = 'dark-dimmed';
   document.body.dataset.density = 'executive';
 
   const meta = spec.meta;
@@ -74,7 +81,6 @@
   function semanticColor(name) {
     const semantic = new Set(['brand', 'accent', 'info', 'success', 'warning', 'danger', 'violet']);
     if (semantic.has(name)) return `var(--${name})`;
-    if (/^(#|rgb|hsl|var\()/.test(String(name || ''))) return name;
     return 'var(--brand)';
   }
 
@@ -115,7 +121,7 @@
     return `<span class="badge ${toneClass(value.tone)}">${escapeHtml(value.label)}</span>`;
   }
 
-  function heroHtml(hero) {
+  function heroHtml(hero, actionHtml = '') {
     return `
       <div class="hero">
         <div class="hero-icon">${escapeHtml(hero.icon || '✦')}</div>
@@ -123,7 +129,7 @@
           <div class="hero-title">${escapeHtml(hero.title)}</div>
           <div class="hero-subtitle">${escapeHtml(hero.subtitle)}</div>
         </div>
-        <div class="hero-action">${hero.badge ? statusBadge(hero.badge) : ''}${hero.actionHtml || ''}</div>
+        <div class="hero-action">${hero.badge ? statusBadge(hero.badge) : ''}${actionHtml}</div>
       </div>`;
   }
 
@@ -371,10 +377,10 @@
     const data = spec.operations;
     return {
       html: `
-        ${heroHtml({
-          ...data.hero,
-          actionHtml: `<button class="button" id="reopt" type="button">${escapeHtml(data.action.button)}</button>`
-        })}
+        ${heroHtml(
+          data.hero,
+          `<button class="button" id="reopt" type="button">${escapeHtml(data.action.button)}</button>`
+        )}
         ${kpiGridHtml(data.kpis, 'operations')}
         <div class="grid grid-2 space-top" style="grid-template-columns:1.45fr .75fr">
           <div class="panel">
@@ -614,10 +620,10 @@
     const data = spec.improvement;
     return {
       html: `
-        ${heroHtml({
-          ...data.hero,
-          actionHtml: `<button class="button" id="runAnalysis" type="button">${escapeHtml(data.action.button)}</button>`
-        })}
+        ${heroHtml(
+          data.hero,
+          `<button class="button" id="runAnalysis" type="button">${escapeHtml(data.action.button)}</button>`
+        )}
         ${kpiGridHtml(data.kpis, 'improvement')}
         <div class="grid grid-2 space-top">
           <div class="panel">
@@ -812,12 +818,12 @@
               offset += value;
               return circle;
             }).join('')}`;
-          const centerSegment = percentages[data.composition.centerSegment || 1] || percentages[0];
+          const centerSegment = percentages[data.composition.centerSegment ?? 1] || percentages[0];
           $('#donutCenter').textContent = `${Math.round(centerSegment)}%`;
           const explanation = $('#financeExplanation');
           if (explanation) explanation.innerHTML = data.explanation.replace(
             '{{value}}',
-            formatNumber(margin, data.margin.decimals || 0) + data.margin.unit
+            formatNumber(margin, data.margin.decimals || 0) + escapeHtml(data.margin.unit)
           );
         }
 
@@ -841,10 +847,10 @@
     const data = spec.devops;
     return {
       html: `
-        ${heroHtml({
-          ...data.hero,
-          actionHtml: `<button class="button info" id="assignIssue" type="button">${escapeHtml(data.action.button)}</button>`
-        })}
+        ${heroHtml(
+          data.hero,
+          `<button class="button info" id="assignIssue" type="button">${escapeHtml(data.action.button)}</button>`
+        )}
         ${kpiGridHtml(data.kpis, 'devops')}
         <div class="grid grid-2 space-top">
           <div class="panel">
@@ -1152,10 +1158,10 @@
     const data = spec.governance;
     return {
       html: `
-        ${heroHtml({
-          ...data.hero,
-          actionHtml: `<button class="button violet" id="evalRun" type="button">${escapeHtml(data.evaluation.button)}</button>`
-        })}
+        ${heroHtml(
+          data.hero,
+          `<button class="button violet" id="evalRun" type="button">${escapeHtml(data.evaluation.button)}</button>`
+        )}
         <div class="grid grid-3">
           ${data.cards.map((card, index) => `
             <div class="governance-card" data-title="${escapeHtml(card.title)}" data-detail="${escapeHtml(card.detail)}">
@@ -1281,7 +1287,7 @@
 
   setInterval(() => {
     const clock = $('#clock');
-    if (clock) clock.textContent = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+    if (clock) clock.textContent = new Date().toLocaleTimeString(locale, { hour12: false });
   }, 1000);
 
   const ambient = spec.ambientNotifications || [];

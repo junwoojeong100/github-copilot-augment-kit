@@ -12,8 +12,9 @@ python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
 
 Runner가 구조 감사와 전체 렌더를 읽기 전용으로 병렬 실행하고, risk score가 높은 슬라이드를 같은 PDF로
 상세 렌더한다. `verification-report.json`, `qa/contact-*.jpg`, `qa-detail/slide-*.jpg`를 확인한 뒤
-결함을 일괄 수정한다. `--strict`는 작은 본문 후보와 title risk를 실패 처리한다. 사람이 확인한 의도적
-보조 텍스트가 있을 때만 `--allow-small-text`를 쓴다.
+결함을 일괄 수정한다. `--strict`는 16pt 미만 본문 후보, 명시적 크기가 없는 run, title risk를 실패
+처리한다. 사람이 확인한 의도적 예외가 있을 때만 해당 슬라이드 번호를
+`--allow-small-text 4,8-9`처럼 명시한다. footer와 짧은 label/chip은 별도로 분류된다.
 
 ## 1. 구조 감사
 
@@ -25,25 +26,29 @@ python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py deck.pptx
 
 - 슬라이드 장수와 화면비
 - PowerPoint 압축 구조(ZIP integrity)
+- 슬라이드·layout·master 등 package XML의 중복 shape-property child(PowerPoint repair risk)
 - 슬라이드 경계를 벗어난 도형
-- 사용 글꼴과 크기 분포
+- 텍스트 상자·도형·그룹 자식·표 셀의 사용 글꼴과 크기 분포
 - 출처를 제외한 작은 텍스트 후보
 - 슬라이드별 텍스트 문자 수
-- 비어 있는 텍스트 프레임
+- 비어 있는 텍스트 상자(장식용 auto shape는 제외)
+- 명시적 글자 크기가 없는 non-empty run
 
 감사 스크립트는 주요 본문과 짧은 label/chip 후보를 분리해 보고한다. label 경고는 시각 검토 대상이며
 그 자체가 실패는 아니다. 그룹 도형이 있으면 내부 텍스트는 검사하지만 자식 좌표의 시각적 경계는 렌더로
-확인한다. 장식 도형의 intentional bleed는 허용할 수 있다. 감사 결과를 맹목적으로 통과시키지 말고
-항목별로 판단한다.
+확인한다. 차트 축·데이터 레이블처럼 별도 객체에 그려지는 텍스트도 렌더로 확인한다. 장식 도형의
+intentional bleed는 허용할 수 있다. 감사 결과를 맹목적으로 통과시키지 말고 항목별로 판단한다.
 
 ## 2. 전체 렌더
 
 필요 도구: LibreOffice `soffice`, PyMuPDF `fitz`, Pillow.
+`--out`에는 이 작업만 사용하는 빈 디렉터리나 Runner가 소유 표시한 기존 QA 디렉터리를 지정한다.
+비어 있지 않은 일반 디렉터리는 기존 파일 삭제를 막기 위해 거부한다.
 
 ```bash
 # 기본: 30장 단위 overview JPEG만 남김
 python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
-  deck.pptx --out <session>/files/<deck>-work/qa --keep-pdf
+  deck.pptx --out <session>/<deck>-work/qa --keep-pdf
 ```
 
 결과:
@@ -69,14 +74,14 @@ python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
-  deck.pptx --reuse-pdf <session>/files/<deck>-work/qa/<deck>.pdf \
+  deck.pptx --reuse-pdf <session>/<deck>-work/qa/<deck>.pdf \
   --slides 8,16,22 --keep-slide-images \
-  --out <session>/files/<deck>-work/qa-detail
+  --out <session>/<deck>-work/qa-detail
 ```
 
-이 상세 검사는 PPTX를 수정하기 전에 수행한다. `--reuse-pdf`는 manifest의 PPTX SHA-256을 검사하며,
-파일이 달라지면 실패하므로 오래된 PDF를 쓸 수 없다. 한 응답에서 full-slide 이미지는 최대 2~3개만
-확인한다.
+이 상세 검사는 PPTX를 수정하기 전에 수행한다. `--reuse-pdf`는 manifest의 PPTX와 PDF SHA-256을 모두
+검사하며, 어느 파일이든 달라지면 실패하므로 오래되거나 부분 생성된 PDF를 쓸 수 없다. 한 응답에서
+full-slide 이미지는 최대 2~3개만 확인한다.
 
 확인:
 
@@ -108,16 +113,17 @@ python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
 2. 원인을 구분한다: content density / geometry / typography / contrast / narrative.
 3. 폰트 축소보다 내용·레이아웃 수정을 우선한다.
 4. 모든 결함을 모아 세션 작업 폴더의 `build_<deck>.py`를 **한 번에** 수정한다.
-5. PPTX를 재생성한다.
-6. 재렌더 후, **국소(단일·소수 슬라이드, 비구조) 수정이면 전체 contact sheet를 다시 열지 말고 변경
-   슬라이드 이미지만 확인**한다.
+5. PPTX를 재생성하고 새 PPTX에서 PDF를 다시 변환한다.
+6. **국소(단일·소수 슬라이드, 비구조) 수정이면 `--slides`로 변경 슬라이드만 이미지화해 확인하고 전체
+   contact sheet는 다시 만들지 않는다.**
 7. 여러 슬라이드·구조가 바뀐 경우에만 전체 contact sheet를 다시 열람한다. 변경이 없으면 최초 전체
    렌더가 최종 검증이다.
 
 ## 7. 정리
 
 ```bash
-rm -rf <session>/files/<deck>-work/qa <session>/files/<deck>-work/qa-detail
+WORK_DIR="<session>/<deck>-work" python3 -B -c \
+  'import os,shutil; from pathlib import Path; w=Path(os.environ["WORK_DIR"]).resolve(); [shutil.rmtree(w/n, ignore_errors=True) for n in ("qa","qa-detail")]'
 ```
 
 재생성 스크립트는 세션 작업 폴더에만 둔다. 저장소와 최종 출력 폴더에는 사용자가 요청한 최종 PPTX/PDF만

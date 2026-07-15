@@ -28,6 +28,7 @@ REQUIRED_SECTIONS = [
     "devops",
     "agents",
     "governance",
+    "notification",
 ]
 
 ROUTE_IDS = [
@@ -41,42 +42,38 @@ ROUTE_IDS = [
     "governance",
 ]
 
-ARCHETYPES = {
-    "precision-control-room",
-    "trusted-executive",
-    "operational-canvas",
-    "premium-minimal",
+FIXED_DESIGN = {
+    "archetype": "trusted-executive",
+    "theme": "dark-dimmed",
+    "density": "executive",
+    "motion": "balanced",
+    "visualMetaphor": "connected operating signals",
+    "counterInfluence": "editorial clarity",
 }
-
-COLOR_TOKEN_KEYS = {
-    "canvas",
-    "canvasAlt",
-    "surface",
-    "surfaceAlt",
-    "surfaceStrong",
-    "ink",
-    "inkMuted",
-    "inkFaint",
+FIXED_CONCEPT_WORDS = ["clarity", "confidence", "continuity"]
+FIXED_AVOID_PATTERNS = [
+    "generic red-blue gradient",
+    "oversized glass cards",
+    "decorative 3D icons",
+]
+SEMANTIC_COLORS = {
     "brand",
-    "brandAlt",
     "accent",
     "info",
     "success",
     "warning",
     "danger",
     "violet",
-    "line",
-    "lineSoft",
 }
-
-NUMBER_TOKEN_RANGES = {
-    "radius": (0, 40),
-    "navWidth": (180, 360),
-    "fontScale": (0.8, 1.3),
-}
-
-CSS_COLOR_PATTERN = re.compile(
-    r"^(?:#[0-9a-fA-F]{3,8}|rgba?\([0-9.,%\s]+\)|hsla?\([0-9.,%\s]+\))$"
+STATUS_TONES = {"success", "warning", "danger", "info", "violet", "ok", "warn", "bad"}
+SAFE_ID_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
+RUNTIME_ASSET_NAMES = ("shell.tmpl", "runtime.css", "runtime.js")
+LANGUAGE_TAG_PATTERN = re.compile(
+    r"^(?:"
+    r"[A-Za-z]{2,3}(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?"
+    r"|[A-Za-z]{4}"
+    r"|[A-Za-z]{5,8}"
+    r")(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*$"
 )
 
 UNSAFE_PATTERNS = [
@@ -278,6 +275,22 @@ def require_number(parent: dict[str, Any], key: str, path: str) -> float:
     return float(value)
 
 
+def optional_integer(
+    parent: dict[str, Any],
+    key: str,
+    path: str,
+    *,
+    minimum: int = 0,
+    maximum: int = 10,
+) -> int | None:
+    value = parent.get(key)
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or not minimum <= value <= maximum:
+        raise SpecError(f"{path}.{key} must be an integer between {minimum} and {maximum}")
+    return value
+
+
 def require_boolean(parent: dict[str, Any], key: str, path: str) -> bool:
     value = parent.get(key)
     if not isinstance(value, bool):
@@ -300,9 +313,32 @@ def require_string_list(
 
 def validate_hero(section: dict[str, Any], path: str) -> None:
     hero = require_mapping(section, "hero", path)
+    if "actionHtml" in hero:
+        raise SpecError(f"{path}.hero.actionHtml is runtime-owned and must not be supplied")
     require_string(hero, "title", f"{path}.hero")
     require_string(hero, "subtitle", f"{path}.hero")
     require_string(hero, "icon", f"{path}.hero")
+    badge = hero.get("badge")
+    if badge is not None:
+        if not isinstance(badge, dict):
+            raise SpecError(f"{path}.hero.badge must be an object")
+        require_string(badge, "label", f"{path}.hero.badge")
+        validate_tone(require_string(badge, "tone", f"{path}.hero.badge"), f"{path}.hero.badge.tone")
+
+
+def validate_semantic_color(value: str, path: str) -> None:
+    if value not in SEMANTIC_COLORS:
+        raise SpecError(f"{path} must be one of: {', '.join(sorted(SEMANTIC_COLORS))}")
+
+
+def validate_tone(value: str, path: str) -> None:
+    if value not in STATUS_TONES:
+        raise SpecError(f"{path} must be a supported status tone")
+
+
+def validate_safe_id(value: str, path: str) -> None:
+    if not SAFE_ID_PATTERN.fullmatch(value):
+        raise SpecError(f"{path} must start with a letter and contain only letters, digits, '_' or '-'")
 
 
 def validate_kpis(section: dict[str, Any], path: str) -> None:
@@ -317,7 +353,12 @@ def validate_kpis(section: dict[str, Any], path: str) -> None:
         require_string(item, "icon", item_path)
         require_number(item, "value", item_path)
         require_string(item, "delta", item_path)
-        require_string(item, "direction", item_path)
+        direction = require_string(item, "direction", item_path)
+        if direction not in {"up", "down", "warning"}:
+            raise SpecError(f"{item_path}.direction must be 'up', 'down', or 'warning'")
+        color = require_string(item, "color", item_path)
+        validate_semantic_color(color, f"{item_path}.color")
+        optional_integer(item, "decimals", item_path, maximum=6)
         series = require_list(item, "series", item_path, minimum=2)
         if not all(
             isinstance(value, (int, float))
@@ -332,6 +373,16 @@ def validate_kpis(section: dict[str, Any], path: str) -> None:
                 raise SpecError(f"{item_path}.tick must be an object")
             require_number(tick, "min", f"{item_path}.tick")
             require_number(tick, "max", f"{item_path}.tick")
+            if tick["min"] > tick["max"]:
+                raise SpecError(f"{item_path}.tick.min must not exceed max")
+            floor = tick.get("floor")
+            ceiling = tick.get("ceiling")
+            if floor is not None:
+                require_number(tick, "floor", f"{item_path}.tick")
+            if ceiling is not None:
+                require_number(tick, "ceiling", f"{item_path}.tick")
+            if floor is not None and ceiling is not None and floor > ceiling:
+                raise SpecError(f"{item_path}.tick.floor must not exceed ceiling")
 
 
 def validate_table(table: dict[str, Any], path: str, *, minimum_rows: int = 3) -> None:
@@ -345,7 +396,12 @@ def validate_table(table: dict[str, Any], path: str, *, minimum_rows: int = 3) -
         if not isinstance(row, dict):
             raise SpecError(f"{path}.rows[{index}] must be an object")
         cells = require_list(row, "cells", f"{path}.rows[{index}]", minimum=1)
-        if not all(isinstance(cell, (str, int, float)) for cell in cells):
+        if not all(
+            isinstance(cell, (str, int, float))
+            and not isinstance(cell, bool)
+            and (not isinstance(cell, float) or math.isfinite(cell))
+            for cell in cells
+        ):
             raise SpecError(f"{path}.rows[{index}].cells contains unsupported values")
         require_string(row, "detail", f"{path}.rows[{index}]")
         status = row.get("status")
@@ -353,7 +409,14 @@ def validate_table(table: dict[str, Any], path: str, *, minimum_rows: int = 3) -
             if not isinstance(status, dict):
                 raise SpecError(f"{path}.rows[{index}].status must be an object")
             require_string(status, "label", f"{path}.rows[{index}].status")
-            require_string(status, "tone", f"{path}.rows[{index}].status")
+            tone = require_string(status, "tone", f"{path}.rows[{index}].status")
+            validate_tone(tone, f"{path}.rows[{index}].status.tone")
+        expected_cells = len(headers) - (1 if status is not None else 0)
+        if len(cells) != expected_cells:
+            raise SpecError(
+                f"{path}.rows[{index}].cells must contain exactly {expected_cells} value(s) "
+                "to match the table headers"
+            )
 
 
 def validate_named_items(
@@ -402,51 +465,37 @@ def validate_spec(spec: dict[str, Any]) -> None:
         require_string(meta, key, "$.meta")
     if len(meta["initials"]) > 4:
         raise SpecError("$.meta.initials must be 1-4 characters")
-    if not re.fullmatch(r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})?", meta["language"]):
-        raise SpecError("$.meta.language must be a valid short language tag")
+    if not LANGUAGE_TAG_PATTERN.fullmatch(meta["language"]):
+        raise SpecError("$.meta.language must be a supported BCP 47 language tag")
 
     design = require_mapping(spec, "design", "$")
-    archetype = require_string(design, "archetype", "$.design")
-    if archetype not in ARCHETYPES:
-        raise SpecError(
-            f"$.design.archetype must be one of: {', '.join(sorted(ARCHETYPES))}"
-        )
-    if design.get("theme") not in {"dark", "light"}:
-        raise SpecError("$.design.theme must be 'dark' or 'light'")
-    if design.get("density") not in {"compact", "executive", "spacious"}:
-        raise SpecError(
-            "$.design.density must be 'compact', 'executive', or 'spacious'"
-        )
-    require_list(design, "conceptWords", "$.design", minimum=3)
-    require_string(design, "visualMetaphor", "$.design")
-    require_string(design, "counterInfluence", "$.design")
+    for key, expected in FIXED_DESIGN.items():
+        actual = require_string(design, key, "$.design")
+        if actual != expected:
+            raise SpecError(
+                f"$.design.{key} must be '{expected}'; the Golden Runtime design is fixed"
+            )
+    concept_words = require_list(design, "conceptWords", "$.design", minimum=3)
+    if concept_words != FIXED_CONCEPT_WORDS:
+        raise SpecError("$.design.conceptWords must match the fixed Golden Runtime marker")
     tokens = require_mapping(design, "tokens", "$.design")
-    unknown_tokens = set(tokens) - COLOR_TOKEN_KEYS - set(NUMBER_TOKEN_RANGES)
-    if unknown_tokens:
+    if tokens:
         raise SpecError(
-            "$.design.tokens contains unsupported token(s): "
-            + ", ".join(sorted(unknown_tokens))
+            "$.design.tokens must be empty; runtime/runtime.css is the only visual-token source"
         )
-    for key, value in tokens.items():
-        if key in COLOR_TOKEN_KEYS:
-            if not isinstance(value, str) or not CSS_COLOR_PATTERN.fullmatch(value):
-                raise SpecError(f"$.design.tokens.{key} must be a safe CSS color")
-        else:
-            if not isinstance(value, (int, float)) or isinstance(value, bool):
-                raise SpecError(f"$.design.tokens.{key} must be a number")
-            minimum, maximum = NUMBER_TOKEN_RANGES[key]
-            if not minimum <= value <= maximum:
-                raise SpecError(
-                    f"$.design.tokens.{key} must be between {minimum} and {maximum}"
-                )
     avoid = require_list(design, "avoid", "$.design", minimum=3)
-    if len(avoid) != 3:
-        raise SpecError("$.design.avoid must contain exactly 3 patterns")
+    if avoid != FIXED_AVOID_PATTERNS:
+        raise SpecError("$.design.avoid must match the fixed Golden Runtime marker")
 
     story = require_mapping(spec, "story", "$")
     require_string(story, "frame", "$.story")
     require_string(story, "climax", "$.story")
-    require_list(story, "audienceMessages", "$.story", minimum=2)
+    audience_messages = require_list(story, "audienceMessages", "$.story", minimum=2)
+    validate_named_items(
+        audience_messages,
+        "$.story.audienceMessages",
+        ["audience", "message"],
+    )
 
     navigation = require_list(spec, "navigation", "$", minimum=8)
     nav_ids = [item.get("id") if isinstance(item, dict) else None for item in navigation]
@@ -467,6 +516,7 @@ def validate_spec(spec: dict[str, Any]) -> None:
     stream = require_mapping(dashboard, "stream", "$.dashboard")
     for key in ["title", "label", "color"]:
         require_string(stream, key, "$.dashboard.stream")
+    validate_semantic_color(stream["color"], "$.dashboard.stream.color")
     stream_values = require_list(stream, "values", "$.dashboard.stream", minimum=2)
     if not all(
         isinstance(value, (int, float))
@@ -477,9 +527,13 @@ def validate_spec(spec: dict[str, Any]) -> None:
         raise SpecError("$.dashboard.stream.values must contain finite numbers")
     for key in ["min", "max"]:
         require_number(stream, key, "$.dashboard.stream")
+    if stream["min"] >= stream["max"]:
+        raise SpecError("$.dashboard.stream.min must be lower than max")
     stream_tick = require_mapping(stream, "tick", "$.dashboard.stream")
     require_number(stream_tick, "min", "$.dashboard.stream.tick")
     require_number(stream_tick, "max", "$.dashboard.stream.tick")
+    if stream_tick["min"] > stream_tick["max"]:
+        raise SpecError("$.dashboard.stream.tick.min must not exceed max")
     require_string(dashboard, "feedTitle", "$.dashboard")
     require_string(dashboard, "feedHint", "$.dashboard")
     feed = require_list(dashboard, "feed", "$.dashboard", minimum=4)
@@ -542,10 +596,20 @@ def validate_spec(spec: dict[str, Any]) -> None:
     ]:
         require_string(action, key, "$.operations.action")
     require_number(action, "durationMs", "$.operations.action")
+    if not 0 < action["durationMs"] <= 15000:
+        raise SpecError("$.operations.action.durationMs must be between 0 and 15000")
     kpi_updates = require_mapping(action, "kpiUpdates", "$.operations.action")
     for key, value in kpi_updates.items():
-        if not str(key).isdigit() or not isinstance(value, (int, float)) or not math.isfinite(value):
-            raise SpecError("$.operations.action.kpiUpdates must map KPI indexes to finite numbers")
+        if (
+            not str(key).isdigit()
+            or not 0 <= int(key) < len(operations["kpis"])
+            or not isinstance(value, (int, float))
+            or isinstance(value, bool)
+            or not math.isfinite(value)
+        ):
+            raise SpecError(
+                "$.operations.action.kpiUpdates must map valid KPI indexes to finite numbers"
+            )
     validate_table(
         require_mapping(operations, "table", "$.operations"),
         "$.operations.table",
@@ -559,14 +623,25 @@ def validate_spec(spec: dict[str, Any]) -> None:
     input_ids = []
     for index, item in enumerate(inputs):
         item_path = f"$.simulator.inputs[{index}]"
-        input_ids.append(require_string(item, "id", item_path))
+        input_id = require_string(item, "id", item_path)
+        validate_safe_id(input_id, f"{item_path}.id")
+        input_ids.append(input_id)
         require_string(item, "label", item_path)
         if not isinstance(item.get("unit"), str):
             raise SpecError(f"{item_path}.unit must be a string")
-        for key in ["min", "max", "value", "optimum", "weight"]:
+        for key in ["min", "max", "step", "value", "optimum", "weight"]:
             require_number(item, key, item_path)
         if item["min"] >= item["max"]:
             raise SpecError(f"{item_path}.min must be lower than max")
+        if item["step"] <= 0:
+            raise SpecError(f"{item_path}.step must be greater than zero")
+        if not item["min"] <= item["value"] <= item["max"]:
+            raise SpecError(f"{item_path}.value must be within min and max")
+        if not item["min"] <= item["optimum"] <= item["max"]:
+            raise SpecError(f"{item_path}.optimum must be within min and max")
+        if item["weight"] < 0:
+            raise SpecError(f"{item_path}.weight must not be negative")
+        optional_integer(item, "decimals", item_path, maximum=6)
     if len(input_ids) != len(set(input_ids)):
         raise SpecError("$.simulator.inputs IDs must be unique")
     output = require_mapping(simulator, "output", "$.simulator")
@@ -580,6 +655,16 @@ def validate_spec(spec: dict[str, Any]) -> None:
         require_string(output, key, "$.simulator.output")
     for key in ["base", "min", "max", "goodThreshold", "warningThreshold"]:
         require_number(output, key, "$.simulator.output")
+    optional_integer(output, "decimals", "$.simulator.output", maximum=6)
+    if output["min"] >= output["max"]:
+        raise SpecError("$.simulator.output.min must be lower than max")
+    for key in ["base", "goodThreshold", "warningThreshold"]:
+        if not output["min"] <= output[key] <= output["max"]:
+            raise SpecError(f"$.simulator.output.{key} must be within min and max")
+    if output["goodThreshold"] <= output["warningThreshold"]:
+        raise SpecError(
+            "$.simulator.output.goodThreshold must be greater than warningThreshold"
+        )
     secondary = require_list(simulator, "secondary", "$.simulator", minimum=3)
     for index, metric in enumerate(secondary):
         metric_path = f"$.simulator.secondary[{index}]"
@@ -589,11 +674,20 @@ def validate_spec(spec: dict[str, Any]) -> None:
         if not isinstance(metric.get("unit"), str):
             raise SpecError(f"{metric_path}.unit must be a string")
         require_number(metric, "base", metric_path)
+        optional_integer(metric, "decimals", metric_path, maximum=6)
         weights = require_mapping(metric, "weights", metric_path)
+        if set(weights) != set(input_ids):
+            raise SpecError(
+                f"{metric_path}.weights must contain exactly the simulator input IDs"
+            )
         for input_id, weight in weights.items():
             if input_id not in input_ids:
                 raise SpecError(f"{metric_path}.weights references unknown input {input_id}")
-            if not isinstance(weight, (int, float)) or not math.isfinite(weight):
+            if (
+                not isinstance(weight, (int, float))
+                or isinstance(weight, bool)
+                or not math.isfinite(weight)
+            ):
                 raise SpecError(f"{metric_path}.weights must contain finite numbers")
     recommendations = require_list(
         simulator,
@@ -613,6 +707,13 @@ def validate_spec(spec: dict[str, Any]) -> None:
             raise SpecError(f"{rule_path}.operator is unsupported")
         require_number(rule, "threshold", rule_path)
         require_string(rule, "message", rule_path)
+    default_indexes = [
+        index for index, rule in enumerate(recommendations) if rule.get("operator") == "default"
+    ]
+    if default_indexes != [len(recommendations) - 1]:
+        raise SpecError(
+            "$.simulator.recommendations must contain exactly one default rule, as the last item"
+        )
     require_string(simulator, "defaultRecommendation", "$.simulator")
     histogram = require_mapping(simulator, "histogram", "$.simulator")
     for key in ["title", "hint", "leftLabel", "centerLabel", "rightLabel"]:
@@ -643,6 +744,13 @@ def validate_spec(spec: dict[str, Any]) -> None:
         ["label", "value", "color"],
         ["width"],
     )
+    for index, factor in enumerate(factors):
+        validate_semantic_color(
+            factor["color"],
+            f"$.improvement.factors[{index}].color",
+        )
+        if not 0 <= factor["width"] <= 100:
+            raise SpecError(f"$.improvement.factors[{index}].width must be between 0 and 100")
     impacts = require_list(improvement, "impacts", "$.improvement", minimum=4)
     validate_named_items(
         impacts,
@@ -679,6 +787,8 @@ def validate_spec(spec: dict[str, Any]) -> None:
     ]:
         require_string(improvement_action, key, "$.improvement.action")
     require_number(improvement_action, "durationMs", "$.improvement.action")
+    if not 0 < improvement_action["durationMs"] <= 15000:
+        raise SpecError("$.improvement.action.durationMs must be between 0 and 15000")
     require_boolean(improvement_action, "autoRun", "$.improvement.action")
 
     finance = require_mapping(spec, "finance", "$")
@@ -692,12 +802,21 @@ def validate_spec(spec: dict[str, Any]) -> None:
         lever_path = f"$.finance.levers[{index}]"
         if not isinstance(lever, dict):
             raise SpecError(f"{lever_path} must be an object")
-        lever_ids.append(require_string(lever, "id", lever_path))
+        lever_id = require_string(lever, "id", lever_path)
+        validate_safe_id(lever_id, f"{lever_path}.id")
+        lever_ids.append(lever_id)
         require_string(lever, "label", lever_path)
         if not isinstance(lever.get("unit"), str):
             raise SpecError(f"{lever_path}.unit must be a string")
-        for key in ["min", "max", "value", "impact"]:
+        for key in ["min", "max", "step", "value"]:
             require_number(lever, key, lever_path)
+        if lever["min"] >= lever["max"]:
+            raise SpecError(f"{lever_path}.min must be lower than max")
+        if lever["step"] <= 0:
+            raise SpecError(f"{lever_path}.step must be greater than zero")
+        if not lever["min"] <= lever["value"] <= lever["max"]:
+            raise SpecError(f"{lever_path}.value must be within min and max")
+        optional_integer(lever, "decimals", lever_path, maximum=6)
     if len(lever_ids) != len(set(lever_ids)):
         raise SpecError("$.finance.levers IDs must be unique")
     margin = require_mapping(finance, "margin", "$.finance")
@@ -712,9 +831,17 @@ def validate_spec(spec: dict[str, Any]) -> None:
         require_string(margin, key, "$.finance.margin")
     for key in ["base", "goodThreshold", "warningThreshold"]:
         require_number(margin, key, "$.finance.margin")
+    optional_integer(margin, "decimals", "$.finance.margin", maximum=6)
+    if margin["goodThreshold"] <= margin["warningThreshold"]:
+        raise SpecError("$.finance.margin.goodThreshold must be greater than warningThreshold")
     margin_impacts = require_mapping(margin, "impacts", "$.finance.margin")
     for lever_id, impact in margin_impacts.items():
-        if lever_id not in lever_ids or not isinstance(impact, (int, float)) or not math.isfinite(impact):
+        if (
+            lever_id not in lever_ids
+            or not isinstance(impact, (int, float))
+            or isinstance(impact, bool)
+            or not math.isfinite(impact)
+        ):
             raise SpecError("$.finance.margin.impacts is invalid")
     summary_metrics = require_list(finance, "summaryMetrics", "$.finance", minimum=3)
     for index, metric in enumerate(summary_metrics):
@@ -725,9 +852,15 @@ def validate_spec(spec: dict[str, Any]) -> None:
         if not isinstance(metric.get("unit"), str):
             raise SpecError(f"{metric_path}.unit must be a string")
         require_number(metric, "base", metric_path)
+        optional_integer(metric, "decimals", metric_path, maximum=6)
         impacts = require_mapping(metric, "impacts", metric_path)
         for lever_id, impact in impacts.items():
-            if lever_id not in lever_ids or not isinstance(impact, (int, float)) or not math.isfinite(impact):
+            if (
+                lever_id not in lever_ids
+                or not isinstance(impact, (int, float))
+                or isinstance(impact, bool)
+                or not math.isfinite(impact)
+            ):
                 raise SpecError(f"{metric_path}.impacts is invalid")
     composition = require_mapping(finance, "composition", "$.finance")
     for key in ["title", "hint", "centerLabel"]:
@@ -740,12 +873,25 @@ def validate_spec(spec: dict[str, Any]) -> None:
         if not isinstance(segment, dict):
             raise SpecError(f"{segment_path} must be an object")
         require_string(segment, "label", segment_path)
-        require_string(segment, "color", segment_path)
+        color = require_string(segment, "color", segment_path)
+        validate_semantic_color(color, f"{segment_path}.color")
         require_number(segment, "base", segment_path)
         impacts = require_mapping(segment, "impacts", segment_path)
         for lever_id, impact in impacts.items():
-            if lever_id not in lever_ids or not isinstance(impact, (int, float)) or not math.isfinite(impact):
+            if (
+                lever_id not in lever_ids
+                or not isinstance(impact, (int, float))
+                or isinstance(impact, bool)
+                or not math.isfinite(impact)
+            ):
                 raise SpecError(f"{segment_path}.impacts is invalid")
+    center_segment = composition.get("centerSegment", 1)
+    if (
+        isinstance(center_segment, bool)
+        or not isinstance(center_segment, int)
+        or not 0 <= center_segment < len(segments)
+    ):
+        raise SpecError("$.finance.composition.centerSegment must reference a segment index")
     validate_table(
         require_mapping(finance, "watchlist", "$.finance"),
         "$.finance.watchlist",
@@ -760,16 +906,27 @@ def validate_spec(spec: dict[str, Any]) -> None:
     devops_steps = require_list(devops, "steps", "$.devops", minimum=5)
     validate_named_items(devops_steps, "$.devops.steps", ["title", "text"])
     issues = require_list(devops, "issues", "$.devops", minimum=3)
+    issue_risk_modes: list[bool] = []
     for index, issue in enumerate(issues):
         issue_path = f"$.devops.issues[{index}]"
         for key in ["id", "title", "product", "type", "risk", "context"]:
             require_string(issue, key, issue_path)
-        require_boolean(issue, "highRisk", issue_path)
+        issue_risk_modes.append(require_boolean(issue, "highRisk", issue_path))
         diff_lines = require_list(issue, "diffLines", issue_path, minimum=2)
         validate_named_items(diff_lines, f"{issue_path}.diffLines", ["type", "text"])
         status = require_mapping(issue, "status", issue_path)
         require_string(status, "label", f"{issue_path}.status")
-        require_string(status, "tone", f"{issue_path}.status")
+        tone = require_string(status, "tone", f"{issue_path}.status")
+        validate_tone(tone, f"{issue_path}.status.tone")
+        for line_index, line in enumerate(diff_lines):
+            if line["type"] not in {"add", "delete", "comment", "keyword"}:
+                raise SpecError(
+                    f"{issue_path}.diffLines[{line_index}].type is unsupported"
+                )
+    if not any(issue_risk_modes) or all(issue_risk_modes):
+        raise SpecError(
+            "$.devops.issues must include at least one autonomous and one high-risk issue"
+        )
     devops_action = require_mapping(devops, "action", "$.devops")
     for key in [
         "button",
@@ -798,6 +955,8 @@ def validate_spec(spec: dict[str, Any]) -> None:
         require_string(devops_action, key, "$.devops.action")
     require_number(devops_action, "prBase", "$.devops.action")
     require_number(devops_action, "durationMs", "$.devops.action")
+    if not 0 < devops_action["durationMs"] <= 15000:
+        raise SpecError("$.devops.action.durationMs must be between 0 and 15000")
 
     agents = require_mapping(spec, "agents", "$")
     validate_hero(agents, "$.agents")
@@ -901,6 +1060,33 @@ def validate_spec(spec: dict[str, Any]) -> None:
         require_string(evaluation, key, "$.governance.evaluation")
     require_number(evaluation, "initialScore", "$.governance.evaluation")
     require_number(evaluation, "finalScore", "$.governance.evaluation")
+    try:
+        visible_initial_score = float(cards[0]["value"])
+    except (TypeError, ValueError) as error:
+        raise SpecError(
+            "$.governance.cards[0].value must be a numeric display string"
+        ) from error
+    if (
+        not math.isfinite(visible_initial_score)
+        or not math.isclose(
+            visible_initial_score,
+            float(evaluation["initialScore"]),
+            rel_tol=0,
+            abs_tol=1e-9,
+        )
+    ):
+        raise SpecError(
+            "$.governance.cards[0].value must equal evaluation.initialScore"
+        )
+    if math.isclose(
+        float(evaluation["initialScore"]),
+        float(evaluation["finalScore"]),
+        rel_tol=0,
+        abs_tol=1e-9,
+    ):
+        raise SpecError(
+            "$.governance.evaluation.finalScore must differ from initialScore"
+        )
     require_string_list(
         evaluation,
         "readyLines",
@@ -926,6 +1112,11 @@ def validate_spec(spec: dict[str, Any]) -> None:
             "$.ambientNotifications",
             ["title", "text", "icon"],
         )
+    ambient_interval = spec.get("ambientIntervalMs")
+    if ambient_interval is not None:
+        require_number(spec, "ambientIntervalMs", "$")
+        if ambient_interval <= 0:
+            raise SpecError("$.ambientIntervalMs must be greater than zero")
 
     for path, value in iter_strings(spec):
         for pattern in UNSAFE_PATTERNS:
@@ -938,6 +1129,22 @@ def read_text(path: Path) -> str:
     if not resolved.is_file():
         raise FileNotFoundError(resolved)
     return resolved.read_text(encoding="utf-8")
+
+
+def paths_collide(first: Path, second: Path) -> bool:
+    first_resolved = first.expanduser().resolve()
+    second_resolved = second.expanduser().resolve()
+    if str(first_resolved).casefold() == str(second_resolved).casefold():
+        return True
+    try:
+        return first_resolved.exists() and second_resolved.exists() and first_resolved.samefile(second_resolved)
+    except OSError:
+        return False
+
+
+def runtime_input_paths(runtime_dir: Path) -> set[Path]:
+    runtime = runtime_dir.expanduser().resolve()
+    return {runtime / name for name in RUNTIME_ASSET_NAMES}
 
 
 def safe_json_for_script(spec: dict[str, Any]) -> str:
@@ -959,6 +1166,9 @@ def render(spec: dict[str, Any], runtime_dir: Path) -> str:
     shell = read_text(runtime / "shell.tmpl")
     css = read_text(runtime / "runtime.css")
     javascript = read_text(runtime / "runtime.js")
+    canvas_match = re.search(r"--canvas:\s*(#[0-9a-fA-F]{6})\s*;", css)
+    if canvas_match is None:
+        raise RuntimeError("Runtime CSS must define --canvas as a six-digit hex color")
     replacements = {
         "{{LANG}}": html_lib.escape(spec["meta"]["language"], quote=True),
         "{{TITLE}}": html_lib.escape(
@@ -966,6 +1176,7 @@ def render(spec: dict[str, Any], runtime_dir: Path) -> str:
             quote=False,
         ),
         "{{RUNTIME_CSS}}": css,
+        "{{THEME_COLOR}}": canvas_match.group(1),
         "{{DEMO_SPEC_JSON}}": safe_json_for_script(spec),
         "{{RUNTIME_JS}}": javascript,
     }
@@ -1008,6 +1219,10 @@ def main() -> int:
     if args.output is None:
         raise SpecError("--output is required unless --validate-only is used")
     output = args.output.expanduser().resolve()
+    if paths_collide(output, spec_path):
+        raise SpecError("--output must not overwrite the input spec")
+    if any(paths_collide(output, path) for path in runtime_input_paths(args.runtime_dir)):
+        raise SpecError("--output must not overwrite or alias a runtime asset")
     if output.suffix.lower() != ".html":
         raise SpecError("--output must use the .html extension")
     output.parent.mkdir(parents=True, exist_ok=True)

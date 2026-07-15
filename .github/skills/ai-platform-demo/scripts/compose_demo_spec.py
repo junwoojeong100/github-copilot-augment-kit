@@ -7,6 +7,7 @@ import argparse
 import copy
 import html as html_lib
 import json
+import math
 import re
 import sys
 import unicodedata
@@ -21,32 +22,6 @@ import render_demo
 
 DELETE_MARKER = {"$delete": True}
 REPLACE_KEY = "$replace"
-CUSTOMER_DESIGN_KEYS = {
-    "conceptWords",
-    "visualMetaphor",
-    "archetype",
-    "counterInfluence",
-    "theme",
-    "density",
-    "motion",
-    "tokens",
-    "avoid",
-}
-CUSTOMER_TOKEN_KEYS = {
-    "canvas",
-    "canvasAlt",
-    "surface",
-    "surfaceAlt",
-    "ink",
-    "inkMuted",
-    "inkFaint",
-    "brand",
-    "brandAlt",
-    "accent",
-    "radius",
-    "navWidth",
-    "fontScale",
-}
 PLACEHOLDER_PATTERN = re.compile(r"__[A-Z][A-Z0-9_-]*__")
 
 
@@ -188,13 +163,13 @@ def apply_customer_layer(
     customer_spec: dict[str, Any],
     required_paths: list[str],
 ) -> dict[str, Any]:
+    if "design" in customer_spec:
+        raise ComposeError(
+            "Customer overlay must not define 'design'; the Golden Runtime design is fixed"
+        )
     merged = deep_merge(composed, customer_spec)
     for section in ["meta", "story"]:
         merged[section] = copy.deepcopy(customer_spec[section])
-    # Design is fixed (Microsoft-tone) and inherited from the base spec. The overlay only
-    # changes menu (routes) and data, so 'design' is replaced solely when explicitly provided.
-    if "design" in customer_spec:
-        merged["design"] = copy.deepcopy(customer_spec["design"])
     for path in required_paths:
         replacement = deep_merge(None, get_path(customer_spec, path))
         if replacement == DELETE_MARKER:
@@ -293,10 +268,15 @@ def canonical_source_url(value: str) -> str | None:
         return None
     scheme = parsed.scheme.lower()
     hostname = parsed.hostname.lower()
+    rendered_hostname = f"[{hostname}]" if ":" in hostname else hostname
     default_port = (scheme == "http" and port == 80) or (
         scheme == "https" and port == 443
     )
-    netloc = hostname if port is None or default_port else f"{hostname}:{port}"
+    netloc = (
+        rendered_hostname
+        if port is None or default_port
+        else f"{rendered_hostname}:{port}"
+    )
     path = parsed.path or "/"
     return urlunparse((scheme, netloc, path, "", parsed.query, ""))
 
@@ -317,11 +297,11 @@ def validate_customer(
     for section in ["meta", "story"]:
         if not isinstance(spec.get(section), dict):
             raise ComposeError(f"Customer overlay must own the full '{section}' section")
-    # Design is fixed (Microsoft-tone) in the runtime and base spec. The overlay changes
+    # Design is fixed to the Golden Runtime soft-dark theme. The overlay changes
     # only menu (routes) and data, so it must NOT redefine the visual design.
     if "design" in spec:
         raise ComposeError(
-            "Customer overlay must not define 'design'; the Microsoft-tone design is fixed "
+            "Customer overlay must not define 'design'; the soft-dark design is fixed "
             "in the base spec and runtime."
         )
 
@@ -343,11 +323,11 @@ def validate_customer(
     unique_sources = sorted(set(canonical_sources))
     if len(unique_sources) < 2:
         raise ComposeError("Customer overlay requires at least two unique HTTP(S) sources")
+    now = datetime.now(timezone.utc)
+    age_hours = (now - checked_at).total_seconds() / 3600
+    if age_hours < -0.25:
+        raise ComposeError("Research timestamp is unexpectedly in the future")
     if not allow_stale:
-        now = datetime.now(timezone.utc)
-        age_hours = (now - checked_at).total_seconds() / 3600
-        if age_hours < -0.25:
-            raise ComposeError("Research timestamp is unexpectedly in the future")
         if age_hours > max_age_hours:
             raise ComposeError(
                 f"Live research is {age_hours:.1f} hours old; maximum is {max_age_hours:.1f}"
@@ -374,6 +354,14 @@ def validate_customer(
     return spec, metadata
 
 
+def stale_research_allowed(customer_path: Path, skill_root: Path) -> bool:
+    resolved = customer_path.expanduser().resolve()
+    return any(
+        resolved.is_relative_to((skill_root / directory).resolve())
+        for directory in ("examples", "tests")
+    )
+
+
 def check_output_leaks(spec: dict[str, Any], forbid_terms: list[str]) -> None:
     for path, value in iter_strings(spec):
         for term in forbid_terms:
@@ -384,8 +372,35 @@ def check_output_leaks(spec: dict[str, Any], forbid_terms: list[str]) -> None:
             raise ComposeError(f"Unresolved placeholder in {path}: {placeholder.group(0)}")
 
 
+def validate_output_paths(
+    output: Path,
+    html_output: Path | None,
+    input_paths: set[Path],
+) -> None:
+    if output.suffix.lower() != ".json":
+        raise ComposeError("--output must use the .json extension")
+    if any(render_demo.paths_collide(output, path) for path in input_paths):
+        raise ComposeError("--output must not overwrite a base, pack, or customer input")
+    if html_output is None:
+        return
+    if html_output.suffix.lower() != ".html":
+        raise ComposeError("--html-output must use the .html extension")
+    if any(render_demo.paths_collide(html_output, path) for path in input_paths):
+        raise ComposeError("--html-output must not overwrite an input")
+    if render_demo.paths_collide(html_output, output):
+        raise ComposeError("--html-output must not overwrite the spec output")
+
+
 def main() -> int:
     args = parse_args()
+    if not math.isfinite(args.max_research_age_hours) or args.max_research_age_hours <= 0:
+        raise ComposeError("--max-research-age-hours must be a finite number greater than zero")
+    skill_root = Path(__file__).resolve().parents[1]
+    customer_path = args.customer.expanduser().resolve()
+    if args.allow_stale_research and not stale_research_allowed(customer_path, skill_root):
+        raise ComposeError(
+            "--allow-stale-research is restricted to repository examples and tests"
+        )
     base = load_json(args.base)
     if not isinstance(base, dict):
         raise ComposeError("Base spec must be an object")
@@ -407,11 +422,10 @@ def main() -> int:
             {
                 "id": metadata["id"],
                 "name": metadata["name"],
-                "designHints": metadata.get("designHints", []),
             }
         )
 
-    customer_document = load_json(args.customer)
+    customer_document = load_json(customer_path)
     customer_spec, customer_metadata = validate_customer(
         customer_document,
         required_paths,
@@ -427,6 +441,17 @@ def main() -> int:
     render_demo.validate_spec(composed)
 
     output = args.output.expanduser().resolve()
+    input_paths = {
+        args.base.expanduser().resolve(),
+        customer_path,
+        *(path.expanduser().resolve() for path in args.pack),
+        *render_demo.runtime_input_paths(args.runtime_dir),
+    }
+    html_output = args.html_output.expanduser().resolve() if args.html_output else None
+    validate_output_paths(output, html_output, input_paths)
+    rendered_html = (
+        render_demo.render(composed, args.runtime_dir) if html_output is not None else None
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(composed, ensure_ascii=False, indent=2, allow_nan=False),
@@ -445,13 +470,9 @@ def main() -> int:
         "specBytes": output.stat().st_size,
     }
 
-    if args.html_output:
-        html_output = args.html_output.expanduser().resolve()
+    if html_output is not None:
         html_output.parent.mkdir(parents=True, exist_ok=True)
-        html_output.write_text(
-            render_demo.render(composed, args.runtime_dir),
-            encoding="utf-8",
-        )
+        html_output.write_text(rendered_html, encoding="utf-8")
         summary.update(
             {
                 "htmlOutput": str(html_output),

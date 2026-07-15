@@ -11,7 +11,8 @@ Validated Base Spec
 ```
 
 Industry Pack은 산업 용어·공식·Agent 역할의 출발점만 제공하며, 고객 Overlay가 `meta`, `story`와
-메뉴·데이터(핵심 route·Agent)를 소유한다. **디자인은 Microsoft 톤으로 고정**되어 base spec이 제공하므로
+메뉴·데이터(핵심 route·Agent)를 소유한다. **디자인은 GitHub Primer Dark Dimmed 계열 soft-dark로
+고정**되어 base spec이 제공하므로
 Overlay는 `design`을 넣지 않는다.
 
 ## 1. 실시간 리서치는 매번 수행
@@ -22,7 +23,7 @@ Composition은 조사 캐시의 대체 수단이 아니다.
 - `checkedAt`은 timezone이 포함된 ISO 8601 timestamp다.
 - 공식·권위 소스 URL을 2개 이상 기록한다.
 - 기본 Composer는 24시간보다 오래된 research metadata를 거부한다.
-- `--allow-stale-research`는 repository example/test에만 사용한다.
+- `--allow-stale-research`는 repository `examples/`·`tests/` 아래 입력에만 허용되며 다른 경로에서는 Composer가 거부한다.
 
 ## 2. Layer 책임
 
@@ -41,7 +42,6 @@ Composition은 조사 캐시의 대체 수단이 아니다.
   "_pack": {
     "id": "renewable-energy-holdings",
     "name": "Renewable Energy Holdings",
-    "designHints": ["global network", "traceability", "energy flow"],
     "requiredCustomerPaths": [
       "dashboard.hero",
       "operations.flow.nodes",
@@ -68,8 +68,6 @@ Industry Pack에 금지되는 것:
 - `design`
 - `story`
 - 특정 고객명·공식 수치·최신 프로젝트 사실
-
-`designHints`는 디자인이 Microsoft 톤으로 고정되어 있으므로 사용되지 않는다(무시).
 
 ### Customer Overlay
 
@@ -113,7 +111,8 @@ Customer Overlay가 반드시 새로 결정하는 것:
 - 최종 output에는 `_pack`, `_customer` metadata를 포함하지 않는다.
 - `meta`, `story`와 Pack의 `requiredCustomerPaths`는 Customer Overlay 값으로 **전체 교체**해
   base/pack 하위 값이 조용히 남지 않게 한다.
-- `design`은 Microsoft 톤으로 고정이므로 Overlay가 정의하지 않는다. Overlay에 `design`이 있으면 Composer가 실패한다.
+- `design`은 GitHub soft-dark로 고정이므로 Overlay가 정의하지 않는다. Overlay에 `design`이 있으면
+  Composer가 실패한다.
 
 ## 4. Composer
 
@@ -121,9 +120,9 @@ Customer Overlay가 반드시 새로 결정하는 것:
 python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
   --base .github/skills/ai-platform-demo/examples/precision-manufacturing.example.json \
   --pack .github/skills/ai-platform-demo/packs/renewable-energy-holdings.pack.json \
-  --customer <session>/files/<app>-work/customer-overlay.json \
-  --output <session>/files/<app>-work/demo-spec.json \
-  --html-output <session>/files/<app>-work/<app>.html
+  --customer <session>/<app>-work/customer-overlay.json \
+  --output <session>/<app>-work/demo-spec.json \
+  --html-output <session>/<app>-work/<app>.html
 ```
 
 Composer는 다음 순서로 실패를 조기에 차단한다.

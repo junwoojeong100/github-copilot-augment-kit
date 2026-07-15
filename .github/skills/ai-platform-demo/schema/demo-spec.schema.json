@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/junwoojeong100/github-copilot-augment-kit/ai-platform-demo/demo-spec.schema.json",
+  "$id": "https://raw.githubusercontent.com/junwoojeong100/github-copilot-augment-kit/main/.github/skills/ai-platform-demo/schema/demo-spec.schema.json",
   "title": "AI Platform Demo Spec",
   "description": "Editor assistance schema. scripts/render_demo.py is the authoritative structural, semantic, and security validator.",
   "type": "object",
@@ -16,7 +16,8 @@
     "finance",
     "devops",
     "agents",
-    "governance"
+    "governance",
+    "notification"
   ],
   "properties": {
     "meta": {
@@ -37,7 +38,10 @@
         "audience": {"type": "string", "minLength": 1},
         "appName": {"type": "string", "minLength": 1},
         "initials": {"type": "string", "minLength": 1, "maxLength": 4},
-        "language": {"type": "string", "minLength": 2},
+        "language": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z]{2,3}(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?|[A-Za-z]{4}|[A-Za-z]{5,8})(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*$"
+        },
         "infrastructureLabel": {"type": "string", "minLength": 1},
         "demoNote": {"type": "string", "minLength": 1}
       }
@@ -58,28 +62,32 @@
       "properties": {
         "conceptWords": {
           "type": "array",
-          "minItems": 3,
-          "items": {"type": "string", "minLength": 1}
-        },
-        "visualMetaphor": {"type": "string", "minLength": 1},
-        "archetype": {
-          "enum": [
-            "precision-control-room",
-            "trusted-executive",
-            "operational-canvas",
-            "premium-minimal"
-          ]
-        },
-        "counterInfluence": {"type": "string", "minLength": 1},
-        "theme": {"enum": ["dark", "light"]},
-        "density": {"enum": ["compact", "executive", "spacious"]},
-        "motion": {"enum": ["restrained", "balanced", "energetic"]},
-        "tokens": {"type": "object"},
-        "avoid": {
-          "type": "array",
+          "prefixItems": [
+            {"const": "clarity"},
+            {"const": "confidence"},
+            {"const": "continuity"}
+          ],
           "minItems": 3,
           "maxItems": 3,
-          "items": {"type": "string", "minLength": 1}
+          "items": false
+        },
+        "visualMetaphor": {"const": "connected operating signals"},
+        "archetype": {"const": "trusted-executive"},
+        "counterInfluence": {"const": "editorial clarity"},
+        "theme": {"const": "dark-dimmed"},
+        "density": {"const": "executive"},
+        "motion": {"const": "balanced"},
+        "tokens": {"type": "object", "maxProperties": 0},
+        "avoid": {
+          "type": "array",
+          "prefixItems": [
+            {"const": "generic red-blue gradient"},
+            {"const": "oversized glass cards"},
+            {"const": "decorative 3D icons"}
+          ],
+          "minItems": 3,
+          "maxItems": 3,
+          "items": false
         }
       }
     },
@@ -88,7 +96,18 @@
       "required": ["frame", "audienceMessages", "climax"],
       "properties": {
         "frame": {"type": "string", "minLength": 1},
-        "audienceMessages": {"type": "array", "minItems": 2},
+        "audienceMessages": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["audience", "message"],
+            "properties": {
+              "audience": {"type": "string", "minLength": 1},
+              "message": {"type": "string", "minLength": 1}
+            }
+          }
+        },
         "climax": {"type": "string", "minLength": 1}
       }
     },
@@ -105,50 +124,230 @@
         {"$ref": "#/$defs/governanceRoute"}
       ],
       "minItems": 8,
-      "maxItems": 8
+      "maxItems": 8,
+      "items": false
     },
-    "dashboard": {"$ref": "#/$defs/routeSection"},
-    "operations": {"$ref": "#/$defs/routeSection"},
+    "dashboard": {
+      "allOf": [
+        {"$ref": "#/$defs/routeSection"},
+        {
+          "required": ["kpis", "stream", "feedTitle", "feedHint", "feed", "cards", "table", "learningLoop"]
+        }
+      ]
+    },
+    "operations": {
+      "allOf": [
+        {"$ref": "#/$defs/routeSection"},
+        {"required": ["kpis", "flow", "action", "table"]}
+      ]
+    },
     "simulator": {
       "allOf": [
         {"$ref": "#/$defs/routeSection"},
         {
           "type": "object",
-          "required": ["inputs", "output", "secondary", "history"],
+          "required": [
+            "inputsTitle",
+            "inputsHint",
+            "inputs",
+            "output",
+            "secondary",
+            "recommendations",
+            "defaultRecommendation",
+            "histogram",
+            "history"
+          ],
           "properties": {
             "inputs": {
               "type": "array",
               "minItems": 2,
               "items": {
                 "type": "object",
-                "required": ["id", "label", "min", "max", "value", "optimum", "weight"],
+                "required": ["id", "label", "unit", "min", "max", "step", "value", "optimum", "weight"],
                 "properties": {
                   "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"},
                   "label": {"type": "string", "minLength": 1},
+                  "unit": {"type": "string"},
                   "min": {"type": "number"},
                   "max": {"type": "number"},
+                  "step": {"type": "number", "exclusiveMinimum": 0},
                   "value": {"type": "number"},
                   "optimum": {"type": "number"},
-                  "weight": {"type": "number"}
+                  "weight": {"type": "number", "minimum": 0},
+                  "decimals": {"type": "integer", "minimum": 0, "maximum": 6}
                 }
               }
             },
-            "output": {"type": "object"},
-            "secondary": {"type": "array", "minItems": 3},
+            "output": {
+              "type": "object",
+              "required": [
+                "label",
+                "unit",
+                "goodLabel",
+                "warningLabel",
+                "dangerLabel",
+                "base",
+                "min",
+                "max",
+                "goodThreshold",
+                "warningThreshold"
+              ],
+              "properties": {
+                "label": {"type": "string", "minLength": 1},
+                "unit": {"type": "string", "minLength": 1},
+                "goodLabel": {"type": "string", "minLength": 1},
+                "warningLabel": {"type": "string", "minLength": 1},
+                "dangerLabel": {"type": "string", "minLength": 1},
+                "base": {"type": "number"},
+                "min": {"type": "number"},
+                "max": {"type": "number"},
+                "goodThreshold": {"type": "number"},
+                "warningThreshold": {"type": "number"},
+                "decimals": {"type": "integer", "minimum": 0, "maximum": 6}
+              }
+            },
+            "secondary": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "object",
+                "required": ["label", "unit", "base", "weights"],
+                "properties": {
+                  "label": {"type": "string", "minLength": 1},
+                  "unit": {"type": "string"},
+                  "base": {"type": "number"},
+                  "weights": {
+                    "type": "object",
+                    "additionalProperties": {"type": "number"}
+                  },
+                  "decimals": {"type": "integer", "minimum": 0, "maximum": 6}
+                }
+              }
+            },
+            "recommendations": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["inputId", "operator", "threshold", "message"],
+                "properties": {
+                  "inputId": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"},
+                  "operator": {"enum": [">", "<", "abs>", "default"]},
+                  "threshold": {"type": "number"},
+                  "message": {"type": "string", "minLength": 1}
+                }
+              }
+            },
+            "defaultRecommendation": {"type": "string", "minLength": 1},
+            "histogram": {
+              "type": "object",
+              "required": ["title", "hint", "leftLabel", "centerLabel", "rightLabel"],
+              "properties": {
+                "title": {"type": "string", "minLength": 1},
+                "hint": {"type": "string", "minLength": 1},
+                "leftLabel": {"type": "string", "minLength": 1},
+                "centerLabel": {"type": "string", "minLength": 1},
+                "rightLabel": {"type": "string", "minLength": 1}
+              }
+            },
             "history": {"$ref": "#/$defs/table"}
           }
         }
       ]
     },
-    "improvement": {"$ref": "#/$defs/routeSection"},
-    "finance": {"$ref": "#/$defs/routeSection"},
-    "devops": {"$ref": "#/$defs/routeSection"},
+    "improvement": {
+      "allOf": [
+        {"$ref": "#/$defs/routeSection"},
+        {
+          "required": [
+            "kpis",
+            "stepsTitle",
+            "stepsHint",
+            "steps",
+            "factorsTitle",
+            "factorsHint",
+            "factors",
+            "impactsTitle",
+            "impactsHint",
+            "impacts",
+            "board",
+            "action"
+          ]
+        }
+      ]
+    },
+    "finance": {
+      "allOf": [
+        {"$ref": "#/$defs/routeSection"},
+        {
+          "required": [
+            "leversTitle",
+            "leversHint",
+            "levers",
+            "margin",
+            "summaryMetrics",
+            "composition",
+            "watchlist",
+            "explanation"
+          ]
+        }
+      ]
+    },
+    "devops": {
+      "allOf": [
+        {"$ref": "#/$defs/routeSection"},
+        {
+          "required": [
+            "kpis",
+            "stepsTitle",
+            "stepsHint",
+            "steps",
+            "issuesTitle",
+            "issuesHint",
+            "issueHeaders",
+            "issues",
+            "action"
+          ],
+          "properties": {
+            "issues": {
+              "type": "array",
+              "minItems": 3,
+              "allOf": [
+                {
+                  "contains": {
+                    "type": "object",
+                    "required": ["highRisk"],
+                    "properties": {"highRisk": {"const": false}}
+                  }
+                },
+                {
+                  "contains": {
+                    "type": "object",
+                    "required": ["highRisk"],
+                    "properties": {"highRisk": {"const": true}}
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
     "agents": {
       "allOf": [
         {"$ref": "#/$defs/routeSection"},
         {
           "type": "object",
-          "required": ["profiles", "orchestration"],
+          "required": [
+            "listTitle",
+            "listHint",
+            "governedLabel",
+            "placeholder",
+            "sendLabel",
+            "fallback",
+            "profiles",
+            "orchestration"
+          ],
           "properties": {
             "profiles": {
               "type": "array",
@@ -182,14 +381,25 @@
         }
       ]
     },
-    "governance": {"$ref": "#/$defs/routeSection"}
+    "governance": {
+      "allOf": [
+        {"$ref": "#/$defs/routeSection"},
+        {"required": ["cards", "controls", "memories", "learningLoop", "evaluation"]}
+      ]
+    },
+    "notification": {"$ref": "#/$defs/notification"},
+    "ambientNotifications": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/notification"}
+    },
+    "ambientIntervalMs": {"type": "number", "exclusiveMinimum": 0}
   },
   "$defs": {
     "route": {
       "type": "object",
       "required": ["id", "icon", "name", "short"],
       "properties": {
-        "id": {"type": "string"},
+        "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"},
         "icon": {"type": "string", "minLength": 1},
         "name": {"type": "string", "minLength": 1},
         "short": {"type": "string", "minLength": 1},
@@ -256,11 +466,16 @@
     },
     "kpi": {
       "type": "object",
-      "required": ["label", "value", "icon", "series"],
+      "required": ["label", "value", "icon", "delta", "direction", "color", "series"],
       "properties": {
         "label": {"type": "string", "minLength": 1},
         "value": {"type": "number"},
         "icon": {"type": "string", "minLength": 1},
+        "delta": {"type": "string", "minLength": 1},
+        "direction": {"enum": ["up", "down", "warning"]},
+        "color": {"$ref": "#/$defs/semanticColor"},
+        "decimals": {"type": "integer", "minimum": 0, "maximum": 6},
+        "unit": {"type": "string"},
         "series": {
           "type": "array",
           "minItems": 2,
@@ -270,11 +485,57 @@
     },
     "table": {
       "type": "object",
-      "required": ["title", "headers", "rows"],
+      "required": ["title", "hint", "headers", "rows"],
       "properties": {
         "title": {"type": "string", "minLength": 1},
-        "headers": {"type": "array", "minItems": 2},
-        "rows": {"type": "array", "minItems": 3}
+        "hint": {"type": "string", "minLength": 1},
+        "headers": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 3,
+          "items": {"$ref": "#/$defs/tableRow"}
+        }
+      }
+    },
+    "tableRow": {
+      "type": "object",
+      "required": ["cells", "detail"],
+      "properties": {
+        "cells": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": ["string", "number"]}
+        },
+        "detail": {"type": "string", "minLength": 1},
+        "detailTitle": {"type": "string"},
+        "icon": {"type": "string"},
+        "status": {"$ref": "#/$defs/status"}
+      }
+    },
+    "status": {
+      "type": "object",
+      "required": ["label", "tone"],
+      "properties": {
+        "label": {"type": "string", "minLength": 1},
+        "tone": {
+          "enum": ["success", "warning", "danger", "info", "violet", "ok", "warn", "bad"]
+        }
+      }
+    },
+    "semanticColor": {
+      "enum": ["brand", "accent", "info", "success", "warning", "danger", "violet"]
+    },
+    "notification": {
+      "type": "object",
+      "required": ["title", "text", "icon"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1},
+        "icon": {"type": "string", "minLength": 1}
       }
     },
     "routeSection": {

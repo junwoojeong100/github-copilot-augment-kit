@@ -4,6 +4,9 @@
 저장소 밖 공용 캐시에 설치하고 재사용한다. 고객별 검증 스크립트와 screenshots만 세션 작업 폴더에
 두며, 저장소나 최종 HTML 출력 폴더에서 `npm install`을 실행하지 않는다.
 
+이 문서의 `<session>`은 client가 제공하는 session artifact directory다. 제공되지 않으면 저장소와
+최종 출력 폴더 밖의 OS temporary directory에 고유 root를 만든다.
+
 ## 0. 전제 — Spec validation + Golden Runtime
 
 브라우저를 열기 전에 Customer Overlay composition, 최종 Spec, 공통 Runtime을 먼저 검사한다.
@@ -12,12 +15,12 @@
 python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
   --base .github/skills/ai-platform-demo/examples/precision-manufacturing.example.json \
   --pack .github/skills/ai-platform-demo/packs/<industry>.pack.json \
-  --customer <session>/files/<app>-work/customer-overlay.json \
-  --output <session>/files/<app>-work/demo-spec.json \
-  --html-output <session>/files/<app>-work/<app>.html
+  --customer <session>/<app>-work/customer-overlay.json \
+  --output <session>/<app>-work/demo-spec.json \
+  --html-output <session>/<app>-work/<app>.html
 
 python3 -B .github/skills/ai-platform-demo/scripts/render_demo.py \
-  --spec <session>/files/<app>-work/demo-spec.json \
+  --spec <session>/<app>-work/demo-spec.json \
   --validate-only
 
 node --check .github/skills/ai-platform-demo/runtime/runtime.js
@@ -31,7 +34,7 @@ node --check .github/skills/ai-platform-demo/runtime/runtime.js
 ```bash
 CACHE_ROOT="${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}"
 PUPPETEER_HOME="$CACHE_ROOT/ai-platform-demo/puppeteer"
-WORK_DIR="<session>/files/<app>-work"
+WORK_DIR="<session>/<app>-work"
 
 mkdir -p "$PUPPETEER_HOME" "$WORK_DIR"
 if [ ! -f "$PUPPETEER_HOME/package.json" ]; then
@@ -54,7 +57,7 @@ fi
 ```bash
 CACHE_ROOT="${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}"
 PUPPETEER_HOME="$CACHE_ROOT/ai-platform-demo/puppeteer"
-WORK_DIR="<session>/files/<app>-work"
+WORK_DIR="<session>/<app>-work"
 
 NODE_PATH="$PUPPETEER_HOME/node_modules" \
 PUPPETEER_CACHE_DIR="$PUPPETEER_HOME/chromium" \
@@ -64,52 +67,25 @@ FULL_QA=1 \
 node .github/skills/ai-platform-demo/scripts/verify_demo.js
 ```
 
-아래 코드는 verifier의 핵심 동작을 설명하는 참고다.
+Verifier는 기본 Chromium sandbox를 유지한다. sandbox를 제공할 수 없는 신뢰된 격리 CI 컨테이너에서만
+위험을 검토한 뒤 `PUPPETEER_NO_SANDBOX=1`을 명시적으로 설정한다.
+
+아래는 verifier contract의 요약이다. 실제 source of truth는 `scripts/verify_demo.js`이며 복사본을
+세션 폴더에 만들지 않는다.
 ```js
-const puppeteer=require('puppeteer'), path=require('path');
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const allRoutes=['dashboard','operations','simulator','improvement','finance','devops','agents','governance']; // Golden Runtime contract
-const routes=(process.env.VERIFY_ROUTES||allRoutes.join(',')).split(',').map(x=>x.trim()).filter(Boolean);
 const fullQa=process.env.FULL_QA!=='0';
-(async()=>{
-  const file='file://'+path.resolve(process.env.APP_HTML);
-  const b=await puppeteer.launch({args:['--no-sandbox']});
-  const page=await b.newPage();
-  const errors=[];
-  page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE: '+m.text())});
-  page.on('pageerror',e=>errors.push('PAGEERROR: '+e.message));
-  await page.setViewport({width:1440,height:900});
-  await page.goto(file,{waitUntil:'networkidle0'});
-
-  // (1) 각 화면 스크린샷 + 데모 버튼 클릭
-  for(const r of routes){
-    await page.evaluate(rt=>location.hash=rt, r); await sleep(800);
-    await page.evaluate(()=>['reopt','orchRun','assignIssue','runAnalysis','evalRun'].forEach(id=>{const x=document.getElementById(id);if(x)x.click()}));
-    await sleep(300);
-    await page.screenshot({path:'shots/'+r+'.png'});
-  }
-  let agentSwitch=[];
-  if(fullQa){
-    // (2) 빠른 전환 스트레스 테스트 (null 접근·리스너 누수 적발)
-    for(let k=0;k<4;k++)for(const r of allRoutes){await page.evaluate(rt=>location.hash=rt,r);await sleep(90)}
-    await sleep(1200);
-    // (3) 에이전트 전환 + 자유질문
-    await page.evaluate(()=>location.hash='agents'); await sleep(700);
-    agentSwitch=await page.evaluate(()=>{const out=[];const rows=[...document.querySelectorAll('#agentList .agent-row')];
-      rows.forEach(row=>{row.click();out.push(document.getElementById('chatTitle')?.textContent||'')});return out;});
-    await page.evaluate(()=>{const i=document.getElementById('chatInput');if(i){i.value='__free_q__';document.getElementById('sendBtn').click()}}); await sleep(1200);
-  }
-
-  console.log('mode:',fullQa?'FULL':'TARGETED');
-  console.log('agentTitles:',agentSwitch);
-  console.log('ERRORS:',errors.length?errors:'NONE');
-  await b.close();
-})();
+const routes=fullQa
+  ? allRoutes // FULL_QA는 VERIFY_ROUTES와 무관하게 항상 8개를 검사
+  : validatedVerifyRoutes;
+// 각 route의 required DOM ID, DEMO DATA, overflow, click handler, 안정화 후 screenshot 검사
+// FULL_QA: operations/simulator/improvement/finance/devops(low/high risk)/agents/governance interaction
+// 모든 Agent 전환, 지연 채팅 격리, orchestration, 빠른 8-route 전환, console/page error 검사
 ```
 ```bash
 CACHE_ROOT="${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}"
 PUPPETEER_HOME="$CACHE_ROOT/ai-platform-demo/puppeteer"
-WORK_DIR="<session>/files/<app>-work"
+WORK_DIR="<session>/<app>-work"
 REPO_ROOT="<repo-root>"
 
 mkdir -p "$WORK_DIR/shots"
@@ -127,17 +103,21 @@ node "$REPO_ROOT/.github/skills/ai-platform-demo/scripts/verify_demo.js"
 NODE_PATH="$PUPPETEER_HOME/node_modules" \
 PUPPETEER_CACHE_DIR="$PUPPETEER_HOME/chromium" \
 APP_HTML="<absolute-path>/<APP>.html" \
-SHOTS_DIR="<session>/files/<app>-work/shots-targeted" \
+SHOTS_DIR="<session>/<app>-work/shots-targeted" \
 VERIFY_ROUTES="finance,agents" \
 FULL_QA=0 \
 node "<repo-root>/.github/skills/ai-platform-demo/scripts/verify_demo.js"
 ```
 
-완료 전에는 `VERIFY_ROUTES`를 비우고 `FULL_QA=1`로 다시 실행한다.
+완료 전에는 `FULL_QA=1`로 다시 실행한다. 이 모드에서는 `VERIFY_ROUTES`가 설정돼 있어도 8개 전체
+route를 검사하므로 최종 gate가 실수로 축소되지 않는다. `SHOTS_DIR`는 필수이며 session 작업 폴더
+밖을 가리키면 verifier가 거부한다.
 
 ## 3. 합격 기준
-- **`ERRORS: NONE`** (콘솔/페이지 에러 0건) — 빠른 전환 후에도.
+- Verifier JSON 결과의 `errors`와 `failures`가 모두 빈 배열(콘솔/페이지 오류 0건) — 빠른 전환 후에도.
 - `agentTitles`에 **모든 에이전트가 서로 다르게** 찍힘(클릭 전환 정상).
+- DevOps에는 일반 issue와 high-risk issue가 각각 하나 이상 있어야 하며, 일반 issue는 결과를 만들고
+  high-risk issue는 human-led plan으로 남음.
 - 8개 스크린샷을 **이미지로 직접 확인**: 텍스트 잘림/겹침, 차트·게이지·맵·도넛 렌더, KPI에 `NaN`/`undefined` 없음, 토프바·사이드바·푸터 겹침 없음.
 
 위 합격 기준은 `FULL_QA=1` 결과에만 적용한다. `FULL_QA=0`은 수정 중 회귀 확인용이며 완료 판정에
@@ -153,9 +133,15 @@ node "<repo-root>/.github/skills/ai-platform-demo/scripts/verify_demo.js"
 | 컨트롤·푸터 겹침 | 고정 UI는 화면 가장자리/빈 영역에 배치, z-index 정리 |
 
 ## 5. 정리 (필수)
-검증이 끝나면 무거운 검증 부산물만 삭제하고 Fact Ledger와 metrics는 세션 폴더에 유지:
+client-provided session artifact directory를 사용했다면 무거운 검증 부산물만 삭제하고 Fact Ledger와
+metrics는 세션 폴더에 유지한다:
 ```bash
-rm -rf <session>/files/<app>-work/shots
+rm -rf <session>/<app>-work/shots
+```
+OS temporary directory fallback을 사용했다면 요청된 최종 HTML을 출력 위치에 복사한 후 work
+directory 전체를 삭제한다:
+```bash
+rm -rf <session>/<app>-work
 ```
 > 시각 검증용 스크린샷이 사용자에게 유용하면 보여준 뒤 정리한다. 저장소와 최종 출력 폴더에는
 > **결과 `.html` 하나만** 남긴다. Python 보조 스크립트가 필요하면 같은 세션 작업 폴더에서

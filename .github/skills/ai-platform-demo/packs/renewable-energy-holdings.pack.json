@@ -3,12 +3,6 @@
     "id": "renewable-energy-holdings",
     "name": "Renewable Energy Holdings",
     "version": "1.0.0",
-    "designHints": [
-      "global energy network",
-      "traceability",
-      "portfolio control",
-      "carbon evidence"
-    ],
     "requiredCustomerPaths": [
       "dashboard.hero",
       "operations.hero",
@@ -334,9 +328,9 @@
       "leversTitle": "Investment committee levers",
       "leversHint": "Adjust three variables",
       "levers": [
-        {"id": "contractCoverage", "label": "Contracted storage coverage", "min": 30, "max": 90, "step": 1, "value": 62, "decimals": 0, "unit": "%", "impact": 0.045},
-        {"id": "greenPremium", "label": "Low-carbon premium capture", "min": 0, "max": 30, "step": 1, "value": 12, "decimals": 0, "unit": "%", "impact": 0.07},
-        {"id": "cashRelease", "label": "Working-capital release", "min": 0, "max": 20, "step": 1, "value": 6, "decimals": 0, "unit": " days", "impact": 0.055}
+        {"id": "contractCoverage", "label": "Contracted storage coverage", "min": 30, "max": 90, "step": 1, "value": 62, "decimals": 0, "unit": "%"},
+        {"id": "greenPremium", "label": "Low-carbon premium capture", "min": 0, "max": 30, "step": 1, "value": 12, "decimals": 0, "unit": "%"},
+        {"id": "cashRelease", "label": "Working-capital release", "min": 0, "max": 20, "step": 1, "value": 6, "decimals": 0, "unit": " days"}
       ],
       "margin": {
         "label": "Illustrative portfolio value margin",
@@ -501,12 +495,12 @@
         "hint": "Click a row for details",
         "headers": ["Control", "Microsoft / GitHub service", "Demo policy", "Status"],
         "rows": [
-          {"cells": ["Identity", "Entra Agent ID · RBAC", "Per-agent least privilege"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Agent identity", "detail": "Each agent receives scoped identity and permissions.", "icon": "⬡"},
+          {"cells": ["Identity", "Microsoft Entra Agent ID · RBAC", "Per-agent least privilege"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Agent identity", "detail": "Each agent receives scoped identity and permissions.", "icon": "⬡"},
           {"cells": ["Knowledge", "Foundry IQ · Azure AI Search", "ACL-aware grounding"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Knowledge grounding", "detail": "Evidence and operating knowledge are retrieved with access filters.", "icon": "▤"},
           {"cells": ["Data", "Microsoft Purview", "Classify · protect · audit"], "status": {"label": "Designed", "tone": "info"}, "detailTitle": "Data governance", "detail": "Sensitivity and AI data posture controls are mapped.", "icon": "◈"},
-          {"cells": ["Safety", "AI Content Safety", "Filter · evaluate · red team"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Safety evaluation", "detail": "External responses and internal actions are evaluated separately.", "icon": "✓"},
-          {"cells": ["Runtime", "Defender · VNet isolation", "Threat and posture signals"], "status": {"label": "Designed", "tone": "info"}, "detailTitle": "Runtime security", "detail": "Runtime and tool connections are monitored.", "icon": "⬡"},
-          {"cells": ["Engineering", "GitHub AI Controls · GHAS", "Session audit · merge gate"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Engineering governance", "detail": "Agent sessions and code changes require review.", "icon": "⌘"},
+          {"cells": ["Safety", "Azure AI Content Safety", "Filter · evaluate · red team"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Safety evaluation", "detail": "External responses and internal actions are evaluated separately.", "icon": "✓"},
+          {"cells": ["Runtime", "Microsoft Defender · VNet isolation", "Threat and posture signals"], "status": {"label": "Designed", "tone": "info"}, "detailTitle": "Runtime security", "detail": "Runtime and tool connections are monitored.", "icon": "⬡"},
+          {"cells": ["Engineering", "GitHub AI Controls · GitHub Advanced Security", "Session audit · merge gate"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Engineering governance", "detail": "Agent sessions and code changes require review.", "icon": "⌘"},
           {"cells": ["Observability", "Foundry · Application Insights", "Trace every decision"], "status": {"label": "Mapped", "tone": "success"}, "detailTitle": "Observability", "detail": "Decision, retrieval, tool, approval, and latency are traced.", "icon": "✦"}
         ]
       },

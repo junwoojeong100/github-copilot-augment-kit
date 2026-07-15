@@ -4,7 +4,7 @@
 브라우저 QA를 통과하는** spec을 쓰기 위한 압축 참고표다. 작성 후 반드시 아래 린트를 먼저 돌린다:
 
 ```bash
-python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/files/<app>-work/demo-spec.json
+python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-work/demo-spec.json
 ```
 
 가장 빠른 방법: **`examples/precision-manufacturing.example.json`을 복사해 내부 ID는 그대로 두고
@@ -25,15 +25,16 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/files/
 | `governance.cards` | **정확히 3** · `learningLoop.steps` **정확히 4** · `controls.rows`/`memories.rows` ≥N |
 
 ## 2. 내부 ID 연동 (반드시 일치)
-- `simulator.inputs[].id` == 각 `simulator.secondary[].weights`의 키 == `recommendations[].inputId`
-- `finance.levers[].id` == `finance.margin.impacts` 키 == `summaryMetrics[].impacts` 키 == `composition.segments[].impacts` 키
-- `operations.action.kpiUpdates`의 키는 `"1"`,`"2"`,`"3"`(KPI 인덱스)
+- `simulator.inputs[].id` 집합 == 각 `simulator.secondary[].weights`의 키 집합. 모든 `recommendations[].inputId`는 그 집합에 속해야 한다.
+- `finance.*.impacts` 키는 `finance.levers[].id`의 **부분집합**이다. 생략한 lever 영향은 0으로 처리한다.
+- `operations.action.kpiUpdates`의 키는 바꿀 KPI의 0-based 인덱스(`"0"`~`"3"`)다.
 > base를 복사하면 이 ID들이 그대로 유지되므로 **라벨만 바꾸고 id는 두는 것**이 가장 안전하다.
 
 ## 3. 색·상태 값
 - `status.tone` / `hero.badge.tone`: `success` · `warning` · `danger` · `info` · `violet` (→ ok/warn/bad/info/violet 배지)
 - `kpi.color`: `brand` · `info` · `accent` · `success` · `violet` · `warning`
-- 디자인은 **고정 Microsoft 톤**이라 색을 새로 만들지 않는다. `design` 블록은 base의 것을 그대로 복사한다.
+- 디자인은 **고정 GitHub Primer Dark Dimmed 계열 soft-dark**라 색을 새로 만들지 않는다. `design`
+  블록은 base의 것을 그대로 복사하며 `design.tokens`는 빈 객체다.
 
 ## 4. Rich text (에이전트 답변 등)
 - 허용 태그: `b` `strong` `em` `code` `br` `div` `span`

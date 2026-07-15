@@ -6,38 +6,69 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import shutil
 import subprocess
 import sys
-import tempfile
+import uuid
 from pathlib import Path
 
 import fitz
 from PIL import Image, ImageDraw
 
+from tooling import resolve_soffice
 
-SOFFICE_CANDIDATES = [
-    "/opt/homebrew/bin/soffice",
-    "/usr/local/bin/soffice",
-    "/Applications/LibreOffice.app/Contents/MacOS/soffice",
-]
+OUTPUT_MARKER = ".adaptive-presentation-render"
+OUTPUT_MARKER_CONTENT = "adaptive-presentation-render-v1\n"
+
+
+def positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("value must be greater than zero")
+    return parsed
+
+
+def positive_float(value: str) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed) or parsed <= 0:
+        raise argparse.ArgumentTypeError("value must be greater than zero")
+    return parsed
+
+
+def jpeg_quality(value: str) -> int:
+    parsed = int(value)
+    if not 1 <= parsed <= 95:
+        raise argparse.ArgumentTypeError("JPEG quality must be between 1 and 95")
+    return parsed
+
+
+def output_dir_is_owned(path: Path) -> bool:
+    marker = path / OUTPUT_MARKER
+    try:
+        return marker.read_text(encoding="utf-8") == OUTPUT_MARKER_CONTENT
+    except OSError:
+        return False
+
+
+def claim_output_dir(path: Path) -> None:
+    if path.exists() and not path.is_dir():
+        raise NotADirectoryError(path)
+    path.mkdir(parents=True, exist_ok=True)
+    if any(path.iterdir()) and not output_dir_is_owned(path):
+        raise RuntimeError(
+            f"Refusing to use non-empty unowned output directory: {path}. "
+            "Choose a dedicated session QA directory."
+        )
+    (path / OUTPUT_MARKER).write_text(
+        OUTPUT_MARKER_CONTENT, encoding="utf-8"
+    )
 
 
 def find_soffice(explicit: Path | None) -> str:
-    if explicit:
-        path = explicit.expanduser().resolve()
-        if not path.is_file():
-            raise FileNotFoundError(path)
-        return str(path)
-
-    from_path = shutil.which("soffice")
-    if from_path:
-        return from_path
-
-    for candidate in SOFFICE_CANDIDATES:
-        if Path(candidate).is_file():
-            return candidate
-
+    resolved = resolve_soffice(explicit)
+    if resolved:
+        return resolved
     raise FileNotFoundError(
         "LibreOffice soffice not found. Install LibreOffice or pass --soffice."
     )
@@ -61,47 +92,61 @@ def parse_slides(value: str | None, total: int) -> list[int]:
         else:
             selected.add(int(item))
 
+    if not selected:
+        raise ValueError("No slides selected")
     invalid = sorted(number for number in selected if number < 1 or number > total)
     if invalid:
         raise ValueError(f"Slides out of range 1-{total}: {invalid}")
     return sorted(selected)
 
 
-def convert_to_pdf(deck: Path, out_dir: Path, soffice: str) -> Path:
+def convert_to_pdf(
+    deck: Path, out_dir: Path, soffice: str, timeout_seconds: float
+) -> Path:
     expected = out_dir / f"{deck.stem}.pdf"
-    if expected.exists():
-        expected.unlink()
-
-    with tempfile.TemporaryDirectory(prefix="copilot-soffice-") as profile_dir:
-        profile_uri = Path(profile_dir).resolve().as_uri()
-        result = subprocess.run(
-            [
-                soffice,
-                f"-env:UserInstallation={profile_uri}",
-                "--headless",
-                "--convert-to",
-                "pdf",
-                "--outdir",
-                str(out_dir),
-                str(deck),
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-    if result.returncode != 0:
-        raise RuntimeError(
-            "LibreOffice conversion failed:\n"
-            f"stdout:\n{result.stdout}\n"
-            f"stderr:\n{result.stderr}"
-        )
-    if not expected.is_file():
-        raise RuntimeError(
-            f"LibreOffice reported success but PDF was not created: {expected}\n"
-            f"stdout:\n{result.stdout}\n"
-            f"stderr:\n{result.stderr}"
-        )
-    return expected
+    stage_dir = out_dir / f".render-stage-{uuid.uuid4().hex}"
+    profile_dir = stage_dir / "soffice-profile"
+    profile_dir.mkdir(parents=True)
+    try:
+        profile_uri = profile_dir.resolve().as_uri()
+        try:
+            result = subprocess.run(
+                [
+                    soffice,
+                    f"-env:UserInstallation={profile_uri}",
+                    "--headless",
+                    "--convert-to",
+                    "pdf",
+                    "--outdir",
+                    str(stage_dir),
+                    str(deck),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=timeout_seconds,
+            )
+        except subprocess.TimeoutExpired as error:
+            raise RuntimeError(
+                f"LibreOffice conversion timed out after {timeout_seconds:g} seconds"
+            ) from error
+        if result.returncode != 0:
+            raise RuntimeError(
+                "LibreOffice conversion failed:\n"
+                f"stdout:\n{result.stdout}\n"
+                f"stderr:\n{result.stderr}"
+            )
+        staged_pdf = stage_dir / f"{deck.stem}.pdf"
+        if not staged_pdf.is_file():
+            raise RuntimeError(
+                f"LibreOffice reported success but PDF was not created: {staged_pdf}\n"
+                f"stdout:\n{result.stdout}\n"
+                f"stderr:\n{result.stderr}"
+            )
+        staged_pdf.replace(expected)
+        return expected
+    finally:
+        shutil.rmtree(stage_dir, ignore_errors=True)
 
 
 def sha256_file(path: Path) -> str:
@@ -145,6 +190,12 @@ def validate_reusable_pdf(deck: Path, pdf: Path, deck_sha256: str) -> Path:
         raise RuntimeError(
             f"Reusable PDF manifest belongs to another deck: {manifest_deck}"
         )
+    manifest_pdf_sha256 = manifest.get("pdf_sha256")
+    if not manifest_pdf_sha256 or sha256_file(reusable) != manifest_pdf_sha256:
+        raise RuntimeError(
+            "Reusable PDF content does not match its manifest. "
+            "Run a fresh render with --keep-pdf."
+        )
     return reusable
 
 
@@ -169,7 +220,8 @@ def make_contact_sheet(
     )
 
     for index, (slide_number, path) in enumerate(slide_paths):
-        image = Image.open(path).convert("RGB")
+        with Image.open(path) as source:
+            image = source.convert("RGB")
         image.thumbnail((thumb_width, thumb_height))
         cell = Image.new("RGB", (cell_width, cell_height), "white")
         cell.paste(
@@ -221,13 +273,9 @@ def save_image(
             return
 
     while max_bytes and output.stat().st_size > max_bytes and candidate.width > 720:
-        candidate = candidate.resize(
-            (
-                max(720, int(candidate.width * 0.86)),
-                max(405, int(candidate.height * 0.86)),
-            ),
-            Image.Resampling.LANCZOS,
-        )
+        width = max(720, int(candidate.width * 0.86))
+        height = max(1, round(candidate.height * width / candidate.width))
+        candidate = candidate.resize((width, height), Image.Resampling.LANCZOS)
         candidate.save(
             output,
             format="JPEG",
@@ -259,12 +307,17 @@ def render(args: argparse.Namespace) -> dict:
         raise FileNotFoundError(deck)
     deck_sha256 = sha256_file(deck)
 
-    out_dir = (
-        args.out.expanduser().resolve()
-        if args.out
-        else Path(tempfile.mkdtemp(prefix=f"{deck.stem}-qa-"))
-    )
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = args.out.expanduser().resolve()
+    claim_output_dir(out_dir)
+    for pattern in (
+        "slide-*.jpg",
+        "slide-*.png",
+        "contact-*.jpg",
+        "contact-*.png",
+        ".manifest-*.tmp",
+    ):
+        for stale in out_dir.glob(pattern):
+            stale.unlink()
 
     reusable_pdf = getattr(args, "reuse_pdf", None)
     reused_pdf = reusable_pdf is not None
@@ -272,14 +325,18 @@ def render(args: argparse.Namespace) -> dict:
         pdf = validate_reusable_pdf(deck, reusable_pdf, deck_sha256)
     else:
         soffice = find_soffice(args.soffice)
-        pdf = convert_to_pdf(deck, out_dir, soffice)
+        pdf = convert_to_pdf(
+            deck,
+            out_dir,
+            soffice,
+            getattr(args, "conversion_timeout", 120.0),
+        )
 
+    manifest_path = out_dir / "manifest.json"
+    manifest_path.unlink(missing_ok=True)
     if hasattr(fitz, "TOOLS") and hasattr(fitz.TOOLS, "mupdf_display_errors"):
         fitz.TOOLS.mupdf_display_errors(False)
 
-    document = fitz.open(pdf)
-    total_slides = len(document)
-    selected = parse_slides(args.slides, total_slides)
     rendered: list[tuple[int, Path]] = []
     matrix = fitz.Matrix(args.scale, args.scale)
     image_format = getattr(args, "image_format", "jpg")
@@ -287,23 +344,26 @@ def render(args: argparse.Namespace) -> dict:
     max_image_kb = getattr(args, "max_image_kb", 900)
     suffix = ".png" if image_format == "png" else ".jpg"
 
-    for slide_number in selected:
-        page = document[slide_number - 1]
-        pixmap = page.get_pixmap(matrix=matrix, alpha=False)
-        path = out_dir / f"slide-{slide_number:02d}{suffix}"
-        image = Image.frombytes(
-            "RGB",
-            (pixmap.width, pixmap.height),
-            pixmap.samples,
-        )
-        save_image(
-            image,
-            path,
-            image_format=image_format,
-            quality=quality,
-            max_image_kb=max_image_kb,
-        )
-        rendered.append((slide_number, path))
+    with fitz.open(pdf) as document:
+        total_slides = len(document)
+        selected = parse_slides(args.slides, total_slides)
+        for slide_number in selected:
+            page = document[slide_number - 1]
+            pixmap = page.get_pixmap(matrix=matrix, alpha=False)
+            path = out_dir / f"slide-{slide_number:02d}{suffix}"
+            image = Image.frombytes(
+                "RGB",
+                (pixmap.width, pixmap.height),
+                pixmap.samples,
+            )
+            save_image(
+                image,
+                path,
+                image_format=image_format,
+                quality=quality,
+                max_image_kb=max_image_kb,
+            )
+            rendered.append((slide_number, path))
 
     sheets: list[str] = []
     for group_number, start in enumerate(
@@ -339,7 +399,6 @@ def render(args: argparse.Namespace) -> dict:
             path.unlink()
         slide_images = []
 
-    document.close()
     keep_pdf = getattr(args, "keep_pdf", False) or reused_pdf
     pdf_path = str(pdf) if keep_pdf else None
     if not keep_pdf:
@@ -349,6 +408,7 @@ def render(args: argparse.Namespace) -> dict:
         "deck": str(deck),
         "deck_sha256": deck_sha256,
         "pdf": pdf_path,
+        "pdf_sha256": sha256_file(pdf) if keep_pdf else None,
         "reused_pdf": reused_pdf,
         "total_slides": total_slides,
         "rendered_slides": selected,
@@ -363,11 +423,12 @@ def render(args: argparse.Namespace) -> dict:
             path: Path(path).stat().st_size for path in sheets
         },
     }
-    manifest_path = out_dir / "manifest.json"
-    manifest_path.write_text(
+    manifest_tmp = out_dir / f".manifest-{uuid.uuid4().hex}.tmp"
+    manifest_tmp.write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    manifest_tmp.replace(manifest_path)
     return manifest
 
 
@@ -379,12 +440,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--out",
         type=Path,
-        help="Output directory (default: unique system temporary directory)",
+        required=True,
+        help="Session-isolated output directory",
     )
     parser.add_argument(
         "--soffice",
         type=Path,
         help="Explicit path to the LibreOffice soffice executable",
+    )
+    parser.add_argument(
+        "--conversion-timeout",
+        type=positive_float,
+        default=120.0,
+        metavar="SECONDS",
+        help="LibreOffice conversion timeout (default: 120)",
     )
     parser.add_argument(
         "--reuse-pdf",
@@ -400,31 +469,31 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--scale",
-        type=float,
+        type=positive_float,
         default=1.25,
         help="PyMuPDF render scale (default: 1.25)",
     )
     parser.add_argument(
         "--per-sheet",
-        type=int,
+        type=positive_int,
         default=30,
         help="Maximum slides per contact sheet (default: 30)",
     )
     parser.add_argument(
         "--columns",
-        type=int,
+        type=positive_int,
         default=5,
         help="Contact-sheet columns (default: 5)",
     )
     parser.add_argument(
         "--thumb-width",
-        type=int,
+        type=positive_int,
         default=220,
         help="Contact-sheet thumbnail width (default: 220)",
     )
     parser.add_argument(
         "--thumb-height",
-        type=int,
+        type=positive_int,
         default=124,
         help="Contact-sheet thumbnail height (default: 124)",
     )
@@ -436,13 +505,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--quality",
-        type=int,
+        type=jpeg_quality,
         default=82,
         help="Initial JPEG quality (default: 82)",
     )
     parser.add_argument(
         "--max-image-kb",
-        type=int,
+        type=positive_int,
         default=900,
         help="Adaptive JPEG size budget per preview image in KiB (default: 900)",
     )

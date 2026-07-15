@@ -9,7 +9,8 @@
 2. 대량 데이터 처리·차트 계산에는 pandas/matplotlib를 쓸 수 있으나, 발표에 들어가는 핵심 도표는
    가능하면 PowerPoint 도형/네이티브 차트로 만들어 편집 가능하게 한다.
 3. 외부 이미지가 필요하면 사용권과 원본 URL을 기록한다.
-4. 도구 탐색·의존성 준비는 `scripts/toolcheck.py`(soffice·PyMuPDF·Pillow·한글 폰트 1회 탐지·캐시)와
+4. 도구 탐색·의존성 준비는 `scripts/toolcheck.py`(soffice·PyMuPDF·Pillow·python-pptx·한글 폰트 1회
+   탐지·캐시)와
    `reference/full-optimized.md`의 캐시 규칙을 따른다.
 
 ## 2. 파일 구조
@@ -17,7 +18,7 @@
 ```text
 <output>/<deck>.pptx                 # 사용자에게 보이는 기본 산출물
 
-<session>/files/<deck>-work/
+<session>/<deck>-work/               # SKILL.md의 portable 세션 artifact 디렉터리 아래
   fact-ledger.md
   storyline.md
   build_<deck>.py                    # python-pptx 직접 생성 스크립트
@@ -41,7 +42,7 @@ from pathlib import Path
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 
 OUT = Path(os.environ["PPTX_OUT"])
 
@@ -56,6 +57,7 @@ def textbox(slide, text, x, y, w, h, size, *, color=INK, bold=False,
     box = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
     tf = box.text_frame
     tf.word_wrap = True
+    tf.auto_size = MSO_AUTO_SIZE.NONE
     p = tf.paragraphs[0]
     p.alignment = align
     run = p.add_run()
@@ -140,6 +142,9 @@ prs.save(OUT)
 실행 환경에서 폰트를 검색한다.
 
 ```bash
+python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
+  --strict --require-korean-font
+
 (fc-list 2>/dev/null || true) | grep -Ei 'Noto Sans|Apple SD Gothic|Malgun|Aptos|Segoe'
 ```
 
@@ -227,7 +232,9 @@ python3 -B -c 'import ast,pathlib; ast.parse(pathlib.Path("<work-dir>/build_<dec
 PPTX_OUT="<absolute-output>/<deck>.pptx" python3 -B <work-dir>/build_<deck>.py
 
 # 감사와 렌더는 같은 immutable PPTX를 읽으므로 병렬 실행 가능
-python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py <absolute-output>/<deck>.pptx
+python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py \
+  <absolute-output>/<deck>.pptx --expected-slides <count> --strict \
+  --fail-small-text --fail-title-risks --fail-unsized-runs
 python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
   <absolute-output>/<deck>.pptx --out <work-dir>/qa --keep-pdf
 
@@ -239,5 +246,8 @@ python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
 unzip -t <absolute-output>/<deck>.pptx
 ```
 
-`--reuse-pdf`는 sibling manifest의 PPTX SHA-256과 현재 파일이 일치할 때만 PDF를 재사용한다. PPTX를
-수정한 뒤에는 기존 PDF를 재사용하지 말고 새 전체 렌더를 수행한다.
+`--reuse-pdf`는 sibling manifest의 PPTX·PDF SHA-256과 현재 파일이 모두 일치할 때만 PDF를 재사용한다.
+PPTX를 수정하거나 PDF가 달라진 뒤에는 기존 PDF를 재사용하지 않는다. 새 PDF로 변환한 뒤 수정 영향에
+맞는 범위를 다시 렌더한다.
+렌더러는 비어 있지 않은 일반 `--out` 디렉터리를 덮어쓰지 않는다. 각 QA 단계에는 전용 디렉터리를
+사용하고, 기존 Runner 소유 디렉터리만 안전하게 초기화한다.

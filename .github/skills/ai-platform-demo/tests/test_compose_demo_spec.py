@@ -39,7 +39,7 @@ class ComposeDemoSpecTests(unittest.TestCase):
     def test_pack_cannot_define_customer_design(self):
         document = {
             "_pack": {"id": "bad", "name": "Bad Pack"},
-            "spec": {"design": {"theme": "dark"}},
+            "spec": {"design": {"theme": "light"}},
         }
         with self.assertRaises(compose_demo_spec.ComposeError):
             compose_demo_spec.validate_pack(document, Path("bad-pack.json"))
@@ -50,7 +50,7 @@ class ComposeDemoSpecTests(unittest.TestCase):
             "spec": {
                 "$replace": {
                     "meta": {"customer": "Injected"},
-                    "design": {"theme": "dark"},
+                    "design": {"theme": "light"},
                     "story": {"frame": "Injected"},
                 }
             },
@@ -70,7 +70,7 @@ class ComposeDemoSpecTests(unittest.TestCase):
             "spec": {
                 "meta": {},
                 "story": {},
-                "design": {"theme": "dark"},
+                "design": {"theme": "light"},
             },
         }
         with self.assertRaises(compose_demo_spec.ComposeError):
@@ -84,7 +84,7 @@ class ComposeDemoSpecTests(unittest.TestCase):
     def test_customer_required_paths_replace_instead_of_merge(self):
         base = {
             "meta": {"customer": "Base"},
-            "design": {"theme": "light"},
+            "design": {"theme": "dark-dimmed"},
             "story": {"frame": "Base"},
             "operations": {
                 "hero": {
@@ -96,7 +96,6 @@ class ComposeDemoSpecTests(unittest.TestCase):
         }
         customer = {
             "meta": {"customer": "Customer"},
-            "design": {"theme": "dark"},
             "story": {"frame": "Customer"},
             "operations": {
                 "hero": {
@@ -121,6 +120,84 @@ class ComposeDemoSpecTests(unittest.TestCase):
                 "icon": "◇",
             },
         )
+        self.assertEqual(result["design"], {"theme": "dark-dimmed"})
+
+    def test_apply_customer_layer_rejects_design_defensively(self):
+        with self.assertRaises(compose_demo_spec.ComposeError):
+            compose_demo_spec.apply_customer_layer(
+                {
+                    "meta": {},
+                    "design": {"theme": "dark-dimmed"},
+                    "story": {},
+                },
+                {
+                    "meta": {},
+                    "story": {},
+                    "design": {"theme": "light"},
+                },
+                [],
+            )
+
+    def test_stale_research_override_is_repository_scoped(self):
+        self.assertTrue(
+            compose_demo_spec.stale_research_allowed(
+                SKILL_ROOT / "examples" / "overlay.json",
+                SKILL_ROOT,
+            )
+        )
+        self.assertFalse(
+            compose_demo_spec.stale_research_allowed(
+                SKILL_ROOT.parent / "customer-overlay.json",
+                SKILL_ROOT,
+            )
+        )
+
+    def test_stale_override_does_not_allow_future_research(self):
+        document = {
+            "_customer": {
+                "research": {
+                    "mode": "live",
+                    "checkedAt": "2999-01-01T00:00:00Z",
+                    "sourceUrls": ["https://example.com/a", "https://example.com/b"],
+                }
+            },
+            "spec": {"meta": {}, "story": {}},
+        }
+        with self.assertRaises(compose_demo_spec.ComposeError):
+            compose_demo_spec.validate_customer(
+                document,
+                [],
+                allow_stale=True,
+                max_age_hours=24,
+            )
+
+    def test_ipv6_source_url_is_canonicalized_safely(self):
+        self.assertEqual(
+            compose_demo_spec.canonical_source_url("https://[2001:db8::1]:443/a#fragment"),
+            "https://[2001:db8::1]/a",
+        )
+
+    def test_output_paths_require_safe_extensions_and_no_aliases(self):
+        inputs = {SKILL_ROOT / "examples" / "base.json"}
+        with self.assertRaises(compose_demo_spec.ComposeError):
+            compose_demo_spec.validate_output_paths(
+                SKILL_ROOT / "work" / "spec.txt", None, inputs
+            )
+        with self.assertRaises(compose_demo_spec.ComposeError):
+            compose_demo_spec.validate_output_paths(
+                SKILL_ROOT / "work" / "spec.json",
+                SKILL_ROOT / "work" / "SPEC.JSON",
+                inputs,
+            )
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "base.json"
+            output = Path(directory) / "output.json"
+            source.write_text("{}", encoding="utf-8")
+            output.hardlink_to(source)
+            with self.assertRaises(compose_demo_spec.ComposeError):
+                compose_demo_spec.validate_output_paths(
+                    output, Path(directory) / "demo.html", {source}
+                )
 
     def test_forbidden_acronym_uses_token_boundaries(self):
         compose_demo_spec.check_output_leaks(
