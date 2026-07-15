@@ -7,15 +7,15 @@
 ## 1. 고정 토큰 (`runtime.css`의 `:root`)
 ```css
 :root{
-  --canvas:#f3f6fb; --canvas-alt:#fbfcfe;
-  --surface:#ffffff; --surface-alt:#f4f7fc; --surface-strong:#eaeef6;
-  --ink:#1a1f2b; --ink-muted:#4a5464; --ink-faint:#79828f;
-  --brand:#0f6cbd; --brand-alt:#2b88d8;      /* Fluent 2 brand blue */
-  --accent:#0e7490;                           /* refined teal */
-  --info:#0f6cbd; --success:#0e7a3d; --warning:#b26a00; --danger:#c43d4b; --violet:#8764b8;
-  --line:rgba(22,32,52,.10); --line-soft:rgba(22,32,52,.055);
+  --canvas:#0a1120; --canvas-alt:#0e1830;
+  --surface:#111d38; --surface-alt:#0e1830; --surface-strong:#16264a;
+  --ink:#f5f8ff; --ink-muted:#adbcd6; --ink-faint:#7f8fac;
+  --brand:#4aa5ff; --brand-alt:#7ac0ff;      /* Fluent 2 brand blue (on dark) */
+  --accent:#37d9cf;                           /* vivid teal */
+  --info:#4aa5ff; --success:#3ed889; --warning:#ffc24a; --danger:#ff6f6f; --violet:#b28bff;
+  --line:rgba(150,180,230,.14); --line-soft:rgba(150,180,230,.08);
   --radius:12px; --nav-width:264px; --font-scale:1; --gap:16px; --panel-pad:20px;
-  --shadow:0 6px 20px rgba(16,24,40,.10);
+  --shadow:0 12px 34px rgba(0,0,0,.5);
   --font:'Pretendard',-apple-system,'Segoe UI',sans-serif;
   --mono:'SFMono-Regular',Consolas,Menlo,monospace;
 }

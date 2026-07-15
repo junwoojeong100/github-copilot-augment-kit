@@ -12,18 +12,18 @@
 - Renderer는 `runtime.css`를 그대로 inline하며, JavaScript는 색 토큰을 override하지 않는다.
 - `demo-spec.json`의 `design` 블록은 **base spec이 고정 제공**하며, 고객 Overlay는 이를 정의하지 않는다.
 
-## 2. 고정 팔레트 (Microsoft / Fluent light)
+## 2. 고정 팔레트 (Microsoft / Fluent dark · vivid)
 
 | 역할 | 토큰 | 값 |
 |---|---|---|
-| 배경 | `--canvas` / `--canvas-alt` | `#f3f6fb` / `#fbfcfe` |
-| 표면(카드) | `--surface` / `--surface-alt` / `--surface-strong` | `#ffffff` / `#f4f7fc` / `#eaeef6` |
-| 텍스트 | `--ink` / `--ink-muted` / `--ink-faint` | `#1a1f2b` / `#4a5464` / `#79828f` |
-| 브랜드 | `--brand` / `--brand-alt` | `#0f6cbd` / `#2b88d8` (Fluent 2 brand blue) |
-| 강조 | `--accent` | `#0e7490` (refined teal) |
-| 상태 | `--info` / `--success` / `--warning` / `--danger` | `#0f6cbd` / `#0e7a3d` / `#b26a00` / `#c43d4b` |
-| AI/거버넌스 | `--violet` | `#8764b8` |
-| 선/그림자 | `--line` / `--line-soft` / `--shadow` | `rgba(22,32,52,.10)` / `rgba(22,32,52,.055)` / `0 6px 20px rgba(16,24,40,.10)` |
+| 배경 | `--canvas` / `--canvas-alt` | `#0a1120` / `#0e1830` (딥 네이비 다크) |
+| 표면(카드) | `--surface` / `--surface-alt` / `--surface-strong` | `#111d38` / `#0e1830` / `#16264a` |
+| 텍스트(화이트) | `--ink` / `--ink-muted` / `--ink-faint` | `#f5f8ff` / `#adbcd6` / `#7f8fac` |
+| 브랜드 | `--brand` / `--brand-alt` | `#4aa5ff` / `#7ac0ff` (Fluent 2 brand blue on dark) |
+| 강조 | `--accent` | `#37d9cf` (vivid teal) |
+| 상태 | `--info` / `--success` / `--warning` / `--danger` | `#4aa5ff` / `#3ed889` / `#ffc24a` / `#ff6f6f` (vivid) |
+| AI/거버넌스 | `--violet` | `#b28bff` |
+| 선/그림자 | `--line` / `--line-soft` / `--shadow` | `rgba(150,180,230,.14)` / `rgba(150,180,230,.08)` / `0 12px 34px rgba(0,0,0,.5)` |
 | 형태 | `--radius` / `--nav-width` / `--font-scale` | `12px` / `264px` / `1` |
 | 폰트 | `--font` / `--mono` (본문 15.5px, 컴포넌트 상향·최소 10.5px) | Pretendard / SFMono |
 
@@ -39,5 +39,5 @@
 ## 4. 정직성·자산
 
 - `● DEMO DATA` 배지는 모든 화면에 유지한다.
-- text contrast는 고정 라이트 배경에서 읽히도록 이미 설계되어 있다(토큰 기반 `color-mix`).
+- text contrast는 고정 다크 배경에서 흰 글자로 읽히도록 이미 설계되어 있다(토큰 기반 `color-mix`).
 - 고객 로고를 임의 생성하거나 비공식 asset을 포함하지 않는다.
