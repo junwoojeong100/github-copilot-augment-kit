@@ -1,6 +1,10 @@
 # Verification
 
-PPTX는 생성 후 반드시 **구조 감사 + 전체 렌더 + 시각 수정**을 거친다.
+PPTX는 Compiler preflight를 통과한 후에도 반드시 **구조 감사 + 전체 렌더 + 시각 수정**을 거친다.
+
+Compiler validation은 빠른 생성 전 검사이며 LibreOffice 렌더 결과를 대체하지 않는다. 생성 스크립트에서
+`compiler.save(..., report_path=<work-dir>/compiler-report.json)`를 사용해 장수·경계·본문 하한·레이아웃
+다양성·연속 반복·카드 비율을 먼저 확인한다.
 
 ## 1. 구조 감사
 

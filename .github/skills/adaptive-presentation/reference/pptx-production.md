@@ -2,7 +2,7 @@
 
 ## 1. 도구 선택
 
-1. 저장소에 검증된 PPTX 생성기가 있으면 구조와 헬퍼를 재사용하되 디자인 토큰은 새 Design DNA로 교체한다.
+1. 저장소의 `pptx_compiler`를 기본 생성 엔진으로 사용하고, 디자인 토큰은 매 요청의 새 Design DNA로 주입한다.
 2. Python 환경에서는 `python-pptx`를 우선한다.
 3. 대량 차트나 데이터 처리에는 pandas/matplotlib를 사용할 수 있으나 결과가 편집 가능해야 하는 핵심 도표는
    PowerPoint 도형으로 만든다.
@@ -21,6 +21,7 @@
   deck-spec.md
   design-dna.md
   build_<deck>.py
+  compiler-report.json
   <deck>_generation_prompt.txt   # 필요할 때만
   defects.md
   metrics.json
@@ -40,34 +41,51 @@ Python은 `python3 -B` 또는 `PYTHONDONTWRITEBYTECODE=1`로 실행해 저장소
 
 ```python
 import os
+import sys
 from pathlib import Path
 
-from pptx import Presentation
+SKILL_DIR = Path("<absolute-skill-dir>")
+sys.path.insert(0, str(SKILL_DIR))
+
+from pptx_compiler import (
+    DesignDNA,
+    Palette,
+    ShapeLanguage,
+    SlideCompiler,
+    SlideFrame,
+    Typography,
+)
 
 OUT = Path(os.environ["PPTX_OUT"])
-
-def add_text(...): ...
-def add_shape(...): ...
-def add_title(...): ...
-def add_source(...): ...
-def slide_01(prs): ...
+WORK = Path(os.environ["PPTX_WORK"])
 
 def build():
-    prs = Presentation()
-    # slide size
-    for maker in [slide_01, slide_02]:
-        maker(prs)
-    prs.save(OUT)
+    design = DesignDNA(...)  # 이번 deck의 design-dna.md에서 생성
+    compiler = SlideCompiler(design, title="...")
+    slide = compiler.begin_slide(
+        SlideFrame(title="결론형 제목", section="WHY", number=1),
+        family="statement",
+        variant="hero-left",
+    )
+    slide.text("hero", "...", role="metric")
+    compiler.save(
+        OUT,
+        expected_slides=30,
+        min_layout_families=8,
+        report_path=WORK / "compiler-report.json",
+    )
 ```
 
 권장 분리:
 
-- Design DNA 상수: 색, 폰트, 선, 여백, 반경
-- primitive: text, shape, line, image, source
+- Design DNA 객체: 색, 폰트, 선, 여백, 반경
+- Compiler primitive: text, shape, line, arrow, image, source, badge, chip
+- semantic blueprint: cover, statement, comparison, process, layered, matrix, architecture, code, roadmap
 - semantic component: metric, status, timeline node, decision gate
 - slide function: 한 슬라이드의 구성
 - build/validate entry point
 
+Compiler는 생성 메커니즘만 재사용한다. 샘플 팔레트·고정 커버·기본 카드 구도를 복사하지 않으며,
 슬라이드 내용을 거대한 JSON 하나에 넣어 모든 장을 같은 레이아웃으로 렌더하지 않는다.
 
 ## 4. 화면과 안전 영역
@@ -202,7 +220,8 @@ Source: Organization · Document title (accessed YYYY-MM-DD)
 
 ```bash
 python3 -B -c 'import ast,pathlib; ast.parse(pathlib.Path("<work-dir>/build_<deck>.py").read_text(encoding="utf-8"))'
-PPTX_OUT="<absolute-output>/<deck>.pptx" python3 -B <work-dir>/build_<deck>.py
+PPTX_OUT="<absolute-output>/<deck>.pptx" PPTX_WORK="<work-dir>" \
+  python3 -B <work-dir>/build_<deck>.py
 # 다음 두 검사는 같은 immutable PPTX를 읽으므로 병렬 실행 가능
 python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py <absolute-output>/<deck>.pptx
 python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
