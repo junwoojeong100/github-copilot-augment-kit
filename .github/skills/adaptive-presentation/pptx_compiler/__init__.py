@@ -1,4 +1,6 @@
 from .compiler import SlideCanvas, SlideCompiler
+from .font_metrics import FontMetrics
+from .components import ComponentRegistry
 from .layouts import BlueprintLibrary
 from .models import (
     CompilerError,
@@ -22,22 +24,35 @@ from .models import (
     contrast_ratio,
     required_layout_families,
 )
+from .recipe import (
+    AdaptiveLayoutSelector,
+    DeckRecipe,
+    LayoutChoice,
+    RecipeAssembler,
+    SlideRecipe,
+)
 
 __all__ = [
     "BlueprintLibrary",
     "CompilerError",
+    "ComponentRegistry",
     "ContentItem",
     "DeckValidationError",
     "DesignDNA",
     "DesignValidationError",
+    "DeckRecipe",
+    "FontMetrics",
     "LayoutError",
+    "LayoutChoice",
     "LayoutMetrics",
     "LayoutPlan",
     "Palette",
     "Region",
+    "RecipeAssembler",
     "ShapeLanguage",
     "SlideCanvas",
     "SlideCompiler",
+    "SlideRecipe",
     "SlideFrame",
     "Source",
     "TextOverflowError",
@@ -45,6 +60,7 @@ __all__ = [
     "Typography",
     "ValidationIssue",
     "ValidationReport",
+    "AdaptiveLayoutSelector",
     "contrast_ratio",
     "required_layout_families",
 ]

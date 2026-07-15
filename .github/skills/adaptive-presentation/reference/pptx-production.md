@@ -19,6 +19,7 @@
 <session>/files/<deck>-work/
   fact-ledger.md
   deck-spec.md
+  deck-recipe.json               # 표준 슬라이드의 semantic content; visual token 금지
   design-dna.md
   build_<deck>.py
   compiler-report.json
@@ -48,11 +49,12 @@ SKILL_DIR = Path("<absolute-skill-dir>")
 sys.path.insert(0, str(SKILL_DIR))
 
 from pptx_compiler import (
+    DeckRecipe,
     DesignDNA,
     Palette,
+    RecipeAssembler,
     ShapeLanguage,
-    SlideCompiler,
-    SlideFrame,
+    SlideRecipe,
     Typography,
 )
 
@@ -61,17 +63,20 @@ WORK = Path(os.environ["PPTX_WORK"])
 
 def build():
     design = DesignDNA(...)  # 이번 deck의 design-dna.md에서 생성
-    compiler = SlideCompiler(design, title="...")
-    slide = compiler.begin_slide(
-        SlideFrame(title="결론형 제목", section="WHY", number=1),
-        family="statement",
-        variant="hero-left",
+    recipe = DeckRecipe(
+        title="...",
+        slides=(
+            SlideRecipe(
+                id="why",
+                title="결론형 제목",
+                semantic_type="statement",
+                content={"hero": "...", "support": "..."},
+            ),
+        ),
     )
-    slide.text("hero", "...", role="metric")
-    compiler.save(
+    RecipeAssembler(design, sources=source_registry).compile_to(
+        recipe,
         OUT,
-        expected_slides=30,
-        min_layout_families=8,
         report_path=WORK / "compiler-report.json",
     )
 ```
@@ -81,11 +86,14 @@ def build():
 - Design DNA 객체: 색, 폰트, 선, 여백, 반경
 - Compiler primitive: text, shape, line, arrow, image, source, badge, chip
 - semantic blueprint: cover, statement, comparison, process, layered, matrix, architecture, code, roadmap
+- Recipe layer: conclusion, content relationship, source key, component, blueprint intent
+- certified component: resource hierarchy, agent anatomy, security layers, quality loop, status ledger
 - semantic component: metric, status, timeline node, decision gate
 - slide function: 한 슬라이드의 구성
 - build/validate entry point
 
-Compiler는 생성 메커니즘만 재사용한다. 샘플 팔레트·고정 커버·기본 카드 구도를 복사하지 않으며,
+Recipe는 디자인을 저장하지 않고 Compiler는 생성 메커니즘만 재사용한다. 샘플 팔레트·고정 커버·
+기본 카드 구도를 복사하지 않으며,
 슬라이드 내용을 거대한 JSON 하나에 넣어 모든 장을 같은 레이아웃으로 렌더하지 않는다.
 
 ## 4. 화면과 안전 영역
@@ -238,3 +246,4 @@ unzip -t <absolute-output>/<deck>.pptx
 
 `--reuse-pdf`는 sibling `manifest.json`의 PPTX SHA-256과 현재 파일이 일치할 때만 PDF를 재사용한다.
 PPTX를 수정한 뒤에는 기존 PDF를 재사용하지 말고 새 전체 렌더를 수행한다.
+    RecipeAssembler,

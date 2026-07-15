@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 import zipfile
+from dataclasses import replace
 from pathlib import Path
 
 from PIL import Image
@@ -233,6 +234,73 @@ def build_sample(design: DesignDNA, output: Path):
 
 
 class CompilerTests(unittest.TestCase):
+    def test_bold_font_metrics_are_used_during_fit(self):
+        class RecordingMetrics:
+            def __init__(self):
+                self.bold_values = []
+
+            def measure_points(self, text, family, size_pt, *, bold=False):
+                self.bold_values.append(bold)
+                return len(text) * size_pt * (0.7 if bold else 0.5)
+
+        metrics = RecordingMetrics()
+        compiler = SlideCompiler(technical_design(), font_metrics=metrics)
+        canvas = compiler.begin_slide(
+            SlideFrame(title="Bold metrics", number=1),
+            family="custom",
+        )
+        canvas.text(
+            Region(1.0, 2.0, 5.0, 0.8),
+            "Bold width must be measured",
+            role="secondary",
+            bold=True,
+            word_wrap=False,
+        )
+        self.assertIn(True, metrics.bold_values)
+
+    def test_adaptive_color_uses_actual_design_dna_text_size(self):
+        base = technical_design()
+        compact = replace(
+            base,
+            typography=replace(base.typography, secondary_pt=12),
+        )
+        compiler = SlideCompiler(compact)
+        canvas = compiler.begin_slide(
+            SlideFrame(
+                title="Compact inverse process",
+                number=1,
+                background_role="canvas_alt",
+                inverse=True,
+            ),
+            family="process",
+            slots=2,
+        )
+        canvas.process(
+            [
+                ContentItem("ACCENT", "detail", "accent"),
+                ContentItem("SECOND", "detail", "secondary"),
+            ]
+        )
+        report = compiler.validate(min_layout_families=1)
+        self.assertFalse(report.errors)
+
+    def test_body_adaptive_color_keeps_body_contrast_at_4_5(self):
+        compiler = SlideCompiler(technical_design())
+        canvas = compiler.begin_slide(
+            SlideFrame(title="Adaptive body color", number=1),
+            family="custom",
+        )
+        canvas.text(
+            Region(1.0, 2.0, 5.0, 0.8),
+            "Body text must use the stricter contrast threshold.",
+            role="body",
+            color="primary",
+            background="canvas",
+            adapt_color=True,
+        )
+        report = compiler.validate(min_layout_families=1)
+        self.assertFalse(report.errors)
+
     def test_palette_rejects_low_contrast(self):
         with self.assertRaises(DesignValidationError):
             Palette(
