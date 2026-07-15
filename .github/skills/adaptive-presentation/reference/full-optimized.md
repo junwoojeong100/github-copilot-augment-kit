@@ -9,13 +9,17 @@
 - 데이터 수집 → Fact Ledger → 스토리라인 → 슬라이드 제작 → 전체 QA 순서를 유지한다.
 - Fact Ledger, storyline, 생성 스크립트, 최종 PPTX는 한 에이전트가 일관되게 소유한다.
 - 조사에는 research agent나 `/fleet`을 사용하지 않고 공식 검색·문서 도구의 병렬 tool call만 사용한다.
-- 수정 중에는 증분 검사를 허용하되, 변경이 있었으면 완료 전에 전체 렌더를 다시 수행한다.
+- 수정 후에는 항상 새 PPTX에서 PDF를 다시 변환한다. 국소·비구조 수정은 변경 슬라이드만 이미지로
+  렌더하고, 다수 슬라이드나 구조 변경은 전체 contact sheet까지 다시 생성한다.
 - 저장소와 최종 출력 폴더에는 사용자가 요청한 PPTX/PDF만 남긴다.
 
 ## 2. 세션 작업 계약
 
+`<session>`은 [`SKILL.md`](../SKILL.md)의 portable 세션 정의를 따른다. 클라이언트 고유의 `files`
+하위 디렉터리를 가정하지 않으며 저장소·최종 출력 폴더 밖에 있어야 한다.
+
 ```text
-<session>/files/<deck>-work/
+<session>/<deck>-work/
   fact-ledger.md
   storyline.md
   build_<deck>.py
@@ -51,8 +55,9 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 ```
 
 - 캐시는 저장소 밖에 둔다.
-- `scripts/toolcheck.py`로 Python·`soffice`·PyMuPDF·Pillow·폰트를 한 번 탐지해 `toolchain.json`/
-  `fonts.txt`에 캐시하고, 같은 작업에서 반복 탐색하지 않는다.
+- `scripts/toolcheck.py`로 Python·`soffice`·PyMuPDF·Pillow·python-pptx·폰트를 탐지해
+  `toolchain.json`/`fonts.txt`에 캐시한다. cache hit에서는 interpreter·PATH·필수 import와 실행 파일을
+  빠르게 재확인하고 비용이 큰 폰트 목록 탐색만 생략한다.
 - 의존성 설치는 import 실패 또는 도구 부재가 확인될 때만 수행하고 검증된 캐시 환경을 재사용한다.
 - 고객 자료·시크릿·생성 산출물은 공용 도구 캐시에 넣지 않는다.
 - 도구 사전 준비는 콘텐츠를 만들지 않으므로 조사와 병렬로 실행할 수 있다.
@@ -69,15 +74,17 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 ## 6. QA 최적화
 
 1. `verify_deck.py`로 구조 감사와 전체 렌더를 읽기 전용 병렬 실행한다.
-2. 최초 전체 렌더는 `--keep-pdf`로 세션 QA 폴더에 PDF를 유지한다.
+2. Runner가 최초 전체 렌더의 PDF를 세션 QA 폴더에 유지한다(`render_pptx.py`를 직접 실행할 때는
+   `--keep-pdf` 사용).
 3. audit risk score로 선택된 슬라이드를 같은 PDF로 자동 상세 렌더하고 contact sheet와 함께 확인한다.
 4. 모든 결함을 `defects.md`에 모은 뒤 생성 스크립트를 한 번에 수정한다.
-5. PPTX를 재생성한다. 국소 수정이면 전체 contact sheet를 다시 열지 말고 변경 슬라이드 이미지만 확인한다.
-6. 변경이 있었으면 마지막에 전체 렌더와 전체 contact sheet를 다시 생성한다. 변경이 없으면 최초 전체
-   렌더가 최종 검증이다.
+5. PPTX를 재생성하고 새 PDF로 변환한다. 국소·비구조 수정이면 `--slides`로 변경 슬라이드만 이미지화해
+   확인하고 전체 contact sheet는 다시 만들지 않는다.
+6. 다수 슬라이드 또는 서사·구조가 바뀌었을 때만 전체 contact sheet를 다시 생성·확인한다. 변경이 없으면
+   최초 전체 렌더가 최종 검증이다.
 
-`--reuse-pdf`는 PPTX SHA-256이 manifest와 일치할 때만 동작한다. PPTX가 변경되면 실패하도록 설계되어
-오래된 PDF로 검수하는 품질 저하를 막는다.
+`--reuse-pdf`는 PPTX와 PDF SHA-256이 manifest와 모두 일치할 때만 동작한다. 어느 파일이든 변경되면
+실패하도록 설계되어 오래되거나 부분 생성된 PDF로 검수하는 품질 저하를 막는다.
 
 ## 7. 시간 측정
 

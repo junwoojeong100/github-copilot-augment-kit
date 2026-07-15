@@ -11,24 +11,17 @@
   },
   "design": {
     "conceptWords": [
-      "precision",
+      "clarity",
       "confidence",
-      "learning"
+      "continuity"
     ],
-    "visualMetaphor": "closed-loop signal network",
+    "visualMetaphor": "connected operating signals",
     "archetype": "trusted-executive",
     "counterInfluence": "editorial clarity",
-    "theme": "light",
+    "theme": "dark-dimmed",
     "density": "executive",
     "motion": "balanced",
-    "tokens": {
-      "brand": "#0078d4",
-      "brandAlt": "#2b88d8",
-      "accent": "#038387",
-      "radius": 12,
-      "navWidth": 254,
-      "fontScale": 1
-    },
+    "tokens": {},
     "avoid": [
       "generic red-blue gradient",
       "oversized glass cards",
@@ -1105,8 +1098,7 @@
         "step": 1,
         "value": 38,
         "decimals": 0,
-        "unit": "%",
-        "impact": 0.075
+        "unit": "%"
       },
       {
         "id": "serviceAttach",
@@ -1116,8 +1108,7 @@
         "step": 1,
         "value": 44,
         "decimals": 0,
-        "unit": "%",
-        "impact": 0.055
+        "unit": "%"
       },
       {
         "id": "qualityReduction",
@@ -1127,8 +1118,7 @@
         "step": 1,
         "value": 18,
         "decimals": 0,
-        "unit": "%",
-        "impact": 0.035
+        "unit": "%"
       }
     ],
     "margin": {
@@ -1310,7 +1300,7 @@
     "hero": {
       "icon": "⌘",
       "title": "Software Delivery · Issue에서 검증된 Pull Request까지",
-      "subtitle": "GitHub Copilot cloud agent가 저장소를 조사하고 계획·코드·테스트·PR을 비동기로 수행합니다. AI Controls, Advanced Security, 리뷰 승인 정책이 사람의 책임 경계를 유지합니다."
+      "subtitle": "GitHub Copilot cloud agent가 저장소를 조사하고 계획·코드·테스트·PR을 비동기로 수행합니다. GitHub AI Controls, GitHub Advanced Security, 리뷰 승인 정책이 사람의 책임 경계를 유지합니다."
     },
     "kpis": [
       {
@@ -1590,7 +1580,7 @@
       "humanImplementation": "Human implementation",
       "checksPassed": "All checks passed",
       "humanResult": "Safety-critical 변경으로 Copilot은 조사와 계획만 수행했습니다.",
-      "prResult": "Unit/integration tests와 Advanced Security gate를 통과한 데모입니다.",
+      "prResult": "Unit/integration tests와 GitHub Advanced Security gate를 통과한 데모입니다.",
       "planStatus": "Plan ready",
       "prStatus": "Draft PR",
       "humanToastTitle": "Human-led plan ready",
@@ -1605,7 +1595,7 @@
     "hero": {
       "icon": "✦",
       "title": "Agent Studio · 한 질문에 전문 Agent가 협업",
-      "subtitle": "Microsoft Foundry Agent Service의 Prompt/Hosted Agent 패턴을 가정한 데모입니다. 각 Agent는 고객의 권한·평가셋·도구 정책 안에서만 동작하며 실행 액션은 승인 게이트를 거칩니다.",
+      "subtitle": "Microsoft Foundry Agent Service의 prompt agent와 hosted agent 패턴을 가정한 데모입니다. 각 Agent는 고객의 권한·평가셋·도구 정책 안에서만 동작하며 실행 액션은 승인 게이트를 거칩니다.",
       "badge": {
         "label": "Agent Framework · A2A",
         "tone": "violet"
@@ -1736,7 +1726,7 @@
           },
           {
             "question": "보안 통제는 어떻게 하나?",
-            "answer": "GitHub AI Controls로 agent availability와 session을 관리하고 Advanced Security gate와 필수 리뷰를 적용합니다."
+            "answer": "GitHub AI Controls로 agent availability와 session을 관리하고 GitHub Advanced Security gate와 필수 리뷰를 적용합니다."
           },
           {
             "question": "Telemetry 개선 PR을 만들어줘",
@@ -1799,7 +1789,7 @@
     "hero": {
       "icon": "⬡",
       "title": "Trust & Sovereignty · 모델은 활용하고 전문성은 소유",
-      "subtitle": "Microsoft Foundry Agent Service, Entra identity, AI Search, Content Safety, Purview, Defender, Application Insights, GitHub AI Controls를 통제 계층으로 매핑합니다."
+      "subtitle": "Microsoft Foundry Agent Service, Microsoft Entra ID, Azure AI Search, Azure AI Content Safety, Microsoft Purview, Microsoft Defender, Application Insights, GitHub AI Controls를 통제 계층으로 매핑합니다."
     },
     "cards": [
       {
@@ -1837,7 +1827,7 @@
         {
           "cells": [
             "Identity",
-            "Entra Agent ID · RBAC",
+            "Microsoft Entra Agent ID · RBAC",
             "Per-agent least privilege"
           ],
           "status": {
@@ -1845,7 +1835,7 @@
             "tone": "success"
           },
           "detailTitle": "Agent identity",
-          "detail": "Hosted Agent별 전용 identity와 최소권한 RBAC를 적용하는 참조 패턴입니다.",
+          "detail": "hosted agent별 전용 identity와 최소권한 RBAC를 적용하는 참조 패턴입니다.",
           "icon": "⬡"
         },
         {
@@ -1879,7 +1869,7 @@
         {
           "cells": [
             "Safety",
-            "AI Content Safety",
+            "Azure AI Content Safety",
             "Filter · evaluate · red team"
           ],
           "status": {
@@ -1887,13 +1877,13 @@
             "tone": "success"
           },
           "detailTitle": "Safety evaluation",
-          "detail": "Content Safety와 private domain evaluation을 결합하는 시연 패턴입니다.",
+          "detail": "Azure AI Content Safety와 private domain evaluation을 결합하는 시연 패턴입니다.",
           "icon": "✓"
         },
         {
           "cells": [
             "Runtime",
-            "Defender · VNet isolation",
+            "Microsoft Defender · VNet isolation",
             "Threat and posture signals"
           ],
           "status": {
@@ -1907,7 +1897,7 @@
         {
           "cells": [
             "Engineering",
-            "GitHub AI Controls · GHAS",
+            "GitHub AI Controls · GitHub Advanced Security",
             "Session audit · merge gate"
           ],
           "status": {
@@ -1915,7 +1905,7 @@
             "tone": "success"
           },
           "detailTitle": "Engineering governance",
-          "detail": "AI Controls, Advanced Security, required review로 code change를 관리합니다.",
+          "detail": "GitHub AI Controls, GitHub Advanced Security, required review로 code change를 관리합니다.",
           "icon": "⌘"
         },
         {

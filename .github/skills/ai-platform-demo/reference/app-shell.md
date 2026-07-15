@@ -8,22 +8,22 @@
 ```html
 <div id="app">
   <aside id="sidebar">
-    <div class="brand"><div class="sq">{{INITIAL}}</div>
-      <div><div class="bn">{{APP_NAME}}</div><div class="bs">{{CUSTOMER}} AI 운영 플랫폼</div></div></div>
-    <div class="navsec">운영 인텔리전스</div>
+    <div class="brand"><div class="brand-mark" id="brandMark"></div>
+      <div><div class="brand-name" id="brandName"></div><div class="brand-sub" id="brandSub"></div></div></div>
+    <div class="nav-section">Operations Intelligence</div>
     <nav class="nav" id="nav"></nav>
     <!-- 선택: 'Learning Loop' 위젯(쓸수록 커지는 고객 소유 AI 자산 카운터) -->
-    <div class="side-foot"><div class="av">{{INITIAL}}</div>
-      <div><div class="un">{{CUSTOMER}} 임원</div><div class="ur">{{CUSTOMER}} · 관리자</div></div></div>
+    <div class="side-user"><div class="side-avatar" id="sideAvatar"></div>
+      <div><div class="side-user-name" id="sideUserName"></div><div class="side-user-role">Executive · Demo workspace</div></div></div>
   </aside>
   <div id="main">
     <header id="topbar">
-      <div><div class="ttl" id="tbTitle">대시보드</div><div class="crumb" id="tbCrumb"></div></div>
-      <div class="tb-spacer"></div>
+      <div><div class="top-title" id="topTitle"></div><div class="top-crumb" id="topCrumb"></div></div>
+      <div class="top-spacer"></div>
       <span class="demo-badge">● DEMO DATA</span>
-      <div class="tb-item"><span class="dot-live"></span> Azure Korea Central · Foundry</div>
-      <div class="tb-item mono" id="clock">--:--:--</div>
-      <div class="bell" id="bell">🔔<span class="bdg" id="bellBdg">3</span></div>
+      <div class="top-item architecture"><span class="dot-live"></span><span id="infraLabel"></span></div>
+      <div class="top-item mono" id="clock">--:--:--</div>
+      <button class="notification-button" id="notificationButton" type="button">◇</button>
     </header>
     <div id="view"></div>
   </div>
@@ -32,21 +32,15 @@
 ```
 > 실명 금지. 사용자 표기는 `{{CUSTOMER}} 임원` 같은 직무/회사명.
 
-## 2. 라우트 정의 + 사이드바 렌더
+## 2. Spec navigation + 사이드바 렌더
 ```js
-const ROUTES=[
-  {id:'dashboard', ic:'📊', nm:'대시보드',  sb:'Overview',    crumb:'Overview'},
-  {id:'operations',ic:'🚚', nm:'{{DOMAIN1}}', sb:'{{D1}} IQ', crumb:'{{D1}} IQ'},
-  {id:'simulator', ic:'🧪', nm:'{{DOMAIN2}}', sb:'{{D2}} IQ', crumb:'{{D2}} IQ'},
-  {id:'improvement',ic:'⚙️',nm:'{{DOMAIN3}}', sb:'{{D3}} IQ', crumb:'{{D3}} IQ'},
-  {id:'finance',   ic:'💰', nm:'재무 인사이트', sb:'Finance IQ', crumb:'Finance IQ'},
-  {id:'devops',    ic:'🐙', nm:'개발 가속',   sb:'GitHub Copilot', crumb:'GitHub Copilot'},
-  {id:'agents',    ic:'🧭', nm:'AI 에이전트', sb:'Agent Studio',   crumb:'Agent Studio'},
-  {id:'governance',ic:'🛡️', nm:'거버넌스',    sb:'Trust',          crumb:'Trust & Sovereignty'},
-];
+const navigation=spec.navigation; // validator가 고정 8-route 순서를 보장
 const navEl=document.getElementById('nav');
-navEl.innerHTML=ROUTES.map(r=>`<a data-id="${r.id}"><span class="ic">${r.ic}</span><span class="nm">${r.nm}</span><span class="sb">${r.sb}</span></a>`).join('');
-navEl.querySelectorAll('a').forEach(a=>a.onclick=()=>location.hash=a.dataset.id);
+navEl.innerHTML=navigation.map(route=>`<a data-route="${escapeHtml(route.id)}">
+  <span class="nav-icon">${escapeHtml(route.icon)}</span>
+  <span class="nav-name">${escapeHtml(route.name)}</span>
+  <span class="nav-short">${escapeHtml(route.short)}</span></a>`).join('');
+navEl.querySelectorAll('a').forEach(link=>link.onclick=()=>{location.hash=link.dataset.route});
 ```
 
 ## 3. 헬퍼 + 타이머/클린업 레지스트리 (★ 누수·null 방지의 핵심)
@@ -54,10 +48,13 @@ navEl.querySelectorAll('a').forEach(a=>a.onclick=()=>location.hash=a.dataset.id)
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const fmt=n=>n.toLocaleString('ko-KR');
-let viewTimers=[], viewCleanups=[];
+const viewTimers=[], viewCleanups=[];
 function addTimer(t){viewTimers.push(t);return t}            // setInterval/Timeout 전부 등록
 function addCleanup(fn){viewCleanups.push(fn)}               // addEventListener 해제 등록
-function clearViewTimers(){viewTimers.forEach(clearInterval);viewTimers=[];viewCleanups.forEach(fn=>{try{fn()}catch(e){}});viewCleanups=[]}
+function clearViewLifecycle(){
+  viewTimers.splice(0).forEach(timer=>{clearInterval(timer);clearTimeout(timer)});
+  viewCleanups.splice(0).forEach(fn=>{try{fn()}catch(error){console.error(error)}});
+}
 ```
 규칙: **뷰 안의 모든 `setInterval`/자동 `setTimeout`은 `addTimer(...)`로 감싸고**, 모든 `addEventListener`는
 `addCleanup(()=>removeEventListener(...))`로 등록한다. 라우트 전환 시 자동 정리된다.
@@ -67,41 +64,43 @@ function clearViewTimers(){viewTimers.forEach(clearInterval);viewTimers=[];viewC
 const VIEWS={};
 function navigate(){
   const id=(location.hash.slice(1))||'dashboard';
-  const r=ROUTES.find(x=>x.id===id)||ROUTES[0];
-  clearViewTimers();
-  $$('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.id===r.id));
-  $('#tbTitle').textContent=r.nm; $('#tbCrumb').textContent='{{APP_NAME}} · '+r.crumb;
+  const route=navigation.find(item=>item.id===id)||navigation[0];
+  clearViewLifecycle();
+  $$('#nav a').forEach(link=>link.classList.toggle('active',link.dataset.route===route.id));
+  $('#topTitle').textContent=route.name;
+  $('#topCrumb').textContent=`${spec.meta.appName} · ${route.crumb||route.short}`;
   const v=document.getElementById('view');
-  const def=(VIEWS[r.id]||VIEWS.dashboard)();
-  v.innerHTML=`<div class="view-anim">${def.html}</div>`;
+  const def=(VIEWS[route.id]||VIEWS.dashboard)();
+  v.innerHTML=`<div class="view-enter">${def.html}</div>`;
   if(def.init)def.init();
   v.scrollTop=0;
 }
-addEventListener('hashchange',navigate);
+window.addEventListener('hashchange',navigate);
 ```
 
 ## 5. 전역 틱 (앱 전체 — 정리하지 않음)
 ```js
 setInterval(()=>{$('#clock').textContent=new Date().toLocaleTimeString('ko-KR',{hour12:false})},1000);
-const toastData=[ /* {i:'🚚',c:'#2b9bff',t:'제목',s:'부제'} … 산업 이벤트 6개 */ ];
-function toast(d){const el=document.createElement('div');el.className='toast';
-  el.innerHTML=`<div class="ti" style="background:${d.c}22;color:${d.c}">${d.i}</div><div><div class="tt">${d.t}</div><div class="ts">${d.s}</div></div>`;
-  $('#toasts').appendChild(el); setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),400)},4200);}
-setInterval(()=>toast(toastData[Math.floor(rnd(0,toastData.length))]), 9000);
-setTimeout(()=>toast(toastData[0]),2500);
-$('#bell').onclick=()=>{$('#bellBdg').style.display='none';toast({i:'🔔',c:'#2b9bff',t:'알림',s:'…'});};
+function toast(title,subtitle,icon='✦'){
+  const el=document.createElement('div');el.className='toast';
+  el.innerHTML=`<div class="toast-icon">${escapeHtml(icon)}</div><div>
+    <div class="toast-title">${escapeHtml(title)}</div><div class="toast-sub">${escapeHtml(subtitle)}</div></div>`;
+  $('#toasts').appendChild(el);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),380)},4200);
+}
 ```
 
 ## 6. 차트 유틸 (순수 SVG — 외부 라이브러리 금지)
 ```js
 // 스파크라인(KPI 카드 우하단)
-function sparkline(values,w=90,h=42,color='#34e29b'){
-  const mn=Math.min(...values),mx=Math.max(...values),rng=(mx-mn)||1;
-  const pts=values.map((v,i)=>[i/(values.length-1)*w, h-4-((v-mn)/rng)*(h-8)]);
+let sparkSequence=0;
+function sparkline(values,color='var(--brand)'){
+  const data=values.length>1?values:[0,1],id=`spark-${++sparkSequence}`,w=94,h=42;
+  const mn=Math.min(...data),mx=Math.max(...data),rng=(mx-mn)||1;
+  const pts=data.map((v,i)=>[i/(data.length-1)*w, h-4-((v-mn)/rng)*(h-8)]);
   const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
   return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:100%">
-    <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
-    <path d="${d} L${w},${h} L0,${h} Z" fill="url(#sg)" opacity=".25"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2"/></svg>`;
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+    <path d="${d} L${w},${h} L0,${h} Z" fill="url(#${id})" opacity=".25"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2"/></svg>`;
 }
 // 카운트업/트윈 — KPI 애니메이션
 function countUp(el){const to=parseFloat(el.dataset.count),pre=el.dataset.pre||'',suf=el.dataset.suf||'',dec=(to%1?1:0),t0=performance.now();

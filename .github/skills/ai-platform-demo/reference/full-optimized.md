@@ -15,8 +15,12 @@
 
 ## 2. 세션 작업 계약
 
+`<session>`은 client가 제공하는 session artifact directory다. 제공되지 않으면 저장소와 최종 출력
+폴더 밖의 OS temporary directory에 고유 root를 만든다. 후자를 사용하면 요청된 최종 HTML을 출력
+위치에 복사한 뒤 `<app>-work` 전체를 삭제한다.
+
 ```text
-<session>/files/<app>-work/
+<session>/<app>-work/
   fact-ledger.md
   storyline.md
   view-contract.md

@@ -17,12 +17,12 @@ from typing import Sequence
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.ns import qn
 
 __all__ = [
-    "PP_ALIGN", "MSO_ANCHOR", "MSO_SHAPE", "RGBColor", "Inches", "Pt",
+    "PP_ALIGN", "MSO_ANCHOR", "MSO_AUTO_SIZE", "MSO_SHAPE", "RGBColor", "Inches", "Pt",
     "hexc", "new_deck", "add_slide", "soft_shadow", "box", "text",
     "bullets", "chip", "hline", "vline", "chevron", "grid_table",
 ]
@@ -123,6 +123,7 @@ def text(slide, s, x, y, w, h, size, color: RGBColor, *, bold=False, align=PP_AL
     tb = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
     tf = tb.text_frame
     tf.word_wrap = True
+    tf.auto_size = MSO_AUTO_SIZE.NONE
     tf.vertical_anchor = anchor
     for m in ("margin_left", "margin_right", "margin_top", "margin_bottom"):
         setattr(tf, m, Inches(margin))
@@ -136,6 +137,7 @@ def bullets(slide, items: Sequence[str], x, y, w, h, size, color: RGBColor, *, m
     tb = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
     tf = tb.text_frame
     tf.word_wrap = True
+    tf.auto_size = MSO_AUTO_SIZE.NONE
     for m in ("margin_left", "margin_right", "margin_top", "margin_bottom"):
         setattr(tf, m, Inches(0.02))
     for i, it in enumerate(items):
@@ -157,6 +159,7 @@ def chip(slide, x, y, w, h, s, fill: RGBColor, text_color: RGBColor, *, size=11,
     sp = box(slide, x, y, w, h, fill=fill, line=line, line_w=1.0, kind=MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.5)
     tf = sp.text_frame
     tf.word_wrap = True
+    tf.auto_size = MSO_AUTO_SIZE.NONE
     tf.vertical_anchor = MSO_ANCHOR.MIDDLE
     for m in ("margin_left", "margin_right", "margin_top", "margin_bottom"):
         setattr(tf, m, Inches(0.02))
@@ -184,7 +187,7 @@ def grid_table(slide, x, y, col_widths: Sequence[float], row_heights: Sequence[f
     """기계적 그리드 표. 스타일은 전부 셀 dict 인자로.
 
     cells: 2D 리스트(행×열). 각 셀은 None 또는 dict:
-      {text, fill, color, size, bold, align, anchor, span_pad}
+      {text, fill, color, size, bold, align, anchor, spacing, pad}
     반환: 그린 셀 도형 dict {(r,c): shape}.
     """
     shapes: dict = {}
@@ -199,8 +202,9 @@ def grid_table(slide, x, y, col_widths: Sequence[float], row_heights: Sequence[f
             sp = box(slide, xx, yy, cw, rh, fill=fill, line=line_color, line_w=line_w)
             shapes[(r, c)] = sp
             txt = spec.get("text")
-            if txt:
-                text(slide, txt, xx + 0.12, yy, cw - 0.24, rh, spec.get("size", 12.5),
+            if txt is not None and str(txt) != "":
+                pad = spec.get("pad", 0.12)
+                text(slide, txt, xx + pad, yy, cw - (2 * pad), rh, spec.get("size", 12.5),
                      spec.get("color", hexc("14203A")), bold=spec.get("bold", False),
                      align=spec.get("align", PP_ALIGN.LEFT), anchor=spec.get("anchor", MSO_ANCHOR.MIDDLE),
                      font=font, spacing=spec.get("spacing", 1.05))

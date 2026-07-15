@@ -15,6 +15,11 @@ import pptx_helpers as H  # noqa: E402
 
 
 class PptxHelpersTests(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+        self.work_dir = Path(self.temp_dir.name)
+
     def test_builds_and_reopens_deck(self):
         prs, blank = H.new_deck()
         blue = H.hexc("1F63D8")
@@ -37,12 +42,11 @@ class PptxHelpersTests(unittest.TestCase):
         )
         H.chevron(s2, 4.0, 5.0, 0.4, 0.4, blue)
 
-        with tempfile.TemporaryDirectory() as d:
-            out = Path(d) / "helpers_smoke.pptx"
-            prs.save(out)
-            self.assertTrue(out.is_file())
-            reopened = Presentation(out)
-            self.assertEqual(len(reopened.slides._sldIdLst), 2)
+        out = self.work_dir / "helpers_smoke.pptx"
+        prs.save(out)
+        self.assertTrue(out.is_file())
+        reopened = Presentation(out)
+        self.assertEqual(len(reopened.slides), 2)
 
     def test_module_defines_no_baked_palette(self):
         """디자인 중립 보장: 모듈 레벨에 색(RGBColor) 상수가 없어야 한다."""
@@ -63,6 +67,25 @@ class PptxHelpersTests(unittest.TestCase):
         effs = spPr.findall(qn("a:effectLst"))
         self.assertEqual(len(effs), 1, "shadow must reuse the single effectLst")
         self.assertEqual(len(effs[0].findall(qn("a:outerShdw"))), 1)
+
+    def test_text_helpers_disable_auto_size(self):
+        prs, blank = H.new_deck()
+        slide = H.add_slide(prs, blank)
+        shape = H.text(slide, "본문", 1, 1, 2, 1, 18, H.hexc("000000"))
+        self.assertEqual(shape.text_frame.auto_size, H.MSO_AUTO_SIZE.NONE)
+
+    def test_grid_table_renders_numeric_zero_and_custom_padding(self):
+        prs, blank = H.new_deck()
+        slide = H.add_slide(prs, blank)
+        H.grid_table(
+            slide,
+            1,
+            1,
+            [2],
+            [1],
+            [[{"text": 0, "pad": 0.2, "color": H.hexc("000000")}]],
+        )
+        self.assertIn("0", [shape.text for shape in slide.shapes if shape.has_text_frame])
 
 
 if __name__ == "__main__":
