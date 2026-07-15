@@ -12,20 +12,20 @@
 - Renderer는 `runtime.css`를 그대로 inline하며, JavaScript는 색 토큰을 override하지 않는다.
 - `demo-spec.json`의 `design` 블록은 **base spec이 고정 제공**하며, 고객 Overlay는 이를 정의하지 않는다.
 
-## 2. 고정 팔레트 (Microsoft / Fluent dark · vivid)
+## 2. 고정 팔레트 (Microsoft / Fluent light · vivid)
 
 | 역할 | 토큰 | 값 |
 |---|---|---|
-| 배경 | `--canvas` / `--canvas-alt` | `#0a1120` / `#0e1830` (딥 네이비 다크) |
-| 표면(카드) | `--surface` / `--surface-alt` / `--surface-strong` | `#111d38` / `#0e1830` / `#16264a` |
-| 텍스트(화이트) | `--ink` / `--ink-muted` / `--ink-faint` | `#f5f8ff` / `#adbcd6` / `#7f8fac` |
-| 브랜드 | `--brand` / `--brand-alt` | `#4aa5ff` / `#7ac0ff` (Fluent 2 brand blue on dark) |
-| 강조 | `--accent` | `#37d9cf` (vivid teal) |
-| 상태 | `--info` / `--success` / `--warning` / `--danger` | `#4aa5ff` / `#3ed889` / `#ffc24a` / `#ff6f6f` (vivid) |
-| AI/거버넌스 | `--violet` | `#b28bff` |
-| 선/그림자 | `--line` / `--line-soft` / `--shadow` | `rgba(150,180,230,.14)` / `rgba(150,180,230,.08)` / `0 12px 34px rgba(0,0,0,.5)` |
-| 형태 | `--radius` / `--nav-width` / `--font-scale` | `12px` / `264px` / `1` |
-| 폰트 | `--font` / `--mono` (본문 15.5px, 컴포넌트 상향·최소 10.5px) | Pretendard / SFMono |
+| 배경 | `--canvas` / `--canvas-alt` | `#f3f7fa` / `#e7f0f5` (cool white) |
+| 표면(카드) | `--surface` / `--surface-alt` / `--surface-strong` | `#ffffff` / `#f7fafc` / `#eaf2f7` |
+| 텍스트 | `--ink` / `--ink-muted` / `--ink-faint` | `#0f2330` / `#405967` / `#6f8491` |
+| 브랜드 | `--brand` / `--brand-alt` | `#007f8f` / `#1a9aaa` (vivid teal) |
+| 강조 | `--accent` | `#e08a1e` (clear warm accent) |
+| 상태 | `--info` / `--success` / `--warning` / `--danger` | `#2878b5` / `#16845e` / `#b96800` / `#c6404a` |
+| AI/거버넌스 | `--violet` | `#6d54a3` |
+| 선/그림자 | `--line` / `--line-soft` / `--shadow` | `rgba(20,65,90,.16)` / `rgba(20,65,90,.065)` / `0 16px 40px rgba(30,66,88,.12)` |
+| 형태 | `--radius` / `--nav-width` / `--font-scale` | `12px` / `276px` / `1` |
+| 폰트 | `--font` / `--mono` (본문 16.2px, 핵심 컴포넌트 상향) | Pretendard / SFMono |
 
 상태 색 매핑: ok=success(green), warn=warning(amber), bad=danger(red), info=info(blue), AI/governance=violet.
 
@@ -39,5 +39,5 @@
 ## 4. 정직성·자산
 
 - `● DEMO DATA` 배지는 모든 화면에 유지한다.
-- text contrast는 고정 다크 배경에서 흰 글자로 읽히도록 이미 설계되어 있다(토큰 기반 `color-mix`).
+- text contrast는 밝은 neutral 배경에서 dark ink로 읽히도록 설계되어 있다(토큰 기반 `color-mix`).
 - 고객 로고를 임의 생성하거나 비공식 asset을 포함하지 않는다.
