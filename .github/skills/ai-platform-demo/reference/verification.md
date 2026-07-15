@@ -4,7 +4,19 @@
 저장소 밖 공용 캐시에 설치하고 재사용한다. 고객별 검증 스크립트와 screenshots만 세션 작업 폴더에
 두며, 저장소나 최종 HTML 출력 폴더에서 `npm install`을 실행하지 않는다.
 
-## 0. 전제 — 해시 라우팅 + `hashchange`
+## 0. 전제 — Spec validation + Golden Runtime
+
+브라우저를 열기 전에 고객 spec과 공통 Runtime을 먼저 검사한다.
+
+```bash
+python3 -B .github/skills/ai-platform-demo/scripts/render_demo.py \
+  --spec <session>/files/<app>-work/demo-spec.json \
+  --validate-only
+
+node --check .github/skills/ai-platform-demo/runtime/runtime.js
+```
+
+## 0.1 해시 라우팅 + `hashchange`
 앱은 `location.hash`로 라우팅하고 `addEventListener('hashchange',navigate)`가 있어야 한다.
 그래야 검증 스크립트가 `location.hash=route`로 각 화면을 띄울 수 있다.
 
@@ -28,11 +40,28 @@ fi
 공용 캐시는 작업 종료 시 삭제하지 않는다. `node_modules`, Chromium, package lock은 이 경로에만
 두고 고객 HTML·스크린샷·브라우저 프로필은 저장하지 않는다.
 
-## 2. 검증 스크립트 (`<session>/files/<app>-work/verify.js`)
+## 2. 검증 스크립트
+
+기본은 skill의 재사용 verifier를 실행한다. 고객별 `verify.js`를 매번 다시 작성하지 않는다.
+
+```bash
+CACHE_ROOT="${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}"
+PUPPETEER_HOME="$CACHE_ROOT/ai-platform-demo/puppeteer"
+WORK_DIR="<session>/files/<app>-work"
+
+NODE_PATH="$PUPPETEER_HOME/node_modules" \
+PUPPETEER_CACHE_DIR="$PUPPETEER_HOME/chromium" \
+APP_HTML="$WORK_DIR/<app>.html" \
+SHOTS_DIR="$WORK_DIR/shots" \
+FULL_QA=1 \
+node .github/skills/ai-platform-demo/scripts/verify_demo.js
+```
+
+아래 코드는 verifier의 핵심 동작을 설명하는 참고다.
 ```js
 const puppeteer=require('puppeteer'), path=require('path');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const allRoutes=['dashboard','ops','predict','improve','finance','devops','agents','governance']; // 실제 ROUTES와 일치
+const allRoutes=['dashboard','operations','simulator','improvement','finance','devops','agents','governance']; // Golden Runtime contract
 const routes=(process.env.VERIFY_ROUTES||allRoutes.join(',')).split(',').map(x=>x.trim()).filter(Boolean);
 const fullQa=process.env.FULL_QA!=='0';
 (async()=>{
@@ -48,7 +77,7 @@ const fullQa=process.env.FULL_QA!=='0';
   // (1) 각 화면 스크린샷 + 데모 버튼 클릭
   for(const r of routes){
     await page.evaluate(rt=>location.hash=rt, r); await sleep(800);
-    await page.evaluate(()=>['reopt','orchRun','assign','runSix','run'].forEach(id=>{const x=document.getElementById(id);if(x)x.click()}));
+    await page.evaluate(()=>['reopt','orchRun','assignIssue','runAnalysis','evalRun'].forEach(id=>{const x=document.getElementById(id);if(x)x.click()}));
     await sleep(300);
     await page.screenshot({path:'shots/'+r+'.png'});
   }
@@ -74,14 +103,15 @@ const fullQa=process.env.FULL_QA!=='0';
 CACHE_ROOT="${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}"
 PUPPETEER_HOME="$CACHE_ROOT/ai-platform-demo/puppeteer"
 WORK_DIR="<session>/files/<app>-work"
+REPO_ROOT="<repo-root>"
 
-cd "$WORK_DIR"
-mkdir -p shots
+mkdir -p "$WORK_DIR/shots"
 NODE_PATH="$PUPPETEER_HOME/node_modules" \
 PUPPETEER_CACHE_DIR="$PUPPETEER_HOME/chromium" \
-APP_HTML="<absolute-path>/<APP>.html" \
+APP_HTML="$WORK_DIR/<APP>.html" \
+SHOTS_DIR="$WORK_DIR/shots" \
 FULL_QA=1 \
-node verify.js
+node "$REPO_ROOT/.github/skills/ai-platform-demo/scripts/verify_demo.js"
 ```
 
 수정 중 영향 route만 빠르게 확인:
@@ -90,9 +120,10 @@ node verify.js
 NODE_PATH="$PUPPETEER_HOME/node_modules" \
 PUPPETEER_CACHE_DIR="$PUPPETEER_HOME/chromium" \
 APP_HTML="<absolute-path>/<APP>.html" \
+SHOTS_DIR="<session>/files/<app>-work/shots-targeted" \
 VERIFY_ROUTES="finance,agents" \
 FULL_QA=0 \
-node verify.js
+node "<repo-root>/.github/skills/ai-platform-demo/scripts/verify_demo.js"
 ```
 
 완료 전에는 `VERIFY_ROUTES`를 비우고 `FULL_QA=1`로 다시 실행한다.
@@ -118,7 +149,6 @@ node verify.js
 검증이 끝나면 무거운 검증 부산물만 삭제하고 Fact Ledger와 metrics는 세션 폴더에 유지:
 ```bash
 rm -rf <session>/files/<app>-work/shots
-rm -f <session>/files/<app>-work/verify.js
 ```
 > 시각 검증용 스크린샷이 사용자에게 유용하면 보여준 뒤 정리한다. 저장소와 최종 출력 폴더에는
 > **결과 `.html` 하나만** 남긴다. Python 보조 스크립트가 필요하면 같은 세션 작업 폴더에서

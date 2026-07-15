@@ -1,0 +1,1026 @@
+#!/usr/bin/env python3
+"""Render a validated demo spec into a self-contained Golden Runtime HTML app."""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import html as html_lib
+import json
+import math
+import re
+import sys
+from html.parser import HTMLParser
+from pathlib import Path
+from typing import Any
+
+
+REQUIRED_SECTIONS = [
+    "meta",
+    "design",
+    "story",
+    "navigation",
+    "dashboard",
+    "operations",
+    "simulator",
+    "improvement",
+    "finance",
+    "devops",
+    "agents",
+    "governance",
+]
+
+ROUTE_IDS = [
+    "dashboard",
+    "operations",
+    "simulator",
+    "improvement",
+    "finance",
+    "devops",
+    "agents",
+    "governance",
+]
+
+ARCHETYPES = {
+    "precision-control-room",
+    "trusted-executive",
+    "operational-canvas",
+    "premium-minimal",
+}
+
+COLOR_TOKEN_KEYS = {
+    "canvas",
+    "canvasAlt",
+    "surface",
+    "surfaceAlt",
+    "surfaceStrong",
+    "ink",
+    "inkMuted",
+    "inkFaint",
+    "brand",
+    "brandAlt",
+    "accent",
+    "info",
+    "success",
+    "warning",
+    "danger",
+    "violet",
+    "line",
+    "lineSoft",
+}
+
+NUMBER_TOKEN_RANGES = {
+    "radius": (0, 40),
+    "navWidth": (180, 360),
+    "fontScale": (0.8, 1.3),
+}
+
+CSS_COLOR_PATTERN = re.compile(
+    r"^(?:#[0-9a-fA-F]{3,8}|rgba?\([0-9.,%\s]+\)|hsla?\([0-9.,%\s]+\))$"
+)
+
+UNSAFE_PATTERNS = [
+    re.compile(r"<\s*script", re.IGNORECASE),
+    re.compile(r"javascript\s*:", re.IGNORECASE),
+    re.compile(r"\bon[a-z0-9_-]+\s*=", re.IGNORECASE),
+]
+
+RICH_TEXT_TAGS = {"b", "strong", "em", "code", "br", "div", "span"}
+RICH_TEXT_CLASSES = {
+    "message-stats",
+    "message-stat-label",
+    "message-stat-value",
+}
+
+
+class SpecError(ValueError):
+    """Raised when a demo spec violates the Golden Runtime contract."""
+
+
+class RichTextSanitizer(HTMLParser):
+    """Strictly allow the small rich-text subset used by the runtime."""
+
+    def __init__(self, path: str):
+        super().__init__(convert_charrefs=True)
+        self.path = path
+        self.parts: list[str] = []
+        self.stack: list[str] = []
+
+    def handle_starttag(
+        self,
+        tag: str,
+        attrs: list[tuple[str, str | None]],
+    ) -> None:
+        tag = tag.lower()
+        if tag not in RICH_TEXT_TAGS:
+            raise SpecError(f"{self.path} uses disallowed rich-text tag <{tag}>")
+        rendered_attrs = ""
+        if attrs:
+            if tag not in {"div", "span"} or len(attrs) != 1 or attrs[0][0].lower() != "class":
+                raise SpecError(f"{self.path} uses disallowed attribute on <{tag}>")
+            classes = (attrs[0][1] or "").split()
+            if not classes or any(value not in RICH_TEXT_CLASSES for value in classes):
+                raise SpecError(f"{self.path} uses a disallowed rich-text class")
+            rendered_attrs = f' class="{html_lib.escape(" ".join(classes), quote=True)}"'
+        if tag == "br":
+            self.parts.append("<br>")
+            return
+        self.parts.append(f"<{tag}{rendered_attrs}>")
+        self.stack.append(tag)
+
+    def handle_startendtag(
+        self,
+        tag: str,
+        attrs: list[tuple[str, str | None]],
+    ) -> None:
+        if tag.lower() != "br" or attrs:
+            raise SpecError(f"{self.path} uses a disallowed self-closing tag")
+        self.parts.append("<br>")
+
+    def handle_endtag(self, tag: str) -> None:
+        tag = tag.lower()
+        if tag == "br" or not self.stack or self.stack[-1] != tag:
+            raise SpecError(f"{self.path} contains malformed rich-text markup")
+        self.stack.pop()
+        self.parts.append(f"</{tag}>")
+
+    def handle_data(self, data: str) -> None:
+        self.parts.append(html_lib.escape(data, quote=False))
+
+    def handle_comment(self, data: str) -> None:
+        raise SpecError(f"{self.path} must not contain HTML comments")
+
+    def handle_decl(self, decl: str) -> None:
+        raise SpecError(f"{self.path} must not contain HTML declarations")
+
+    def unknown_decl(self, data: str) -> None:
+        raise SpecError(f"{self.path} contains unsupported markup")
+
+    def result(self) -> str:
+        if self.stack:
+            raise SpecError(f"{self.path} contains unclosed rich-text markup")
+        return "".join(self.parts)
+
+
+def sanitize_rich_text(value: str, path: str) -> str:
+    sanitizer = RichTextSanitizer(path)
+    try:
+        sanitizer.feed(value)
+        sanitizer.close()
+    except SpecError:
+        raise
+    except Exception as error:
+        raise SpecError(f"{path} contains invalid rich text: {error}") from error
+    return sanitizer.result()
+
+
+def sanitize_rich_fields(spec: dict[str, Any]) -> dict[str, Any]:
+    sanitized = copy.deepcopy(spec)
+
+    def clean(container: Any, key: str, path: str) -> None:
+        if isinstance(container, dict) and isinstance(container.get(key), str):
+            container[key] = sanitize_rich_text(container[key], path)
+
+    operations = sanitized.get("operations")
+    action = operations.get("action") if isinstance(operations, dict) else None
+    clean(action, "recommendationBefore", "$.operations.action.recommendationBefore")
+    clean(action, "recommendationAfter", "$.operations.action.recommendationAfter")
+
+    simulator = sanitized.get("simulator")
+    if isinstance(simulator, dict):
+        for index, rule in enumerate(simulator.get("recommendations") or []):
+            clean(rule, "message", f"$.simulator.recommendations[{index}].message")
+        clean(simulator, "defaultRecommendation", "$.simulator.defaultRecommendation")
+
+    improvement = sanitized.get("improvement")
+    action = improvement.get("action") if isinstance(improvement, dict) else None
+    clean(action, "summaryBefore", "$.improvement.action.summaryBefore")
+    clean(action, "summaryAfter", "$.improvement.action.summaryAfter")
+
+    finance = sanitized.get("finance")
+    clean(finance, "explanation", "$.finance.explanation")
+
+    agents = sanitized.get("agents")
+    if isinstance(agents, dict):
+        clean(agents, "fallback", "$.agents.fallback")
+        for profile_index, profile in enumerate(agents.get("profiles") or []):
+            clean(profile, "intro", f"$.agents.profiles[{profile_index}].intro")
+            if isinstance(profile, dict):
+                for qa_index, item in enumerate(profile.get("qa") or []):
+                    clean(
+                        item,
+                        "answer",
+                        f"$.agents.profiles[{profile_index}].qa[{qa_index}].answer",
+                    )
+        orchestration = agents.get("orchestration")
+        clean(orchestration, "intro", "$.agents.orchestration.intro")
+        clean(orchestration, "summary", "$.agents.orchestration.summary")
+
+    return sanitized
+
+
+def parse_args() -> argparse.Namespace:
+    skill_root = Path(__file__).resolve().parents[1]
+    parser = argparse.ArgumentParser(
+        description="Compile a demo-spec JSON file into one self-contained HTML app."
+    )
+    parser.add_argument("--spec", type=Path, required=True, help="Customer demo spec JSON.")
+    parser.add_argument("--output", type=Path, help="Output .html path.")
+    parser.add_argument(
+        "--runtime-dir",
+        type=Path,
+        default=skill_root / "runtime",
+        help="Directory containing shell.tmpl, runtime.css, and runtime.js.",
+    )
+    parser.add_argument(
+        "--validate-only",
+        action="store_true",
+        help="Validate the spec without writing HTML.",
+    )
+    return parser.parse_args()
+
+
+def require_mapping(parent: dict[str, Any], key: str, path: str) -> dict[str, Any]:
+    value = parent.get(key)
+    if not isinstance(value, dict):
+        raise SpecError(f"{path}.{key} must be an object")
+    return value
+
+
+def require_list(
+    parent: dict[str, Any],
+    key: str,
+    path: str,
+    *,
+    minimum: int = 1,
+) -> list[Any]:
+    value = parent.get(key)
+    if not isinstance(value, list) or len(value) < minimum:
+        raise SpecError(f"{path}.{key} must be an array with at least {minimum} item(s)")
+    return value
+
+
+def require_string(parent: dict[str, Any], key: str, path: str) -> str:
+    value = parent.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise SpecError(f"{path}.{key} must be a non-empty string")
+    return value
+
+
+def require_number(parent: dict[str, Any], key: str, path: str) -> float:
+    value = parent.get(key)
+    if (
+        not isinstance(value, (int, float))
+        or isinstance(value, bool)
+        or not math.isfinite(value)
+    ):
+        raise SpecError(f"{path}.{key} must be a finite number")
+    return float(value)
+
+
+def require_boolean(parent: dict[str, Any], key: str, path: str) -> bool:
+    value = parent.get(key)
+    if not isinstance(value, bool):
+        raise SpecError(f"{path}.{key} must be a boolean")
+    return value
+
+
+def require_string_list(
+    parent: dict[str, Any],
+    key: str,
+    path: str,
+    *,
+    minimum: int = 1,
+) -> list[str]:
+    values = require_list(parent, key, path, minimum=minimum)
+    if not all(isinstance(value, str) and value.strip() for value in values):
+        raise SpecError(f"{path}.{key} must contain non-empty strings")
+    return values
+
+
+def validate_hero(section: dict[str, Any], path: str) -> None:
+    hero = require_mapping(section, "hero", path)
+    require_string(hero, "title", f"{path}.hero")
+    require_string(hero, "subtitle", f"{path}.hero")
+    require_string(hero, "icon", f"{path}.hero")
+
+
+def validate_kpis(section: dict[str, Any], path: str) -> None:
+    kpis = require_list(section, "kpis", path, minimum=4)
+    if len(kpis) != 4:
+        raise SpecError(f"{path}.kpis must contain exactly 4 KPI items")
+    for index, item in enumerate(kpis):
+        if not isinstance(item, dict):
+            raise SpecError(f"{path}.kpis[{index}] must be an object")
+        item_path = f"{path}.kpis[{index}]"
+        require_string(item, "label", item_path)
+        require_string(item, "icon", item_path)
+        require_number(item, "value", item_path)
+        require_string(item, "delta", item_path)
+        require_string(item, "direction", item_path)
+        series = require_list(item, "series", item_path, minimum=2)
+        if not all(
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and math.isfinite(value)
+            for value in series
+        ):
+            raise SpecError(f"{item_path}.series must contain only finite numbers")
+        tick = item.get("tick")
+        if tick is not None:
+            if not isinstance(tick, dict):
+                raise SpecError(f"{item_path}.tick must be an object")
+            require_number(tick, "min", f"{item_path}.tick")
+            require_number(tick, "max", f"{item_path}.tick")
+
+
+def validate_table(table: dict[str, Any], path: str, *, minimum_rows: int = 3) -> None:
+    require_string(table, "title", path)
+    require_string(table, "hint", path)
+    headers = require_list(table, "headers", path, minimum=2)
+    rows = require_list(table, "rows", path, minimum=minimum_rows)
+    if not all(isinstance(header, str) and header for header in headers):
+        raise SpecError(f"{path}.headers must contain non-empty strings")
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise SpecError(f"{path}.rows[{index}] must be an object")
+        cells = require_list(row, "cells", f"{path}.rows[{index}]", minimum=1)
+        if not all(isinstance(cell, (str, int, float)) for cell in cells):
+            raise SpecError(f"{path}.rows[{index}].cells contains unsupported values")
+        require_string(row, "detail", f"{path}.rows[{index}]")
+        status = row.get("status")
+        if status is not None:
+            if not isinstance(status, dict):
+                raise SpecError(f"{path}.rows[{index}].status must be an object")
+            require_string(status, "label", f"{path}.rows[{index}].status")
+            require_string(status, "tone", f"{path}.rows[{index}].status")
+
+
+def validate_named_items(
+    items: list[Any],
+    path: str,
+    required_strings: list[str],
+    required_numbers: list[str] | None = None,
+) -> None:
+    for index, item in enumerate(items):
+        if not isinstance(item, dict):
+            raise SpecError(f"{path}[{index}] must be an object")
+        item_path = f"{path}[{index}]"
+        for key in required_strings:
+            require_string(item, key, item_path)
+        for key in required_numbers or []:
+            require_number(item, key, item_path)
+
+
+def iter_strings(value: Any, path: str = "$"):
+    if isinstance(value, str):
+        yield path, value
+    elif isinstance(value, dict):
+        for key, child in value.items():
+            yield from iter_strings(child, f"{path}.{key}")
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            yield from iter_strings(child, f"{path}[{index}]")
+
+
+def validate_spec(spec: dict[str, Any]) -> None:
+    missing = [section for section in REQUIRED_SECTIONS if section not in spec]
+    if missing:
+        raise SpecError(f"Missing required top-level section(s): {', '.join(missing)}")
+
+    meta = require_mapping(spec, "meta", "$")
+    for key in [
+        "customer",
+        "industry",
+        "audience",
+        "appName",
+        "initials",
+        "language",
+        "infrastructureLabel",
+        "demoNote",
+    ]:
+        require_string(meta, key, "$.meta")
+    if len(meta["initials"]) > 4:
+        raise SpecError("$.meta.initials must be 1-4 characters")
+    if not re.fullmatch(r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})?", meta["language"]):
+        raise SpecError("$.meta.language must be a valid short language tag")
+
+    design = require_mapping(spec, "design", "$")
+    archetype = require_string(design, "archetype", "$.design")
+    if archetype not in ARCHETYPES:
+        raise SpecError(
+            f"$.design.archetype must be one of: {', '.join(sorted(ARCHETYPES))}"
+        )
+    if design.get("theme") not in {"dark", "light"}:
+        raise SpecError("$.design.theme must be 'dark' or 'light'")
+    if design.get("density") not in {"compact", "executive", "spacious"}:
+        raise SpecError(
+            "$.design.density must be 'compact', 'executive', or 'spacious'"
+        )
+    require_list(design, "conceptWords", "$.design", minimum=3)
+    require_string(design, "visualMetaphor", "$.design")
+    require_string(design, "counterInfluence", "$.design")
+    tokens = require_mapping(design, "tokens", "$.design")
+    unknown_tokens = set(tokens) - COLOR_TOKEN_KEYS - set(NUMBER_TOKEN_RANGES)
+    if unknown_tokens:
+        raise SpecError(
+            "$.design.tokens contains unsupported token(s): "
+            + ", ".join(sorted(unknown_tokens))
+        )
+    for key, value in tokens.items():
+        if key in COLOR_TOKEN_KEYS:
+            if not isinstance(value, str) or not CSS_COLOR_PATTERN.fullmatch(value):
+                raise SpecError(f"$.design.tokens.{key} must be a safe CSS color")
+        else:
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                raise SpecError(f"$.design.tokens.{key} must be a number")
+            minimum, maximum = NUMBER_TOKEN_RANGES[key]
+            if not minimum <= value <= maximum:
+                raise SpecError(
+                    f"$.design.tokens.{key} must be between {minimum} and {maximum}"
+                )
+    avoid = require_list(design, "avoid", "$.design", minimum=3)
+    if len(avoid) != 3:
+        raise SpecError("$.design.avoid must contain exactly 3 patterns")
+
+    story = require_mapping(spec, "story", "$")
+    require_string(story, "frame", "$.story")
+    require_string(story, "climax", "$.story")
+    require_list(story, "audienceMessages", "$.story", minimum=2)
+
+    navigation = require_list(spec, "navigation", "$", minimum=8)
+    nav_ids = [item.get("id") if isinstance(item, dict) else None for item in navigation]
+    if nav_ids != ROUTE_IDS:
+        raise SpecError(
+            "$.navigation IDs must match the fixed route order: "
+            + ", ".join(ROUTE_IDS)
+        )
+    for index, route in enumerate(navigation):
+        route_path = f"$.navigation[{index}]"
+        require_string(route, "name", route_path)
+        require_string(route, "short", route_path)
+        require_string(route, "icon", route_path)
+
+    dashboard = require_mapping(spec, "dashboard", "$")
+    validate_hero(dashboard, "$.dashboard")
+    validate_kpis(dashboard, "$.dashboard")
+    stream = require_mapping(dashboard, "stream", "$.dashboard")
+    for key in ["title", "label", "color"]:
+        require_string(stream, key, "$.dashboard.stream")
+    stream_values = require_list(stream, "values", "$.dashboard.stream", minimum=2)
+    if not all(
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+        for value in stream_values
+    ):
+        raise SpecError("$.dashboard.stream.values must contain finite numbers")
+    for key in ["min", "max"]:
+        require_number(stream, key, "$.dashboard.stream")
+    stream_tick = require_mapping(stream, "tick", "$.dashboard.stream")
+    require_number(stream_tick, "min", "$.dashboard.stream.tick")
+    require_number(stream_tick, "max", "$.dashboard.stream.tick")
+    require_string(dashboard, "feedTitle", "$.dashboard")
+    require_string(dashboard, "feedHint", "$.dashboard")
+    feed = require_list(dashboard, "feed", "$.dashboard", minimum=4)
+    validate_named_items(
+        feed,
+        "$.dashboard.feed",
+        ["icon", "title", "text"],
+    )
+    cards = require_mapping(dashboard, "cards", "$.dashboard")
+    require_string(cards, "title", "$.dashboard.cards")
+    require_string(cards, "hint", "$.dashboard.cards")
+    card_items = require_list(cards, "items", "$.dashboard.cards", minimum=3)
+    validate_named_items(
+        card_items,
+        "$.dashboard.cards.items",
+        ["name", "value", "sub", "detail"],
+    )
+    validate_table(
+        require_mapping(dashboard, "table", "$.dashboard"),
+        "$.dashboard.table",
+    )
+    learning_loop = require_mapping(dashboard, "learningLoop", "$.dashboard")
+    for key in ["label", "unit", "note"]:
+        require_string(learning_loop, key, "$.dashboard.learningLoop")
+    require_number(learning_loop, "value", "$.dashboard.learningLoop")
+
+    operations = require_mapping(spec, "operations", "$")
+    validate_hero(operations, "$.operations")
+    validate_kpis(operations, "$.operations")
+    flow = require_mapping(operations, "flow", "$.operations")
+    for key in ["title", "hint", "moverLabel"]:
+        require_string(flow, key, "$.operations.flow")
+    nodes = require_list(flow, "nodes", "$.operations.flow", minimum=4)
+    if len(nodes) > 7:
+        raise SpecError("$.operations.flow.nodes supports at most 7 nodes")
+    validate_named_items(
+        nodes,
+        "$.operations.flow.nodes",
+        ["name", "subtitle", "metric", "status", "detail"],
+    )
+    require_string_list(
+        flow,
+        "events",
+        "$.operations.flow",
+        minimum=len(nodes),
+    )
+    action = require_mapping(operations, "action", "$.operations")
+    for key in [
+        "button",
+        "running",
+        "complete",
+        "runningEvent",
+        "completeEvent",
+        "recommendationLabel",
+        "recommendationBefore",
+        "recommendationAfter",
+        "toastTitle",
+        "toastText",
+        "toastIcon",
+    ]:
+        require_string(action, key, "$.operations.action")
+    require_number(action, "durationMs", "$.operations.action")
+    kpi_updates = require_mapping(action, "kpiUpdates", "$.operations.action")
+    for key, value in kpi_updates.items():
+        if not str(key).isdigit() or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise SpecError("$.operations.action.kpiUpdates must map KPI indexes to finite numbers")
+    validate_table(
+        require_mapping(operations, "table", "$.operations"),
+        "$.operations.table",
+    )
+
+    simulator = require_mapping(spec, "simulator", "$")
+    validate_hero(simulator, "$.simulator")
+    require_string(simulator, "inputsTitle", "$.simulator")
+    require_string(simulator, "inputsHint", "$.simulator")
+    inputs = require_list(simulator, "inputs", "$.simulator", minimum=2)
+    input_ids = []
+    for index, item in enumerate(inputs):
+        item_path = f"$.simulator.inputs[{index}]"
+        input_ids.append(require_string(item, "id", item_path))
+        require_string(item, "label", item_path)
+        if not isinstance(item.get("unit"), str):
+            raise SpecError(f"{item_path}.unit must be a string")
+        for key in ["min", "max", "value", "optimum", "weight"]:
+            require_number(item, key, item_path)
+        if item["min"] >= item["max"]:
+            raise SpecError(f"{item_path}.min must be lower than max")
+    if len(input_ids) != len(set(input_ids)):
+        raise SpecError("$.simulator.inputs IDs must be unique")
+    output = require_mapping(simulator, "output", "$.simulator")
+    for key in [
+        "label",
+        "unit",
+        "goodLabel",
+        "warningLabel",
+        "dangerLabel",
+    ]:
+        require_string(output, key, "$.simulator.output")
+    for key in ["base", "min", "max", "goodThreshold", "warningThreshold"]:
+        require_number(output, key, "$.simulator.output")
+    secondary = require_list(simulator, "secondary", "$.simulator", minimum=3)
+    for index, metric in enumerate(secondary):
+        metric_path = f"$.simulator.secondary[{index}]"
+        if not isinstance(metric, dict):
+            raise SpecError(f"{metric_path} must be an object")
+        require_string(metric, "label", metric_path)
+        if not isinstance(metric.get("unit"), str):
+            raise SpecError(f"{metric_path}.unit must be a string")
+        require_number(metric, "base", metric_path)
+        weights = require_mapping(metric, "weights", metric_path)
+        for input_id, weight in weights.items():
+            if input_id not in input_ids:
+                raise SpecError(f"{metric_path}.weights references unknown input {input_id}")
+            if not isinstance(weight, (int, float)) or not math.isfinite(weight):
+                raise SpecError(f"{metric_path}.weights must contain finite numbers")
+    recommendations = require_list(
+        simulator,
+        "recommendations",
+        "$.simulator",
+        minimum=1,
+    )
+    for index, rule in enumerate(recommendations):
+        rule_path = f"$.simulator.recommendations[{index}]"
+        if not isinstance(rule, dict):
+            raise SpecError(f"{rule_path} must be an object")
+        input_id = require_string(rule, "inputId", rule_path)
+        if input_id not in input_ids:
+            raise SpecError(f"{rule_path}.inputId references unknown input")
+        operator = require_string(rule, "operator", rule_path)
+        if operator not in {">", "<", "abs>", "default"}:
+            raise SpecError(f"{rule_path}.operator is unsupported")
+        require_number(rule, "threshold", rule_path)
+        require_string(rule, "message", rule_path)
+    require_string(simulator, "defaultRecommendation", "$.simulator")
+    histogram = require_mapping(simulator, "histogram", "$.simulator")
+    for key in ["title", "hint", "leftLabel", "centerLabel", "rightLabel"]:
+        require_string(histogram, key, "$.simulator.histogram")
+    validate_table(
+        require_mapping(simulator, "history", "$.simulator"),
+        "$.simulator.history",
+    )
+
+    improvement = require_mapping(spec, "improvement", "$")
+    validate_hero(improvement, "$.improvement")
+    validate_kpis(improvement, "$.improvement")
+    for key in [
+        "stepsTitle",
+        "stepsHint",
+        "factorsTitle",
+        "factorsHint",
+        "impactsTitle",
+        "impactsHint",
+    ]:
+        require_string(improvement, key, "$.improvement")
+    steps_data = require_list(improvement, "steps", "$.improvement", minimum=5)
+    validate_named_items(steps_data, "$.improvement.steps", ["title", "text"])
+    factors = require_list(improvement, "factors", "$.improvement", minimum=4)
+    validate_named_items(
+        factors,
+        "$.improvement.factors",
+        ["label", "value", "color"],
+        ["width"],
+    )
+    impacts = require_list(improvement, "impacts", "$.improvement", minimum=4)
+    validate_named_items(
+        impacts,
+        "$.improvement.impacts",
+        ["label", "value", "sub", "detail"],
+    )
+    board = require_mapping(improvement, "board", "$.improvement")
+    require_string(board, "title", "$.improvement.board")
+    require_string(board, "hint", "$.improvement.board")
+    columns = require_list(board, "columns", "$.improvement.board", minimum=3)
+    if len(columns) != 3:
+        raise SpecError("$.improvement.board.columns must contain exactly 3 columns")
+    for index, column in enumerate(columns):
+        column_path = f"$.improvement.board.columns[{index}]"
+        if not isinstance(column, dict):
+            raise SpecError(f"{column_path} must be an object")
+        require_string(column, "name", column_path)
+        items = require_list(column, "items", column_path, minimum=1)
+        validate_named_items(
+            items,
+            f"{column_path}.items",
+            ["text", "title", "detail"],
+        )
+    improvement_action = require_mapping(improvement, "action", "$.improvement")
+    for key in [
+        "button",
+        "running",
+        "complete",
+        "summaryBefore",
+        "summaryAfter",
+        "toastTitle",
+        "toastText",
+        "toastIcon",
+    ]:
+        require_string(improvement_action, key, "$.improvement.action")
+    require_number(improvement_action, "durationMs", "$.improvement.action")
+    require_boolean(improvement_action, "autoRun", "$.improvement.action")
+
+    finance = require_mapping(spec, "finance", "$")
+    validate_hero(finance, "$.finance")
+    require_string(finance, "leversTitle", "$.finance")
+    require_string(finance, "leversHint", "$.finance")
+    require_string(finance, "explanation", "$.finance")
+    levers = require_list(finance, "levers", "$.finance", minimum=3)
+    lever_ids = []
+    for index, lever in enumerate(levers):
+        lever_path = f"$.finance.levers[{index}]"
+        if not isinstance(lever, dict):
+            raise SpecError(f"{lever_path} must be an object")
+        lever_ids.append(require_string(lever, "id", lever_path))
+        require_string(lever, "label", lever_path)
+        if not isinstance(lever.get("unit"), str):
+            raise SpecError(f"{lever_path}.unit must be a string")
+        for key in ["min", "max", "value", "impact"]:
+            require_number(lever, key, lever_path)
+    if len(lever_ids) != len(set(lever_ids)):
+        raise SpecError("$.finance.levers IDs must be unique")
+    margin = require_mapping(finance, "margin", "$.finance")
+    for key in [
+        "label",
+        "unit",
+        "note",
+        "goodLabel",
+        "warningLabel",
+        "lowLabel",
+    ]:
+        require_string(margin, key, "$.finance.margin")
+    for key in ["base", "goodThreshold", "warningThreshold"]:
+        require_number(margin, key, "$.finance.margin")
+    margin_impacts = require_mapping(margin, "impacts", "$.finance.margin")
+    for lever_id, impact in margin_impacts.items():
+        if lever_id not in lever_ids or not isinstance(impact, (int, float)) or not math.isfinite(impact):
+            raise SpecError("$.finance.margin.impacts is invalid")
+    summary_metrics = require_list(finance, "summaryMetrics", "$.finance", minimum=3)
+    for index, metric in enumerate(summary_metrics):
+        metric_path = f"$.finance.summaryMetrics[{index}]"
+        if not isinstance(metric, dict):
+            raise SpecError(f"{metric_path} must be an object")
+        require_string(metric, "label", metric_path)
+        if not isinstance(metric.get("unit"), str):
+            raise SpecError(f"{metric_path}.unit must be a string")
+        require_number(metric, "base", metric_path)
+        impacts = require_mapping(metric, "impacts", metric_path)
+        for lever_id, impact in impacts.items():
+            if lever_id not in lever_ids or not isinstance(impact, (int, float)) or not math.isfinite(impact):
+                raise SpecError(f"{metric_path}.impacts is invalid")
+    composition = require_mapping(finance, "composition", "$.finance")
+    for key in ["title", "hint", "centerLabel"]:
+        require_string(composition, key, "$.finance.composition")
+    segments = require_list(composition, "segments", "$.finance.composition", minimum=4)
+    if len(segments) != 4:
+        raise SpecError("$.finance.composition.segments must contain exactly 4 items")
+    for index, segment in enumerate(segments):
+        segment_path = f"$.finance.composition.segments[{index}]"
+        if not isinstance(segment, dict):
+            raise SpecError(f"{segment_path} must be an object")
+        require_string(segment, "label", segment_path)
+        require_string(segment, "color", segment_path)
+        require_number(segment, "base", segment_path)
+        impacts = require_mapping(segment, "impacts", segment_path)
+        for lever_id, impact in impacts.items():
+            if lever_id not in lever_ids or not isinstance(impact, (int, float)) or not math.isfinite(impact):
+                raise SpecError(f"{segment_path}.impacts is invalid")
+    validate_table(
+        require_mapping(finance, "watchlist", "$.finance"),
+        "$.finance.watchlist",
+    )
+
+    devops = require_mapping(spec, "devops", "$")
+    validate_hero(devops, "$.devops")
+    validate_kpis(devops, "$.devops")
+    for key in ["stepsTitle", "stepsHint", "issuesTitle", "issuesHint"]:
+        require_string(devops, key, "$.devops")
+    require_string_list(devops, "issueHeaders", "$.devops", minimum=5)
+    devops_steps = require_list(devops, "steps", "$.devops", minimum=5)
+    validate_named_items(devops_steps, "$.devops.steps", ["title", "text"])
+    issues = require_list(devops, "issues", "$.devops", minimum=3)
+    for index, issue in enumerate(issues):
+        issue_path = f"$.devops.issues[{index}]"
+        for key in ["id", "title", "product", "type", "risk", "context"]:
+            require_string(issue, key, issue_path)
+        require_boolean(issue, "highRisk", issue_path)
+        diff_lines = require_list(issue, "diffLines", issue_path, minimum=2)
+        validate_named_items(diff_lines, f"{issue_path}.diffLines", ["type", "text"])
+        status = require_mapping(issue, "status", issue_path)
+        require_string(status, "label", f"{issue_path}.status")
+        require_string(status, "tone", f"{issue_path}.status")
+    devops_action = require_mapping(devops, "action", "$.devops")
+    for key in [
+        "button",
+        "running",
+        "complete",
+        "readyLabel",
+        "humanLedLabel",
+        "notCreated",
+        "humanRequired",
+        "awaiting",
+        "agentRunning",
+        "policyChecks",
+        "planReady",
+        "prReady",
+        "humanImplementation",
+        "checksPassed",
+        "humanResult",
+        "prResult",
+        "planStatus",
+        "prStatus",
+        "humanToastTitle",
+        "humanToastText",
+        "prToastTitle",
+        "prToastText",
+    ]:
+        require_string(devops_action, key, "$.devops.action")
+    require_number(devops_action, "prBase", "$.devops.action")
+    require_number(devops_action, "durationMs", "$.devops.action")
+
+    agents = require_mapping(spec, "agents", "$")
+    validate_hero(agents, "$.agents")
+    for key in [
+        "listTitle",
+        "listHint",
+        "governedLabel",
+        "placeholder",
+        "sendLabel",
+        "fallback",
+    ]:
+        require_string(agents, key, "$.agents")
+    profiles = require_list(agents, "profiles", "$.agents", minimum=5)
+    if len(profiles) > 7:
+        raise SpecError("$.agents.profiles supports at most 7 agents")
+    profile_names = []
+    for index, profile in enumerate(profiles):
+        profile_path = f"$.agents.profiles[{index}]"
+        profile_names.append(require_string(profile, "name", profile_path))
+        require_string(profile, "icon", profile_path)
+        require_string(profile, "subtitle", profile_path)
+        require_string(profile, "intro", profile_path)
+        qa = require_list(profile, "qa", profile_path, minimum=3)
+        for qa_index, item in enumerate(qa):
+            item_path = f"{profile_path}.qa[{qa_index}]"
+            require_string(item, "question", item_path)
+            require_string(item, "answer", item_path)
+    if len(profile_names) != len(set(profile_names)):
+        raise SpecError("$.agents.profiles names must be unique")
+    orchestration = require_mapping(agents, "orchestration", "$.agents")
+    for key in [
+        "title",
+        "button",
+        "running",
+        "complete",
+        "coreLabel",
+        "intro",
+        "summary",
+        "toastTitle",
+        "toastText",
+    ]:
+        require_string(orchestration, key, "$.agents.orchestration")
+    stages = require_list(orchestration, "stages", "$.agents.orchestration", minimum=3)
+    for index, stage in enumerate(stages):
+        stage_path = f"$.agents.orchestration.stages[{index}]"
+        if not isinstance(stage, dict):
+            raise SpecError(f"{stage_path} must be an object")
+        agent_index = stage.get("agentIndex")
+        if not isinstance(agent_index, int) or not 0 <= agent_index < len(profiles):
+            raise SpecError(
+                f"$.agents.orchestration.stages[{index}].agentIndex is out of range"
+            )
+        for key in ["icon", "name", "text"]:
+            require_string(stage, key, stage_path)
+
+    governance = require_mapping(spec, "governance", "$")
+    validate_hero(governance, "$.governance")
+    cards = require_list(governance, "cards", "$.governance", minimum=3)
+    if len(cards) != 3:
+        raise SpecError("$.governance.cards must contain exactly 3 items")
+    validate_named_items(
+        cards,
+        "$.governance.cards",
+        ["icon", "title", "value", "sub", "detail"],
+    )
+    validate_table(
+        require_mapping(governance, "controls", "$.governance"),
+        "$.governance.controls",
+        minimum_rows=5,
+    )
+    validate_table(
+        require_mapping(governance, "memories", "$.governance"),
+        "$.governance.memories",
+    )
+    governance_loop = require_mapping(governance, "learningLoop", "$.governance")
+    require_string(governance_loop, "title", "$.governance.learningLoop")
+    require_string(governance_loop, "hint", "$.governance.learningLoop")
+    governance_steps = require_list(
+        governance_loop,
+        "steps",
+        "$.governance.learningLoop",
+        minimum=4,
+    )
+    if len(governance_steps) != 4:
+        raise SpecError("$.governance.learningLoop.steps must contain exactly 4 items")
+    validate_named_items(
+        governance_steps,
+        "$.governance.learningLoop.steps",
+        ["icon", "title", "sub", "detail"],
+    )
+    evaluation = require_mapping(governance, "evaluation", "$.governance")
+    for key in [
+        "title",
+        "hint",
+        "button",
+        "running",
+        "complete",
+        "toastTitle",
+        "toastText",
+    ]:
+        require_string(evaluation, key, "$.governance.evaluation")
+    require_number(evaluation, "initialScore", "$.governance.evaluation")
+    require_number(evaluation, "finalScore", "$.governance.evaluation")
+    require_string_list(
+        evaluation,
+        "readyLines",
+        "$.governance.evaluation",
+        minimum=3,
+    )
+    require_string_list(
+        evaluation,
+        "runLines",
+        "$.governance.evaluation",
+        minimum=4,
+    )
+
+    notification = require_mapping(spec, "notification", "$")
+    for key in ["title", "text", "icon"]:
+        require_string(notification, key, "$.notification")
+    ambient = spec.get("ambientNotifications")
+    if ambient is not None:
+        if not isinstance(ambient, list):
+            raise SpecError("$.ambientNotifications must be an array")
+        validate_named_items(
+            ambient,
+            "$.ambientNotifications",
+            ["title", "text", "icon"],
+        )
+
+    for path, value in iter_strings(spec):
+        for pattern in UNSAFE_PATTERNS:
+            if pattern.search(value):
+                raise SpecError(f"Unsafe HTML/JavaScript pattern in {path}")
+
+
+def read_text(path: Path) -> str:
+    resolved = path.expanduser().resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError(resolved)
+    return resolved.read_text(encoding="utf-8")
+
+
+def safe_json_for_script(spec: dict[str, Any]) -> str:
+    encoded = json.dumps(
+        spec,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
+    return (
+        encoded.replace("</", "<\\/")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+    )
+
+
+def render(spec: dict[str, Any], runtime_dir: Path) -> str:
+    runtime = runtime_dir.expanduser().resolve()
+    shell = read_text(runtime / "shell.tmpl")
+    css = read_text(runtime / "runtime.css")
+    javascript = read_text(runtime / "runtime.js")
+    replacements = {
+        "{{LANG}}": html_lib.escape(spec["meta"]["language"], quote=True),
+        "{{TITLE}}": html_lib.escape(
+            f'{spec["meta"]["appName"]} | Executive AI Operations Demo',
+            quote=False,
+        ),
+        "{{RUNTIME_CSS}}": css,
+        "{{DEMO_SPEC_JSON}}": safe_json_for_script(spec),
+        "{{RUNTIME_JS}}": javascript,
+    }
+    html = shell
+    for placeholder, value in replacements.items():
+        if placeholder not in html:
+            raise RuntimeError(f"Runtime shell placeholder missing: {placeholder}")
+        html = html.replace(placeholder, value)
+    return html
+
+
+def main() -> int:
+    args = parse_args()
+    spec_path = args.spec.expanduser().resolve()
+    if not spec_path.is_file():
+        raise FileNotFoundError(spec_path)
+    def reject_constant(value: str):
+        raise SpecError(f"Non-finite JSON number is not allowed: {value}")
+
+    with spec_path.open(encoding="utf-8") as stream:
+        spec = json.load(stream, parse_constant=reject_constant)
+    if not isinstance(spec, dict):
+        raise SpecError("Top-level JSON value must be an object")
+    spec = sanitize_rich_fields(spec)
+    validate_spec(spec)
+
+    summary = {
+        "spec": str(spec_path),
+        "customer": spec["meta"]["customer"],
+        "archetype": spec["design"]["archetype"],
+        "routes": len(spec["navigation"]),
+        "agents": len(spec["agents"]["profiles"]),
+        "valid": True,
+    }
+
+    if args.validate_only:
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.output is None:
+        raise SpecError("--output is required unless --validate-only is used")
+    output = args.output.expanduser().resolve()
+    if output.suffix.lower() != ".html":
+        raise SpecError("--output must use the .html extension")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    html = render(spec, args.runtime_dir)
+    output.write_text(html, encoding="utf-8")
+    summary.update({"output": str(output), "bytes": output.stat().st_size})
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except (FileNotFoundError, json.JSONDecodeError, SpecError, RuntimeError) as error:
+        print(f"render_demo.py: {error}", file=sys.stderr)
+        raise SystemExit(2)

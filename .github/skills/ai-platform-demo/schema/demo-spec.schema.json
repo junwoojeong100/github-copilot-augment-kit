@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/junwoojeong100/github-copilot-augment-kit/ai-platform-demo/demo-spec.schema.json",
+  "title": "AI Platform Demo Spec",
+  "description": "Editor assistance schema. scripts/render_demo.py is the authoritative structural, semantic, and security validator.",
+  "type": "object",
+  "required": [
+    "meta",
+    "design",
+    "story",
+    "navigation",
+    "dashboard",
+    "operations",
+    "simulator",
+    "improvement",
+    "finance",
+    "devops",
+    "agents",
+    "governance"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "customer",
+        "industry",
+        "audience",
+        "appName",
+        "initials",
+        "language",
+        "infrastructureLabel",
+        "demoNote"
+      ],
+      "properties": {
+        "customer": {"type": "string", "minLength": 1},
+        "industry": {"type": "string", "minLength": 1},
+        "audience": {"type": "string", "minLength": 1},
+        "appName": {"type": "string", "minLength": 1},
+        "initials": {"type": "string", "minLength": 1, "maxLength": 4},
+        "language": {"type": "string", "minLength": 2},
+        "infrastructureLabel": {"type": "string", "minLength": 1},
+        "demoNote": {"type": "string", "minLength": 1}
+      }
+    },
+    "design": {
+      "type": "object",
+      "required": [
+        "conceptWords",
+        "visualMetaphor",
+        "archetype",
+        "counterInfluence",
+        "theme",
+        "density",
+        "motion",
+        "tokens",
+        "avoid"
+      ],
+      "properties": {
+        "conceptWords": {
+          "type": "array",
+          "minItems": 3,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "visualMetaphor": {"type": "string", "minLength": 1},
+        "archetype": {
+          "enum": [
+            "precision-control-room",
+            "trusted-executive",
+            "operational-canvas",
+            "premium-minimal"
+          ]
+        },
+        "counterInfluence": {"type": "string", "minLength": 1},
+        "theme": {"enum": ["dark", "light"]},
+        "density": {"enum": ["compact", "executive", "spacious"]},
+        "motion": {"enum": ["restrained", "balanced", "energetic"]},
+        "tokens": {"type": "object"},
+        "avoid": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "story": {
+      "type": "object",
+      "required": ["frame", "audienceMessages", "climax"],
+      "properties": {
+        "frame": {"type": "string", "minLength": 1},
+        "audienceMessages": {"type": "array", "minItems": 2},
+        "climax": {"type": "string", "minLength": 1}
+      }
+    },
+    "navigation": {
+      "type": "array",
+      "prefixItems": [
+        {"$ref": "#/$defs/dashboardRoute"},
+        {"$ref": "#/$defs/operationsRoute"},
+        {"$ref": "#/$defs/simulatorRoute"},
+        {"$ref": "#/$defs/improvementRoute"},
+        {"$ref": "#/$defs/financeRoute"},
+        {"$ref": "#/$defs/devopsRoute"},
+        {"$ref": "#/$defs/agentsRoute"},
+        {"$ref": "#/$defs/governanceRoute"}
+      ],
+      "minItems": 8,
+      "maxItems": 8
+    },
+    "dashboard": {"$ref": "#/$defs/routeSection"},
+    "operations": {"$ref": "#/$defs/routeSection"},
+    "simulator": {
+      "allOf": [
+        {"$ref": "#/$defs/routeSection"},
+        {
+          "type": "object",
+          "required": ["inputs", "output", "secondary", "history"],
+          "properties": {
+            "inputs": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "object",
+                "required": ["id", "label", "min", "max", "value", "optimum", "weight"],
+                "properties": {
+                  "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"},
+                  "label": {"type": "string", "minLength": 1},
+                  "min": {"type": "number"},
+                  "max": {"type": "number"},
+                  "value": {"type": "number"},
+                  "optimum": {"type": "number"},
+                  "weight": {"type": "number"}
+                }
+              }
+            },
+            "output": {"type": "object"},
+            "secondary": {"type": "array", "minItems": 3},
+            "history": {"$ref": "#/$defs/table"}
+          }
+        }
+      ]
+    },
+    "improvement": {"$ref": "#/$defs/routeSection"},
+    "finance": {"$ref": "#/$defs/routeSection"},
+    "devops": {"$ref": "#/$defs/routeSection"},
+    "agents": {
+      "allOf": [
+        {"$ref": "#/$defs/routeSection"},
+        {
+          "type": "object",
+          "required": ["profiles", "orchestration"],
+          "properties": {
+            "profiles": {
+              "type": "array",
+              "minItems": 5,
+              "maxItems": 7,
+              "items": {
+                "type": "object",
+                "required": ["icon", "name", "subtitle", "intro", "qa"],
+                "properties": {
+                  "icon": {"type": "string", "minLength": 1},
+                  "name": {"type": "string", "minLength": 1},
+                  "subtitle": {"type": "string", "minLength": 1},
+                  "intro": {"type": "string", "minLength": 1},
+                  "qa": {
+                    "type": "array",
+                    "minItems": 3,
+                    "items": {
+                      "type": "object",
+                      "required": ["question", "answer"],
+                      "properties": {
+                        "question": {"type": "string", "minLength": 1},
+                        "answer": {"type": "string", "minLength": 1}
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "orchestration": {"type": "object"}
+          }
+        }
+      ]
+    },
+    "governance": {"$ref": "#/$defs/routeSection"}
+  },
+  "$defs": {
+    "route": {
+      "type": "object",
+      "required": ["id", "icon", "name", "short"],
+      "properties": {
+        "id": {"type": "string"},
+        "icon": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "short": {"type": "string", "minLength": 1},
+        "crumb": {"type": "string"}
+      }
+    },
+    "dashboardRoute": {
+      "allOf": [
+        {"$ref": "#/$defs/route"},
+        {"properties": {"id": {"const": "dashboard"}}}
+      ]
+    },
+    "operationsRoute": {
+      "allOf": [
+        {"$ref": "#/$defs/route"},
+        {"properties": {"id": {"const": "operations"}}}
+      ]
+    },
+    "simulatorRoute": {
+      "allOf": [
+        {"$ref": "#/$defs/route"},
+        {"properties": {"id": {"const": "simulator"}}}
+      ]
+    },
+    "improvementRoute": {
+      "allOf": [
+        {"$ref": "#/$defs/route"},
+        {"properties": {"id": {"const": "improvement"}}}
+      ]
+    },
+    "financeRoute": {
+      "allOf": [
+        {"$ref": "#/$defs/route"},
+        {"properties": {"id": {"const": "finance"}}}
+      ]
+    },
+    "devopsRoute": {
+      "allOf": [
+        {"$ref": "#/$defs/route"},
+        {"properties": {"id": {"const": "devops"}}}
+      ]
+    },
+    "agentsRoute": {
+      "allOf": [
+        {"$ref": "#/$defs/route"},
+        {"properties": {"id": {"const": "agents"}}}
+      ]
+    },
+    "governanceRoute": {
+      "allOf": [
+        {"$ref": "#/$defs/route"},
+        {"properties": {"id": {"const": "governance"}}}
+      ]
+    },
+    "hero": {
+      "type": "object",
+      "required": ["icon", "title", "subtitle"],
+      "properties": {
+        "icon": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "subtitle": {"type": "string", "minLength": 1},
+        "badge": {"type": "object"}
+      }
+    },
+    "kpi": {
+      "type": "object",
+      "required": ["label", "value", "icon", "series"],
+      "properties": {
+        "label": {"type": "string", "minLength": 1},
+        "value": {"type": "number"},
+        "icon": {"type": "string", "minLength": 1},
+        "series": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"type": "number"}
+        }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": ["title", "headers", "rows"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "headers": {"type": "array", "minItems": 2},
+        "rows": {"type": "array", "minItems": 3}
+      }
+    },
+    "routeSection": {
+      "type": "object",
+      "required": ["hero"],
+      "properties": {
+        "hero": {"$ref": "#/$defs/hero"},
+        "kpis": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {"$ref": "#/$defs/kpi"}
+        }
+      }
+    }
+  }
+}

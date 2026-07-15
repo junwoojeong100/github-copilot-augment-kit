@@ -6,7 +6,8 @@
 ## 1. 불변 원칙
 
 - 5단계 순서를 유지하며 리서치가 합쳐지기 전에는 스토리라인을 시작하지 않는다.
-- 스토리라인, 화면 계약, 디자인 토큰, 최종 단일 HTML은 한 에이전트가 소유한다.
+- 스토리라인, Adaptive Design DNA, 화면 계약, 고객 Demo Spec, 최종 단일 HTML은 한 에이전트가 소유한다.
+- 공통 shell·CSS·JavaScript는 Golden Runtime에서 재사용하며 고객별로 다시 작성하지 않는다.
 - `/fleet` 또는 병렬 subagent는 독립적인 조사와 읽기 전용 검사에만 사용한다.
 - 수정 중에는 변경 화면만 빠르게 확인할 수 있지만, 완료 전에는 8개 화면·스트레스 전환·에이전트
   전환·채팅을 포함한 전체 검증을 다시 수행한다.
@@ -18,16 +19,17 @@
 <session>/files/<app>-work/
   fact-ledger.md
   storyline.md
+  design-dna.md
   view-contract.md
+  demo-spec.json
   defects.md
   metrics.json
-  verify.js
   shots/
 ```
 
 `view-contract.md`에는 각 route의 KPI, 필수 DOM ID, 클릭 동작, 시뮬레이터 입력, 예상 결과,
-에이전트 전환 조건을 기록한다. 이 계약을 확정한 뒤 HTML을 조립하면 후기 DOM 변경과 검증 스크립트
-수정을 줄일 수 있다.
+에이전트 전환 조건을 기록한다. `design-dna.md`에는 고객별 archetype·token·density·avoid를 기록하고,
+두 계약을 `demo-spec.json`으로 합친다. 이후 수정 surface는 HTML보다 spec을 우선한다.
 
 ## 3. 리서치 병렬화
 
@@ -57,13 +59,16 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/ai-platform-demo/puppeteer/
 - 캐시에 고객 데이터, 시크릿, 브라우저 프로필을 보관하지 않는다.
 - 도구 사전 준비는 콘텐츠를 만들지 않으므로 리서치와 병렬로 실행할 수 있다.
 
-## 5. 단일 소유 빌드
+## 5. Golden Runtime 기반 단일 소유 빌드
 
 - 조사 subagent가 화면별 HTML/CSS/JS를 따로 작성하지 않는다.
-- 메인 에이전트가 잠긴 storyline과 view contract를 기준으로 단일 파일을 조립한다.
-- 검증된 app shell, router, timer cleanup, SVG helper는 재사용하되 고객 콘텐츠와 브랜드 표현은
-  새로 매핑한다.
-- 여러 에이전트가 같은 HTML을 동시에 편집하지 않는다.
+- 메인 에이전트가 잠긴 storyline·Design DNA·view contract를 고객 `demo-spec.json`으로 작성한다.
+- `scripts/render_demo.py`가 `runtime/shell.tmpl`, `runtime/runtime.css`, `runtime/runtime.js`와 spec을
+  inline해 단일 HTML을 만든다.
+- 고객 콘텐츠·브랜드 표현·산업 공식·Agent는 spec에서 새로 매핑하고 runtime engine은 재사용한다.
+- 기본 수정은 spec→재생성으로 수행한다. 핵심 장면이 runtime variant로 표현되지 않을 때만 해당
+  route를 bespoke patch한다.
+- 여러 에이전트가 같은 spec·HTML을 동시에 편집하지 않는다.
 
 ## 6. 검증 최적화
 
@@ -83,6 +88,8 @@ route만 전환한다.
   "research_seconds": 0,
   "storyline_design_seconds": 0,
   "build_seconds": 0,
+  "runtime_render_seconds": 0,
+  "bespoke_extension_routes": 0,
   "first_full_qa_seconds": 0,
   "repair_cycles": 0,
   "targeted_qa_seconds": 0,
