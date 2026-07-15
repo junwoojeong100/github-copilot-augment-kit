@@ -58,7 +58,7 @@ class ComposeDemoSpecTests(unittest.TestCase):
         with self.assertRaises(compose_demo_spec.ComposeError):
             compose_demo_spec.validate_pack(document, Path("bad-pack.json"))
 
-    def test_customer_overlay_requires_complete_design_dna(self):
+    def test_customer_overlay_must_not_define_design(self):
         document = {
             "_customer": {
                 "research": {
@@ -71,39 +71,6 @@ class ComposeDemoSpecTests(unittest.TestCase):
                 "meta": {},
                 "story": {},
                 "design": {"theme": "dark"},
-            },
-        }
-        with self.assertRaises(compose_demo_spec.ComposeError):
-            compose_demo_spec.validate_customer(
-                document,
-                [],
-                allow_stale=True,
-                max_age_hours=24,
-            )
-
-    def test_customer_overlay_requires_customer_visual_tokens(self):
-        document = {
-            "_customer": {
-                "research": {
-                    "mode": "live",
-                    "checkedAt": "2026-07-15T12:40:00+09:00",
-                    "sourceUrls": ["https://example.com/a", "https://example.com/b"],
-                }
-            },
-            "spec": {
-                "meta": {},
-                "story": {},
-                "design": {
-                    "conceptWords": ["a", "b", "c"],
-                    "visualMetaphor": "network",
-                    "archetype": "trusted-executive",
-                    "counterInfluence": "operations",
-                    "theme": "dark",
-                    "density": "executive",
-                    "motion": "balanced",
-                    "tokens": {},
-                    "avoid": ["x", "y", "z"],
-                },
             },
         }
         with self.assertRaises(compose_demo_spec.ComposeError):
@@ -187,31 +154,6 @@ class ComposeDemoSpecTests(unittest.TestCase):
             "spec": {
                 "meta": {},
                 "story": {},
-                "design": {
-                    "conceptWords": ["a", "b", "c"],
-                    "visualMetaphor": "network",
-                    "archetype": "trusted-executive",
-                    "counterInfluence": "operations",
-                    "theme": "dark",
-                    "density": "executive",
-                    "motion": "balanced",
-                    "tokens": {
-                        "canvas": "#000000",
-                        "canvasAlt": "#111111",
-                        "surface": "#222222",
-                        "surfaceAlt": "#333333",
-                        "ink": "#ffffff",
-                        "inkMuted": "#dddddd",
-                        "inkFaint": "#aaaaaa",
-                        "brand": "#ff0000",
-                        "brandAlt": "#cc0000",
-                        "accent": "#00ffff",
-                        "radius": 12,
-                        "navWidth": 250,
-                        "fontScale": 1,
-                    },
-                    "avoid": ["x", "y", "z"],
-                },
             },
         }
         with self.assertRaises(compose_demo_spec.ComposeError):
@@ -237,31 +179,6 @@ class ComposeDemoSpecTests(unittest.TestCase):
             "spec": {
                 "meta": {},
                 "story": {},
-                "design": {
-                    "conceptWords": ["a", "b", "c"],
-                    "visualMetaphor": "network",
-                    "archetype": "trusted-executive",
-                    "counterInfluence": "operations",
-                    "theme": "dark",
-                    "density": "executive",
-                    "motion": "balanced",
-                    "tokens": {
-                        "canvas": "#000000",
-                        "canvasAlt": "#111111",
-                        "surface": "#222222",
-                        "surfaceAlt": "#333333",
-                        "ink": "#ffffff",
-                        "inkMuted": "#dddddd",
-                        "inkFaint": "#aaaaaa",
-                        "brand": "#ff0000",
-                        "brandAlt": "#cc0000",
-                        "accent": "#00ffff",
-                        "radius": 12,
-                        "navWidth": 250,
-                        "fontScale": 1,
-                    },
-                    "avoid": ["x", "y", "z"],
-                },
             },
         }
         with self.assertRaises(compose_demo_spec.ComposeError):

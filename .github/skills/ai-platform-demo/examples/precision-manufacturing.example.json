@@ -16,16 +16,16 @@
       "learning"
     ],
     "visualMetaphor": "closed-loop signal network",
-    "archetype": "precision-control-room",
+    "archetype": "trusted-executive",
     "counterInfluence": "editorial clarity",
-    "theme": "dark",
+    "theme": "light",
     "density": "executive",
     "motion": "balanced",
     "tokens": {
-      "brand": "#73bc5a",
-      "brandAlt": "#a6d65f",
-      "accent": "#35d4c7",
-      "radius": 16,
+      "brand": "#0078d4",
+      "brandAlt": "#2b88d8",
+      "accent": "#038387",
+      "radius": 12,
       "navWidth": 254,
       "fontScale": 1
     },
@@ -131,7 +131,16 @@
         "direction": "up",
         "icon": "▦",
         "color": "brand",
-        "series": [89, 94, 101, 105, 111, 118, 122, 128],
+        "series": [
+          89,
+          94,
+          101,
+          105,
+          111,
+          118,
+          122,
+          128
+        ],
         "tick": {
           "min": 0,
           "max": 0.8,
@@ -148,7 +157,16 @@
         "direction": "up",
         "icon": "◈",
         "color": "accent",
-        "series": [36000, 39000, 38000, 41000, 40000, 43000, 42000, 44000],
+        "series": [
+          36000,
+          39000,
+          38000,
+          41000,
+          40000,
+          43000,
+          42000,
+          44000
+        ],
         "tick": {
           "min": -420,
           "max": 660,
@@ -165,7 +183,16 @@
         "direction": "up",
         "icon": "✓",
         "color": "success",
-        "series": [97.7, 97.9, 98.0, 98.1, 98.0, 98.2, 98.3, 98.42],
+        "series": [
+          97.7,
+          97.9,
+          98.0,
+          98.1,
+          98.0,
+          98.2,
+          98.3,
+          98.42
+        ],
         "tick": {
           "min": -0.05,
           "max": 0.08,
@@ -182,7 +209,16 @@
         "direction": "up",
         "icon": "✦",
         "color": "violet",
-        "series": [480, 620, 710, 770, 920, 1030, 1160, 1284],
+        "series": [
+          480,
+          620,
+          710,
+          770,
+          920,
+          1030,
+          1160,
+          1284
+        ],
         "tick": {
           "min": 2,
           "max": 8,
@@ -196,7 +232,27 @@
       "label": "FPY",
       "unit": "%",
       "color": "brand",
-      "values": [97.72, 97.78, 97.8, 97.87, 97.9, 97.94, 98.01, 98.0, 98.08, 98.12, 98.16, 98.14, 98.21, 98.25, 98.28, 98.31, 98.34, 98.38, 98.42],
+      "values": [
+        97.72,
+        97.78,
+        97.8,
+        97.87,
+        97.9,
+        97.94,
+        98.01,
+        98.0,
+        98.08,
+        98.12,
+        98.16,
+        98.14,
+        98.21,
+        98.25,
+        98.28,
+        98.31,
+        98.34,
+        98.38,
+        98.42
+      ],
       "min": 97.5,
       "max": 99,
       "tick": {
@@ -267,10 +323,19 @@
     "table": {
       "title": "Region / segment pulse",
       "hint": "행을 클릭해 상세 보기",
-      "headers": ["Region", "Focus", "FPY", "Signal"],
+      "headers": [
+        "Region",
+        "Focus",
+        "FPY",
+        "Signal"
+      ],
       "rows": [
         {
-          "cells": ["Korea", "Advanced Packaging", "98.71%"],
+          "cells": [
+            "Korea",
+            "Advanced Packaging",
+            "98.71%"
+          ],
           "status": {
             "label": "Stable",
             "tone": "success"
@@ -280,7 +345,11 @@
           "icon": "△"
         },
         {
-          "cells": ["Europe", "EV · Power", "98.08%"],
+          "cells": [
+            "Europe",
+            "EV · Power",
+            "98.08%"
+          ],
           "status": {
             "label": "Watch",
             "tone": "warning"
@@ -290,7 +359,11 @@
           "icon": "◇"
         },
         {
-          "cells": ["Americas", "AI Infrastructure", "97.94%"],
+          "cells": [
+            "Americas",
+            "AI Infrastructure",
+            "97.94%"
+          ],
           "status": {
             "label": "Investigating",
             "tone": "info"
@@ -300,7 +373,11 @@
           "icon": "✦"
         },
         {
-          "cells": ["Asia", "High-Mix SMT", "98.55%"],
+          "cells": [
+            "Asia",
+            "High-Mix SMT",
+            "98.55%"
+          ],
           "status": {
             "label": "Stable",
             "tone": "success"
@@ -334,7 +411,16 @@
         "direction": "up",
         "icon": "▦",
         "color": "brand",
-        "series": [1610, 1680, 1710, 1740, 1760, 1810, 1802, 1842],
+        "series": [
+          1610,
+          1680,
+          1710,
+          1740,
+          1760,
+          1810,
+          1802,
+          1842
+        ],
         "tick": {
           "min": -25,
           "max": 45,
@@ -351,7 +437,16 @@
         "direction": "up",
         "icon": "✓",
         "color": "success",
-        "series": [97.8, 97.9, 98.0, 98.08, 98.1, 98.2, 98.28, 98.36],
+        "series": [
+          97.8,
+          97.9,
+          98.0,
+          98.08,
+          98.1,
+          98.2,
+          98.28,
+          98.36
+        ],
         "tick": {
           "min": -0.05,
           "max": 0.08,
@@ -368,7 +463,16 @@
         "direction": "down",
         "icon": "◉",
         "color": "accent",
-        "series": [1.2, 1.08, 1.03, 0.94, 0.88, 0.81, 0.77, 0.72]
+        "series": [
+          1.2,
+          1.08,
+          1.03,
+          0.94,
+          0.88,
+          0.81,
+          0.77,
+          0.72
+        ]
       },
       {
         "label": "Closed-loop corrections",
@@ -379,7 +483,16 @@
         "direction": "up",
         "icon": "◎",
         "color": "violet",
-        "series": [5, 8, 12, 16, 19, 25, 31, 36]
+        "series": [
+          5,
+          8,
+          12,
+          16,
+          19,
+          25,
+          31,
+          36
+        ]
       }
     ],
     "flow": {
@@ -453,10 +566,17 @@
     "table": {
       "title": "Live station status",
       "hint": "행 클릭 가능",
-      "headers": ["Station", "Signal", "Status"],
+      "headers": [
+        "Station",
+        "Signal",
+        "Status"
+      ],
       "rows": [
         {
-          "cells": ["INS-03", "+0.7σ"],
+          "cells": [
+            "INS-03",
+            "+0.7σ"
+          ],
           "status": {
             "label": "Normal",
             "tone": "success"
@@ -466,7 +586,10 @@
           "icon": "△"
         },
         {
-          "cells": ["PLC-02", "18 μm"],
+          "cells": [
+            "PLC-02",
+            "18 μm"
+          ],
           "status": {
             "label": "Review",
             "tone": "warning"
@@ -476,7 +599,10 @@
           "icon": "◇"
         },
         {
-          "cells": ["OPT-05", "99.4%"],
+          "cells": [
+            "OPT-05",
+            "99.4%"
+          ],
           "status": {
             "label": "Normal",
             "tone": "success"
@@ -486,7 +612,10 @@
           "icon": "◈"
         },
         {
-          "cells": ["AIR-01", "18 items"],
+          "cells": [
+            "AIR-01",
+            "18 items"
+          ],
           "status": {
             "label": "AI triage",
             "tone": "info"
@@ -496,7 +625,10 @@
           "icon": "✦"
         },
         {
-          "cells": ["POLICY", "1 action"],
+          "cells": [
+            "POLICY",
+            "1 action"
+          ],
           "status": {
             "label": "Approval",
             "tone": "violet"
@@ -643,10 +775,19 @@
     "history": {
       "title": "Recent twin scenarios",
       "hint": "행 클릭 가능",
-      "headers": ["Scenario", "FPY", "Risk", "Decision"],
+      "headers": [
+        "Scenario",
+        "FPY",
+        "Risk",
+        "Decision"
+      ],
       "rows": [
         {
-          "cells": ["AI server baseline", "98.36%", "Low"],
+          "cells": [
+            "AI server baseline",
+            "98.36%",
+            "Low"
+          ],
           "status": {
             "label": "Release",
             "tone": "success"
@@ -656,7 +797,11 @@
           "icon": "△"
         },
         {
-          "cells": ["Material drift +12%", "96.88%", "High"],
+          "cells": [
+            "Material drift +12%",
+            "96.88%",
+            "High"
+          ],
           "status": {
             "label": "Hold",
             "tone": "danger"
@@ -666,7 +811,11 @@
           "icon": "△"
         },
         {
-          "cells": ["Offset corrected", "98.91%", "Low"],
+          "cells": [
+            "Offset corrected",
+            "98.91%",
+            "Low"
+          ],
           "status": {
             "label": "Release",
             "tone": "success"
@@ -676,7 +825,11 @@
           "icon": "◇"
         },
         {
-          "cells": ["Threshold 91%", "97.82%", "Medium"],
+          "cells": [
+            "Threshold 91%",
+            "97.82%",
+            "Medium"
+          ],
           "status": {
             "label": "Validate",
             "tone": "warning"
@@ -705,7 +858,16 @@
         "direction": "up",
         "icon": "◎",
         "color": "brand",
-        "series": [1, 1, 2, 3, 3, 4, 5, 6]
+        "series": [
+          1,
+          1,
+          2,
+          3,
+          3,
+          4,
+          5,
+          6
+        ]
       },
       {
         "label": "Expected defect reduction",
@@ -716,7 +878,16 @@
         "direction": "up",
         "icon": "↓",
         "color": "success",
-        "series": [80, 110, 140, 170, 205, 250, 292, 340]
+        "series": [
+          80,
+          110,
+          140,
+          170,
+          205,
+          250,
+          292,
+          340
+        ]
       },
       {
         "label": "Stabilization time",
@@ -727,7 +898,16 @@
         "direction": "down",
         "icon": "◷",
         "color": "accent",
-        "series": [61, 55, 49, 43, 36, 31, 24, 18]
+        "series": [
+          61,
+          55,
+          49,
+          43,
+          36,
+          31,
+          24,
+          18
+        ]
       },
       {
         "label": "Owned playbooks",
@@ -738,7 +918,16 @@
         "direction": "up",
         "icon": "▤",
         "color": "violet",
-        "series": [1090, 1140, 1185, 1220, 1270, 1320, 1380, 1428]
+        "series": [
+          1090,
+          1140,
+          1185,
+          1220,
+          1270,
+          1320,
+          1380,
+          1428
+        ]
       }
     ],
     "stepsTitle": "Agent reasoning trace",
@@ -1035,10 +1224,19 @@
     "watchlist": {
       "title": "Autonomous finance watchlist",
       "hint": "행 클릭 가능",
-      "headers": ["Signal", "Variance", "AI comment", "Status"],
+      "headers": [
+        "Signal",
+        "Variance",
+        "AI comment",
+        "Status"
+      ],
       "rows": [
         {
-          "cells": ["Service attach", "+3.2%p", "Installed-base cohort"],
+          "cells": [
+            "Service attach",
+            "+3.2%p",
+            "Installed-base cohort"
+          ],
           "status": {
             "label": "Opportunity",
             "tone": "success"
@@ -1048,7 +1246,11 @@
           "icon": "₩"
         },
         {
-          "cells": ["Product mix", "+5.4%p", "Premium demand"],
+          "cells": [
+            "Product mix",
+            "+5.4%p",
+            "Premium demand"
+          ],
           "status": {
             "label": "Model",
             "tone": "info"
@@ -1058,7 +1260,11 @@
           "icon": "△"
         },
         {
-          "cells": ["Expedite cost", "+11.8%", "Supplier cluster"],
+          "cells": [
+            "Expedite cost",
+            "+11.8%",
+            "Supplier cluster"
+          ],
           "status": {
             "label": "Review",
             "tone": "warning"
@@ -1068,7 +1274,11 @@
           "icon": "◈"
         },
         {
-          "cells": ["Warranty reserve", "−4.1%", "Quality trend"],
+          "cells": [
+            "Warranty reserve",
+            "−4.1%",
+            "Quality trend"
+          ],
           "status": {
             "label": "Improving",
             "tone": "success"
@@ -1078,7 +1288,11 @@
           "icon": "⬡"
         },
         {
-          "cells": ["AI run cost", "+2.6%", "Volume driven"],
+          "cells": [
+            "AI run cost",
+            "+2.6%",
+            "Volume driven"
+          ],
           "status": {
             "label": "Controlled",
             "tone": "violet"
@@ -1108,7 +1322,16 @@
         "direction": "down",
         "icon": "◷",
         "color": "brand",
-        "series": [8.2, 7.5, 6.8, 6.1, 5.5, 4.8, 4.2, 3.8]
+        "series": [
+          8.2,
+          7.5,
+          6.8,
+          6.1,
+          5.5,
+          4.8,
+          4.2,
+          3.8
+        ]
       },
       {
         "label": "Agent pull requests",
@@ -1119,7 +1342,16 @@
         "direction": "up",
         "icon": "⑂",
         "color": "info",
-        "series": [5, 9, 14, 18, 22, 29, 36, 42]
+        "series": [
+          5,
+          9,
+          14,
+          18,
+          22,
+          29,
+          36,
+          42
+        ]
       },
       {
         "label": "Security checks",
@@ -1130,7 +1362,16 @@
         "direction": "up",
         "icon": "⬡",
         "color": "success",
-        "series": [82, 86, 91, 95, 97, 99, 100, 100]
+        "series": [
+          82,
+          86,
+          91,
+          95,
+          97,
+          99,
+          100,
+          100
+        ]
       },
       {
         "label": "Review turnaround",
@@ -1141,7 +1382,16 @@
         "direction": "down",
         "icon": "✓",
         "color": "violet",
-        "series": [11, 10.2, 9.5, 8.4, 7.8, 6.8, 5.9, 5.2]
+        "series": [
+          11,
+          10.2,
+          9.5,
+          8.4,
+          7.8,
+          6.8,
+          5.9,
+          5.2
+        ]
       }
     ],
     "stepsTitle": "Copilot cloud agent session",
@@ -1170,7 +1420,13 @@
     ],
     "issuesTitle": "Engineering backlog",
     "issuesHint": "행을 선택한 뒤 이슈를 배정하세요",
-    "issueHeaders": ["Issue", "Product", "Type", "Risk", "Status"],
+    "issueHeaders": [
+      "Issue",
+      "Product",
+      "Type",
+      "Risk",
+      "Status"
+    ],
     "issues": [
       {
         "id": "#482",
@@ -1571,10 +1827,19 @@
     "controls": {
       "title": "Enterprise control plane",
       "hint": "제품별 역할 매핑 · 행 클릭 가능",
-      "headers": ["Control", "Microsoft / GitHub service", "Demo policy", "Status"],
+      "headers": [
+        "Control",
+        "Microsoft / GitHub service",
+        "Demo policy",
+        "Status"
+      ],
       "rows": [
         {
-          "cells": ["Identity", "Entra Agent ID · RBAC", "Per-agent least privilege"],
+          "cells": [
+            "Identity",
+            "Entra Agent ID · RBAC",
+            "Per-agent least privilege"
+          ],
           "status": {
             "label": "Mapped",
             "tone": "success"
@@ -1584,7 +1849,11 @@
           "icon": "⬡"
         },
         {
-          "cells": ["Knowledge", "Azure AI Search", "ACL-aware retrieval"],
+          "cells": [
+            "Knowledge",
+            "Azure AI Search",
+            "ACL-aware retrieval"
+          ],
           "status": {
             "label": "Mapped",
             "tone": "success"
@@ -1594,7 +1863,11 @@
           "icon": "▤"
         },
         {
-          "cells": ["Data", "Microsoft Purview", "Classify · protect · audit"],
+          "cells": [
+            "Data",
+            "Microsoft Purview",
+            "Classify · protect · audit"
+          ],
           "status": {
             "label": "Designed",
             "tone": "info"
@@ -1604,7 +1877,11 @@
           "icon": "◈"
         },
         {
-          "cells": ["Safety", "AI Content Safety", "Filter · evaluate · red team"],
+          "cells": [
+            "Safety",
+            "AI Content Safety",
+            "Filter · evaluate · red team"
+          ],
           "status": {
             "label": "Mapped",
             "tone": "success"
@@ -1614,7 +1891,11 @@
           "icon": "✓"
         },
         {
-          "cells": ["Runtime", "Defender · VNet isolation", "Threat and posture signals"],
+          "cells": [
+            "Runtime",
+            "Defender · VNet isolation",
+            "Threat and posture signals"
+          ],
           "status": {
             "label": "Designed",
             "tone": "info"
@@ -1624,7 +1905,11 @@
           "icon": "⬡"
         },
         {
-          "cells": ["Engineering", "GitHub AI Controls · GHAS", "Session audit · merge gate"],
+          "cells": [
+            "Engineering",
+            "GitHub AI Controls · GHAS",
+            "Session audit · merge gate"
+          ],
           "status": {
             "label": "Mapped",
             "tone": "success"
@@ -1634,7 +1919,11 @@
           "icon": "⌘"
         },
         {
-          "cells": ["Observability", "Foundry · Application Insights", "Trace every decision"],
+          "cells": [
+            "Observability",
+            "Foundry · Application Insights",
+            "Trace every decision"
+          ],
           "status": {
             "label": "Mapped",
             "tone": "success"
@@ -1648,10 +1937,17 @@
     "memories": {
       "title": "Owned memory register",
       "hint": "고객 소유 자산",
-      "headers": ["Asset", "Count", "Ownership"],
+      "headers": [
+        "Asset",
+        "Count",
+        "Ownership"
+      ],
       "rows": [
         {
-          "cells": ["Measurement pattern library", "8,420"],
+          "cells": [
+            "Measurement pattern library",
+            "8,420"
+          ],
           "status": {
             "label": "Owned",
             "tone": "success"
@@ -1661,7 +1957,10 @@
           "icon": "△"
         },
         {
-          "cells": ["Improvement playbooks", "1,428"],
+          "cells": [
+            "Improvement playbooks",
+            "1,428"
+          ],
           "status": {
             "label": "Owned",
             "tone": "success"
@@ -1671,7 +1970,10 @@
           "icon": "◎"
         },
         {
-          "cells": ["Service resolution memory", "6,214"],
+          "cells": [
+            "Service resolution memory",
+            "6,214"
+          ],
           "status": {
             "label": "Owned",
             "tone": "success"
@@ -1681,7 +1983,10 @@
           "icon": "◇"
         },
         {
-          "cells": ["Agent evaluation cases", "8,618"],
+          "cells": [
+            "Agent evaluation cases",
+            "8,618"
+          ],
           "status": {
             "label": "Owned",
             "tone": "success"

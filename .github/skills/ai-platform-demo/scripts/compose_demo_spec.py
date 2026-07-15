@@ -189,8 +189,12 @@ def apply_customer_layer(
     required_paths: list[str],
 ) -> dict[str, Any]:
     merged = deep_merge(composed, customer_spec)
-    for section in ["meta", "design", "story"]:
+    for section in ["meta", "story"]:
         merged[section] = copy.deepcopy(customer_spec[section])
+    # Design is fixed (Microsoft-tone) and inherited from the base spec. The overlay only
+    # changes menu (routes) and data, so 'design' is replaced solely when explicitly provided.
+    if "design" in customer_spec:
+        merged["design"] = copy.deepcopy(customer_spec["design"])
     for path in required_paths:
         replacement = deep_merge(None, get_path(customer_spec, path))
         if replacement == DELETE_MARKER:
@@ -310,23 +314,15 @@ def validate_customer(
     spec = document.get("spec")
     if not isinstance(metadata, dict) or not isinstance(spec, dict):
         raise ComposeError("Customer overlay requires _customer and spec objects")
-    for section in ["meta", "design", "story"]:
+    for section in ["meta", "story"]:
         if not isinstance(spec.get(section), dict):
             raise ComposeError(f"Customer overlay must own the full '{section}' section")
-    missing_design = CUSTOMER_DESIGN_KEYS - set(spec["design"])
-    if missing_design:
+    # Design is fixed (Microsoft-tone) in the runtime and base spec. The overlay changes
+    # only menu (routes) and data, so it must NOT redefine the visual design.
+    if "design" in spec:
         raise ComposeError(
-            "Customer overlay must define complete Adaptive Design DNA; missing: "
-            + ", ".join(sorted(missing_design))
-        )
-    tokens = spec["design"].get("tokens")
-    if not isinstance(tokens, dict):
-        raise ComposeError("Customer Overlay design.tokens must be an object")
-    missing_tokens = CUSTOMER_TOKEN_KEYS - set(tokens)
-    if missing_tokens:
-        raise ComposeError(
-            "Customer Overlay must own the customer visual token set; missing: "
-            + ", ".join(sorted(missing_tokens))
+            "Customer overlay must not define 'design'; the Microsoft-tone design is fixed "
+            "in the base spec and runtime."
         )
 
     research = metadata.get("research")

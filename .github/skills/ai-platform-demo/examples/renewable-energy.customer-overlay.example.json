@@ -24,54 +24,25 @@
       "infrastructureLabel": "Microsoft Foundry · Reference Architecture",
       "demoNote": "모든 고객명·운영·재무·예측 수치는 Composition 예제를 위한 시연 데이터입니다."
     },
-    "design": {
-      "conceptWords": [
-        "global coordination",
-        "evidence",
-        "resilient growth"
-      ],
-      "visualMetaphor": "an illuminated energy corridor across regions",
-      "archetype": "trusted-executive",
-      "counterInfluence": "live operations",
-      "theme": "dark",
-      "density": "executive",
-      "motion": "balanced",
-      "tokens": {
-        "canvas": "#07111F",
-        "canvasAlt": "#0B1828",
-        "surface": "#112235",
-        "surfaceAlt": "#0E1C2C",
-        "surfaceStrong": "#172B40",
-        "ink": "#F2F7FC",
-        "inkMuted": "#A9B9C9",
-        "inkFaint": "#70849A",
-        "brand": "#F0A23A",
-        "brandAlt": "#FFD17A",
-        "accent": "#27C2B4",
-        "info": "#4A9EFF",
-        "success": "#45CF8C",
-        "warning": "#F0B84B",
-        "danger": "#F06962",
-        "violet": "#A98AF4",
-        "line": "rgba(220,235,250,.10)",
-        "lineSoft": "rgba(220,235,250,.06)",
-        "radius": 14,
-        "navWidth": 254,
-        "fontScale": 1
-      },
-      "avoid": [
-        "generic green sustainability dashboard",
-        "full-surface brand color",
-        "decorative energy photography"
-      ]
-    },
     "story": {
       "frame": "Northstar Energy Holdings는 소재·발전·저장·계약 결정을 하나의 학습 루프로 연결합니다.",
       "audienceMessages": [
-        {"audience": "CEO", "message": "지역과 자회사를 하나의 포트폴리오로 조율"},
-        {"audience": "COO", "message": "공급과 delivery exception을 조기에 대응"},
-        {"audience": "CFO", "message": "계약과 working capital을 동일한 가치 언어로 비교"},
-        {"audience": "CIO", "message": "Agent identity, evidence, approval을 통제"}
+        {
+          "audience": "CEO",
+          "message": "지역과 자회사를 하나의 포트폴리오로 조율"
+        },
+        {
+          "audience": "COO",
+          "message": "공급과 delivery exception을 조기에 대응"
+        },
+        {
+          "audience": "CFO",
+          "message": "계약과 working capital을 동일한 가치 언어로 비교"
+        },
+        {
+          "audience": "CIO",
+          "message": "Agent identity, evidence, approval을 통제"
+        }
       ],
       "climax": "Peak 수요 전에 forecast와 evidence exception이 동시에 발생하고 전문 Agent들이 delivery package를 생성합니다."
     },
@@ -94,11 +65,41 @@
       },
       "flow": {
         "nodes": [
-          {"name": "Clean Power", "subtitle": "Source", "metric": "97.6%", "status": "availability", "detail": "Renewable source availability and production plans are linked."},
-          {"name": "Core Material", "subtitle": "Production", "metric": "94.8%", "status": "run-rate", "detail": "Material quality, energy, and evidence are monitored."},
-          {"name": "Manufacturing", "subtitle": "Downstream", "metric": "92.7%", "status": "readiness", "detail": "Capacity, yield, and handoff windows are coordinated."},
-          {"name": "Generation", "subtitle": "Renewable", "metric": "2.9 GW", "status": "portfolio flow", "detail": "Forecast and contracted delivery are combined."},
-          {"name": "Storage / Grid", "subtitle": "Delivery", "metric": "97.8%", "status": "confidence", "detail": "Storage reserve and grid commitment are optimized."}
+          {
+            "name": "Clean Power",
+            "subtitle": "Source",
+            "metric": "97.6%",
+            "status": "availability",
+            "detail": "Renewable source availability and production plans are linked."
+          },
+          {
+            "name": "Core Material",
+            "subtitle": "Production",
+            "metric": "94.8%",
+            "status": "run-rate",
+            "detail": "Material quality, energy, and evidence are monitored."
+          },
+          {
+            "name": "Manufacturing",
+            "subtitle": "Downstream",
+            "metric": "92.7%",
+            "status": "readiness",
+            "detail": "Capacity, yield, and handoff windows are coordinated."
+          },
+          {
+            "name": "Generation",
+            "subtitle": "Renewable",
+            "metric": "2.9 GW",
+            "status": "portfolio flow",
+            "detail": "Forecast and contracted delivery are combined."
+          },
+          {
+            "name": "Storage / Grid",
+            "subtitle": "Delivery",
+            "metric": "97.8%",
+            "status": "confidence",
+            "detail": "Storage reserve and grid commitment are optimized."
+          }
         ]
       }
     },
@@ -113,9 +114,42 @@
         }
       },
       "inputs": [
-        {"id": "forecastConfidence", "label": "Generation forecast confidence", "min": 70, "max": 99, "step": 1, "value": 95, "decimals": 0, "unit": "%", "optimum": 97, "weight": 0.21},
-        {"id": "reserveSoc", "label": "Storage reserve SOC", "min": 10, "max": 60, "step": 1, "value": 29, "decimals": 0, "unit": "%", "optimum": 29, "weight": 0.1},
-        {"id": "loadRamp", "label": "Peak-load ramp", "min": 0, "max": 40, "step": 1, "value": 11, "decimals": 0, "unit": "%", "optimum": 8, "weight": 0.14}
+        {
+          "id": "forecastConfidence",
+          "label": "Generation forecast confidence",
+          "min": 70,
+          "max": 99,
+          "step": 1,
+          "value": 95,
+          "decimals": 0,
+          "unit": "%",
+          "optimum": 97,
+          "weight": 0.21
+        },
+        {
+          "id": "reserveSoc",
+          "label": "Storage reserve SOC",
+          "min": 10,
+          "max": 60,
+          "step": 1,
+          "value": 29,
+          "decimals": 0,
+          "unit": "%",
+          "optimum": 29,
+          "weight": 0.1
+        },
+        {
+          "id": "loadRamp",
+          "label": "Peak-load ramp",
+          "min": 0,
+          "max": 40,
+          "step": 1,
+          "value": 11,
+          "decimals": 0,
+          "unit": "%",
+          "optimum": 8,
+          "weight": 0.14
+        }
       ]
     },
     "improvement": {
@@ -154,9 +188,18 @@
           "subtitle": "Low-carbon material",
           "intro": "Energy input, production run-rate, quality, evidence를 연결합니다.",
           "qa": [
-            {"question": "오늘 소재 운영 상태는?", "answer": "Run-rate와 clean-power availability가 <b>안정 범위</b>입니다."},
-            {"question": "Evidence exception은?", "answer": "2개 evidence item이 approval queue에서 검토 중입니다."},
-            {"question": "Carbon premium을 높이려면?", "answer": "Power-source evidence와 carbon methodology를 contract에 연결하세요."}
+            {
+              "question": "오늘 소재 운영 상태는?",
+              "answer": "Run-rate와 clean-power availability가 <b>안정 범위</b>입니다."
+            },
+            {
+              "question": "Evidence exception은?",
+              "answer": "2개 evidence item이 approval queue에서 검토 중입니다."
+            },
+            {
+              "question": "Carbon premium을 높이려면?",
+              "answer": "Power-source evidence와 carbon methodology를 contract에 연결하세요."
+            }
           ]
         },
         {
@@ -166,9 +209,18 @@
           "subtitle": "Forecast · ESS · Grid",
           "intro": "Forecast, reserve SOC, grid ramp를 연결해 delivery confidence를 관리합니다.",
           "qa": [
-            {"question": "Peak window는 안전한가?", "answer": "현재 delivery confidence는 <b>97.8%</b>입니다."},
-            {"question": "Forecast가 낮아지면?", "answer": "Commitment를 낮추고 storage reserve를 확대합니다."},
-            {"question": "Curtailment를 줄이려면?", "answer": "Forecast regime과 reserve policy를 함께 최적화합니다."}
+            {
+              "question": "Peak window는 안전한가?",
+              "answer": "현재 delivery confidence는 <b>97.8%</b>입니다."
+            },
+            {
+              "question": "Forecast가 낮아지면?",
+              "answer": "Commitment를 낮추고 storage reserve를 확대합니다."
+            },
+            {
+              "question": "Curtailment를 줄이려면?",
+              "answer": "Forecast regime과 reserve policy를 함께 최적화합니다."
+            }
           ]
         },
         {
@@ -178,9 +230,18 @@
           "subtitle": "Material · Power · Ownership",
           "intro": "Material, power source, ownership, delivery evidence를 연결합니다.",
           "qa": [
-            {"question": "Evidence completeness는?", "answer": "현재 시연 completeness는 <b>99.1%</b>입니다."},
-            {"question": "감사 준비 시간을 줄이려면?", "answer": "Release 전에 policy package를 자동 조립합니다."},
-            {"question": "어떤 증빙이 부족한가?", "answer": "Power source와 handoff evidence를 우선 확인합니다."}
+            {
+              "question": "Evidence completeness는?",
+              "answer": "현재 시연 completeness는 <b>99.1%</b>입니다."
+            },
+            {
+              "question": "감사 준비 시간을 줄이려면?",
+              "answer": "Release 전에 policy package를 자동 조립합니다."
+            },
+            {
+              "question": "어떤 증빙이 부족한가?",
+              "answer": "Power source와 handoff evidence를 우선 확인합니다."
+            }
           ]
         },
         {
@@ -190,9 +251,18 @@
           "subtitle": "Capital allocation",
           "intro": "Contract, premium, working capital을 투자위원회 언어로 번역합니다.",
           "qa": [
-            {"question": "가장 큰 가치 레버는?", "answer": "Contracted storage와 low-carbon premium의 조합입니다."},
-            {"question": "Working capital 효과는?", "answer": "Handoff alignment로 <b>6일 release</b>하는 데모입니다."},
-            {"question": "투자 우선순위는?", "answer": "Energy Twin, evidence automation, capital cockpit 순입니다."}
+            {
+              "question": "가장 큰 가치 레버는?",
+              "answer": "Contracted storage와 low-carbon premium의 조합입니다."
+            },
+            {
+              "question": "Working capital 효과는?",
+              "answer": "Handoff alignment로 <b>6일 release</b>하는 데모입니다."
+            },
+            {
+              "question": "투자 우선순위는?",
+              "answer": "Energy Twin, evidence automation, capital cockpit 순입니다."
+            }
           ]
         },
         {
@@ -202,9 +272,18 @@
           "subtitle": "GitHub · Energy software",
           "intro": "Repository research, plan, tests, pull request 흐름을 실행합니다.",
           "qa": [
-            {"question": "어떤 이슈를 맡길까?", "answer": "Forecast guard와 evidence audit처럼 검증 기준이 명확한 작업이 적합합니다."},
-            {"question": "Safety 변경도 가능한가?", "answer": "Live-grid 변경은 사람이 구현과 승인을 주도합니다."},
-            {"question": "Forecast PR을 만들어줘", "answer": "Threshold, approval guard, audit test를 추가하는 Draft PR 시나리오입니다."}
+            {
+              "question": "어떤 이슈를 맡길까?",
+              "answer": "Forecast guard와 evidence audit처럼 검증 기준이 명확한 작업이 적합합니다."
+            },
+            {
+              "question": "Safety 변경도 가능한가?",
+              "answer": "Live-grid 변경은 사람이 구현과 승인을 주도합니다."
+            },
+            {
+              "question": "Forecast PR을 만들어줘",
+              "answer": "Threshold, approval guard, audit test를 추가하는 Draft PR 시나리오입니다."
+            }
           ]
         }
       ],
@@ -216,11 +295,36 @@
         "coreLabel": "Northstar Orchestrator",
         "intro": "<b>Executive scenario:</b> Peak 수요 전에 forecast와 evidence exception이 동시에 발생했습니다.",
         "stages": [
-          {"agentIndex": 0, "icon": "◇", "name": "Material Agent", "text": "Production 정상, evidence 우선 보완"},
-          {"agentIndex": 1, "icon": "△", "name": "Energy Agent", "text": "Reserve SOC 조정, delivery confidence 회복"},
-          {"agentIndex": 2, "icon": "⬡", "name": "Traceability Agent", "text": "Evidence package를 release gate에 연결"},
-          {"agentIndex": 3, "icon": "₩", "name": "Finance Agent", "text": "Value-at-risk와 contract coverage 계산"},
-          {"agentIndex": 4, "icon": "⌘", "name": "Copilot Agent", "text": "Forecast guard Draft PR 준비"}
+          {
+            "agentIndex": 0,
+            "icon": "◇",
+            "name": "Material Agent",
+            "text": "Production 정상, evidence 우선 보완"
+          },
+          {
+            "agentIndex": 1,
+            "icon": "△",
+            "name": "Energy Agent",
+            "text": "Reserve SOC 조정, delivery confidence 회복"
+          },
+          {
+            "agentIndex": 2,
+            "icon": "⬡",
+            "name": "Traceability Agent",
+            "text": "Evidence package를 release gate에 연결"
+          },
+          {
+            "agentIndex": 3,
+            "icon": "₩",
+            "name": "Finance Agent",
+            "text": "Value-at-risk와 contract coverage 계산"
+          },
+          {
+            "agentIndex": 4,
+            "icon": "⌘",
+            "name": "Copilot Agent",
+            "text": "Forecast guard Draft PR 준비"
+          }
         ],
         "summary": "<b>Executive decision package가 준비되었습니다.</b><br>Storage reserve 조정, evidence 승인, contract rebalance, forecast guard PR을 제안합니다.",
         "toastTitle": "멀티에이전트 협업 완료",

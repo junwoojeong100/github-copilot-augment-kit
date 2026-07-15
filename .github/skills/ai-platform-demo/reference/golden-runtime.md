@@ -8,6 +8,7 @@ Golden Runtime은 고객 데모의 **동작 엔진**이다. 특정 고객의 색
 
 다음 항목은 고객·산업과 무관한 runtime contract다.
 
+- 고정 Microsoft-톤 디자인(색·타이포·radius·shadow·spacing = `runtime.css`의 `:root`)
 - 단일 HTML shell, 8-route hash router, sidebar/topbar, `DEMO DATA` 표시
 - route 전환 시 timer/listener cleanup
 - KPI tick, streaming chart, activity feed, toast, moving-object engine
@@ -30,12 +31,10 @@ runtime/
 
 ## 2. 고정하지 않는 것
 
-다음 항목은 반드시 `demo-spec.json`과 Design DNA에서 고객별로 결정한다.
+다음 항목은 `demo-spec.json`에서 고객별로 결정한다(= 메뉴와 데이터). 디자인은 Microsoft 톤으로 고정.
 
 - 브랜드명, 앱명, 언어, audience, storyline
-- dark/light canvas, palette, typography scale, radius, shadow, spacing, density
-- hero 표현, chart grammar, visual metaphor, motion intensity
-- route 이름과 domain terminology
+- route 이름과 domain terminology (= 메뉴)
 - KPI label·단위·범위·tick behavior
 - 운영 flow node, simulator input·formula, root-cause factor
 - finance lever·가정, GitHub issue·diff
@@ -49,8 +48,7 @@ runtime/
 | Layer | 소유자 | 변경 빈도 | 예시 |
 |---|---|---:|---|
 | Golden Runtime | skill | 낮음 | router, cleanup, chart primitive, interaction engine |
-| Design archetype | skill + request | 중간 | precision-control-room, trusted-executive |
-| Design DNA | 고객별 spec | 매 요청 | palette, density, radius, chart style |
+| Design (Microsoft-톤 고정) | skill | 낮음 | palette, typography, radius, shadow — `runtime.css` |
 | Domain content | 고객별 spec | 매 요청 | KPI, flow, formula, agent QA |
 | Bespoke extension | 생성 agent | 예외 | 산업 특화 map, uncommon visual simulator |
 
@@ -67,7 +65,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
   --html-output <session>/files/<app>-work/<app>.html
 ```
 
-Industry Pack은 디자인을 포함할 수 없고 Customer Overlay가 전체 Design DNA를 제공해야 한다. 적합한
+Industry Pack과 Customer Overlay 모두 디자인을 정의하지 않는다(디자인은 base가 고정 제공). 적합한
 Pack이 없을 때만 전체 Spec을 직접 작성해 아래 Renderer를 사용한다.
 
 ```bash
@@ -113,7 +111,7 @@ QA는 추가로 확인한다.
 
 Golden Runtime이 고객의 핵심 장면을 충분히 표현하지 못할 때만 extension을 사용한다.
 
-1. 먼저 spec의 `visual.variant`, Design DNA, route data로 해결한다.
+1. 먼저 spec의 `visual.variant`와 route data로 해결한다(디자인은 고정).
 2. 그래도 부족하면 생성된 HTML의 해당 `VIEWS.<route>`만 session 작업 폴더에서 patch한다.
 3. runtime 공통 파일에 고객 전용 분기를 추가하지 않는다.
 4. extension 후 targeted QA와 final full QA를 모두 수행한다.

@@ -6,7 +6,7 @@
 ## 1. 불변 원칙
 
 - 5단계 순서를 유지하며 리서치가 합쳐지기 전에는 스토리라인을 시작하지 않는다.
-- 스토리라인, Adaptive Design DNA, 화면 계약, 고객 Demo Spec, 최종 단일 HTML은 한 에이전트가 소유한다.
+- 스토리라인, 화면 계약, 고객 Demo Spec, 최종 단일 HTML은 한 에이전트가 소유한다(디자인은 고정).
 - 공통 shell·CSS·JavaScript는 Golden Runtime에서 재사용하며 고객별로 다시 작성하지 않는다.
 - 독립적인 조사 축은 메인 에이전트가 병렬 tool call로 직접 수행한다.
 - 수정 중에는 변경 화면만 빠르게 확인할 수 있지만, 완료 전에는 8개 화면·스트레스 전환·에이전트
@@ -19,7 +19,6 @@
 <session>/files/<app>-work/
   fact-ledger.md
   storyline.md
-  design-dna.md
   view-contract.md
   customer-overlay.json
   demo-spec.json
@@ -29,9 +28,9 @@
 ```
 
 `view-contract.md`에는 각 route의 KPI, 필수 DOM ID, 클릭 동작, 시뮬레이터 입력, 예상 결과,
-에이전트 전환 조건을 기록한다. `design-dna.md`에는 고객별 archetype·token·density·avoid를 기록하고,
-실시간 Fact Ledger와 함께 `customer-overlay.json`으로 합친다. Composer가 Industry Pack과 Overlay를
-`demo-spec.json`으로 만들며 이후 수정 surface는 HTML이나 전체 Spec보다 Overlay를 우선한다.
+에이전트 전환 조건을 기록한다. 이 view-contract(메뉴·데이터)를 실시간 Fact Ledger와 함께
+`customer-overlay.json`으로 합친다(디자인은 고정이라 `design`은 넣지 않는다). Composer가 Industry
+Pack과 Overlay를 `demo-spec.json`으로 만들며 이후 수정 surface는 HTML이나 전체 Spec보다 Overlay를 우선한다.
 
 ## 3. 리서치 병렬화
 
@@ -65,12 +64,12 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/ai-platform-demo/puppeteer/
 ## 5. Golden Runtime 기반 단일 소유 빌드
 
 - 화면별 HTML/CSS/JS를 여러 실행 주체에 분산하지 않는다.
-- 메인 에이전트가 잠긴 storyline·Design DNA·view contract와 실시간 research metadata를
-  `customer-overlay.json`으로 작성한다.
+- 메인 에이전트가 잠긴 storyline·view contract(메뉴·데이터)와 실시간 research metadata를
+  `customer-overlay.json`으로 작성한다(디자인은 고정이라 넣지 않는다).
 - `scripts/compose_demo_spec.py`가 base + Industry Pack + Customer Overlay를 합치고
   `scripts/render_demo.py` validation을 거쳐 단일 HTML까지 생성한다.
-- Industry Pack은 `meta`, `story`, `design`을 소유하지 않으며 고객 Overlay가 전체 Design DNA를
-  제공하지 않으면 Composer가 실패한다.
+- Industry Pack은 `meta`, `story`, `design`을 소유하지 않으며, 고객 Overlay가 `design`을
+  정의하면 Composer가 실패한다(디자인은 base가 고정 제공).
 - 고객 콘텐츠·브랜드 표현·산업 공식·Agent는 spec에서 새로 매핑하고 runtime engine은 재사용한다.
 - 기본 수정은 Overlay→재합성으로 수행한다. 핵심 장면이 runtime variant로 표현되지 않을 때만 해당
   route를 bespoke patch한다.
