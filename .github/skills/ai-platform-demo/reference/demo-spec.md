@@ -3,6 +3,10 @@
 `demo-spec.json`은 고객별 콘텐츠·Design DNA·산업 동작을 한 곳에 잠그는 build contract다. Fact
 Ledger와 storyline을 먼저 확정한 뒤 작성하며, Renderer가 읽을 수 있는 JSON이어야 한다.
 
+기본 생성 경로에서는 이 파일을 0부터 직접 작성하지 않고
+`reference/composable-spec.md`의 Base + Industry Pack + Customer Overlay 방식으로 합성한다. 적합한
+Pack이 없거나 bespoke 구조가 더 빠르고 정확할 때만 전체 Spec을 직접 작성한다.
+
 `schema/demo-spec.schema.json`은 editor completion용이고, 실제 완료 판정은
 `scripts/render_demo.py --validate-only`의 구조·semantic·security validation을 기준으로 한다.
 
@@ -182,12 +186,13 @@ secondary = base + Σ((value - input.value) * weights[input.id])
 
 ## 6. Spec 작성 순서
 
-1. Fact Ledger의 검증된 사실과 DEMO 가정을 분리한다.
+1. 고객 요청마다 실시간 Fact Ledger를 새로 만들고 검증된 사실과 DEMO 가정을 분리한다.
 2. Storyline과 audience message를 `story`에 잠근다.
-3. Adaptive Design DNA를 `design`에 잠근다.
-4. View Contract를 route section으로 변환한다.
-5. Renderer validation을 통과시킨다.
-6. 생성 후에는 HTML이 아니라 spec을 우선 수정해 재생성한다.
+3. Adaptive Design DNA를 고객 Overlay의 `design`에 잠근다.
+4. View Contract의 high-impact route를 고객 Overlay로 변환한다.
+5. Composer로 Industry Pack과 Overlay를 합쳐 전체 Spec을 만든다.
+6. Renderer validation을 통과시킨다.
+7. 생성 후에는 HTML보다 customer Overlay를 우선 수정해 재합성한다.
 
 ## 7. 금지
 

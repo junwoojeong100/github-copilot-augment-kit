@@ -6,9 +6,16 @@
 
 ## 0. 전제 — Spec validation + Golden Runtime
 
-브라우저를 열기 전에 고객 spec과 공통 Runtime을 먼저 검사한다.
+브라우저를 열기 전에 Customer Overlay composition, 최종 Spec, 공통 Runtime을 먼저 검사한다.
 
 ```bash
+python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
+  --base .github/skills/ai-platform-demo/examples/precision-manufacturing.example.json \
+  --pack .github/skills/ai-platform-demo/packs/<industry>.pack.json \
+  --customer <session>/files/<app>-work/customer-overlay.json \
+  --output <session>/files/<app>-work/demo-spec.json \
+  --html-output <session>/files/<app>-work/<app>.html
+
 python3 -B .github/skills/ai-platform-demo/scripts/render_demo.py \
   --spec <session>/files/<app>-work/demo-spec.json \
   --validate-only
