@@ -8,7 +8,7 @@
 - 5단계 순서를 유지하며 리서치가 합쳐지기 전에는 스토리라인을 시작하지 않는다.
 - 스토리라인, Adaptive Design DNA, 화면 계약, 고객 Demo Spec, 최종 단일 HTML은 한 에이전트가 소유한다.
 - 공통 shell·CSS·JavaScript는 Golden Runtime에서 재사용하며 고객별로 다시 작성하지 않는다.
-- `/fleet` 또는 병렬 subagent는 독립적인 조사와 읽기 전용 검사에만 사용한다.
+- 독립적인 조사 축은 메인 에이전트가 병렬 tool call로 직접 수행한다.
 - 수정 중에는 변경 화면만 빠르게 확인할 수 있지만, 완료 전에는 8개 화면·스트레스 전환·에이전트
   전환·채팅을 포함한 전체 검증을 다시 수행한다.
 - 저장소와 최종 출력 폴더에는 결과 HTML 하나만 남긴다.
@@ -41,7 +41,7 @@
 2. 고객의 DX·AI 현황과 최근 이슈
 3. Microsoft·GitHub 서비스의 현재 상태
 
-각 조사자는 1차 출처 URL·확인일·핵심 근거만 반환한다. 메인 에이전트가 결과를 하나의 Fact Ledger로
+각 검색 결과에서 1차 출처 URL·확인일·핵심 근거만 추출한다. 메인 에이전트가 결과를 하나의 Fact Ledger로
 합치고 충돌을 해결한 뒤에만 스토리라인을 시작한다. 기존 원장이 있으면 안정적인 회사 사실은 출처를
 찾는 참고로만 사용하고, **고객 요청마다 공식 원문을 실시간으로 다시 확인한다.** 이전 Fact Ledger나
 Industry Pack의 사실이 새 조사를 대체하면 안 된다.
@@ -64,7 +64,7 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/ai-platform-demo/puppeteer/
 
 ## 5. Golden Runtime 기반 단일 소유 빌드
 
-- 조사 subagent가 화면별 HTML/CSS/JS를 따로 작성하지 않는다.
+- 화면별 HTML/CSS/JS를 여러 실행 주체에 분산하지 않는다.
 - 메인 에이전트가 잠긴 storyline·Design DNA·view contract와 실시간 research metadata를
   `customer-overlay.json`으로 작성한다.
 - `scripts/compose_demo_spec.py`가 base + Industry Pack + Customer Overlay를 합치고
