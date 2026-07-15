@@ -1,108 +1,43 @@
-# Adaptive Design DNA
+# Fixed Microsoft-tone Design System
 
-Adaptive Design DNA는 Golden Runtime 위에 적용되는 고객별 시각 계약이다. 브랜드 색 하나만 바꾸는
-theme이 아니라, 고객·산업·청중·목적의 물성을 UI token과 composition으로 번역한다.
+이 데모의 디자인은 **Microsoft(Fluent) 톤으로 고정**되어 있다. 고객·산업이 바뀌어도 색·레이아웃·
+타이포·모션은 바꾸지 않는다. 고객별로는 **메뉴(라우트/도메인명)와 데이터만** 바뀐다.
 
-Industry Pack은 Design DNA를 정의할 수 없다. Pack의 `designHints`는 참고 정보일 뿐이며, 최종
-`design` section은 실시간 조사 결과를 반영한 Customer Overlay가 매 요청 새로 제공한다.
+과거의 "고객별 Adaptive Design DNA(archetype·palette·theme 도출)"는 제거되었다. 매 요청 디자인을
+새로 설계하지 않으므로 생성이 빠르다.
 
-## 1. 반드시 결정할 항목
+## 1. 단일 원천 (source of truth)
 
-`demo-spec.json`의 `design`에 다음을 기록한다.
+- 시각 토큰의 원천은 `runtime/runtime.css`의 `:root` 하나다.
+- Renderer는 `runtime.css`를 그대로 inline하며, JavaScript는 색 토큰을 override하지 않는다.
+- `demo-spec.json`의 `design` 블록은 **base spec이 고정 제공**하며, 고객 Overlay는 이를 정의하지 않는다.
 
-1. `conceptWords` — 고객 인상을 설명하는 3개 단어
-2. `visualMetaphor` — control room, signal network, operating map 등 1개
-3. `archetype` — 기본 archetype
-4. `counterInfluence` — 획일화를 피하기 위한 보조 영향
-5. `theme` — `dark` 또는 `light`
-6. palette roles — canvas, surface, ink, muted, brand, secondary, accent, semantic colors
-7. typography — scale, weight, mono usage
-8. shape language — radius, border strength, shadow, line style
-9. density — `compact`, `executive`, `spacious`
-10. chart grammar — line weight, fill opacity, grid visibility, highlight behavior
-11. motion — `restrained`, `balanced`, `energetic`
-12. `avoid` — 이번 고객에게 사용하지 않을 패턴 3개
+## 2. 고정 팔레트 (Microsoft / Fluent light)
 
-## 2. Archetype
-
-Runtime은 다음 archetype을 제공한다. Archetype은 시작점이며 spec token이 항상 우선한다.
-
-| Archetype | 적합한 상황 | 기본 인상 |
+| 역할 | 토큰 | 값 |
 |---|---|---|
-| `precision-control-room` | 제조·반도체·물류·에너지 | 정밀, 실시간, 기술적 |
-| `trusted-executive` | 금융·공공·규제 산업 | 신뢰, 절제, 통제 |
-| `operational-canvas` | 유통·서비스·현장 운영 | 명료, 활동적, 접근성 |
-| `premium-minimal` | 전략·투자·브랜드 중심 | 여백, 집중, 고급감 |
+| 배경 | `--canvas` / `--canvas-alt` | `#f3f2f1` / `#faf9f8` |
+| 표면(카드) | `--surface` / `--surface-alt` / `--surface-strong` | `#ffffff` / `#f8f7f6` / `#edebe9` |
+| 텍스트 | `--ink` / `--ink-muted` / `--ink-faint` | `#201f1e` / `#484644` / `#797775` |
+| 브랜드 | `--brand` / `--brand-alt` | `#0078d4` / `#2b88d8` (Microsoft blue) |
+| 강조 | `--accent` | `#038387` (Fluent teal) |
+| 상태 | `--info` / `--success` / `--warning` / `--danger` | `#0078d4` / `#107c10` / `#c77700` / `#d13438` |
+| AI/거버넌스 | `--violet` | `#8661c5` |
+| 선/그림자 | `--line` / `--line-soft` / `--shadow` | `rgba(0,0,0,.10)` / `rgba(0,0,0,.06)` / `0 8px 24px rgba(0,0,0,.09)` |
+| 형태 | `--radius` / `--nav-width` / `--font-scale` | `12px` / `254px` / `1` |
+| 폰트 | `--font` / `--mono` | Pretendard / SFMono |
 
-`counterInfluence` 예:
+상태 색 매핑: ok=success(green), warn=warning(amber), bad=danger(red), info=info(blue), AI/governance=violet.
 
-- precision-control-room + editorial clarity
-- trusted-executive + live operations
-- operational-canvas + premium restraint
-- premium-minimal + technical evidence
+## 3. 바꾸지 않는다
 
-## 3. Token contract
+- 팔레트·radius·폰트·간격·모션은 고객·산업별로 바꾸지 않는다.
+- 색을 바꿔야 하면 `runtime/runtime.css`의 `:root`만 수정한다(전 고객 공통으로 반영됨).
+- 고객 Overlay(`customer-overlay.json`)에 `design`을 넣으면 Composer가 실패한다.
+- 로고 색을 전체 배경으로 확장하지 않는다. 브랜드 색은 강조 역할로만 쓴다.
 
-```json
-{
-  "design": {
-    "conceptWords": ["precision", "confidence", "learning"],
-    "visualMetaphor": "closed-loop signal network",
-    "archetype": "precision-control-room",
-    "counterInfluence": "editorial clarity",
-    "theme": "dark",
-    "density": "executive",
-    "motion": "balanced",
-    "tokens": {
-      "canvas": "#08100e",
-      "canvasAlt": "#0b1512",
-      "surface": "#101c18",
-      "surfaceAlt": "#0d1815",
-      "ink": "#f1f7f3",
-      "inkMuted": "#a7bbb0",
-      "inkFaint": "#6f877a",
-      "brand": "#73bc5a",
-      "brandAlt": "#a6d65f",
-      "accent": "#35d4c7",
-      "info": "#40a9ff",
-      "success": "#54db8f",
-      "warning": "#ffc85a",
-      "danger": "#ff6b63",
-      "violet": "#a78bfa",
-      "radius": 16,
-      "navWidth": 254,
-      "fontScale": 1
-    },
-    "avoid": ["generic red-blue gradient", "oversized glass cards", "decorative 3D icons"]
-  }
-}
-```
+## 4. 정직성·자산
 
-## 4. Design DNA 도출 절차
-
-1. 공식 고객 사이트·IR·제품 UI에서 반복되는 색, 대비, 형태, 이미지 톤을 관찰한다.
-2. 로고 색을 전체 배경으로 확장하지 말고 `brand`/highlight 역할로 제한한다.
-3. 산업의 물성을 선택한다.
-   - 정밀 제조: 얇은 grid, mono metric, restrained motion
-   - 금융: 높은 대비, 넓은 여백, 명시적 control states
-   - 유통: 밝은 hierarchy, 빠른 status scan, 지도/흐름
-4. audience density를 결정한다.
-   - CEO/board: executive
-   - operator: compact
-   - external showcase: spacious
-5. storyline의 climax가 가장 강하게 보이도록 accent와 motion budget을 배분한다.
-6. `avoid`를 적어 기존 demo와 시각적으로 같은 결과가 나오는 것을 방지한다.
-
-## 5. 품질 가드
-
-- brand 색 하나를 모든 card와 chart에 반복하지 않는다.
-- semantic status color는 brand와 분리한다.
-- text contrast는 dark/light theme 모두에서 읽을 수 있어야 한다.
-- animation은 의미 있는 state 변화에만 사용한다.
-- density가 달라도 최소 body text와 click target은 유지한다.
+- `● DEMO DATA` 배지는 모든 화면에 유지한다.
+- text contrast는 고정 라이트 배경에서 읽히도록 이미 설계되어 있다(토큰 기반 `color-mix`).
 - 고객 로고를 임의 생성하거나 비공식 asset을 포함하지 않는다.
-
-## 6. 속도 최적화 원칙
-
-Design DNA는 CSS를 다시 작성하는 작업이 아니다. Agent는 12개 결정을 spec으로 확정하고 Runtime이
-token과 archetype을 적용한다. 고객별 고유성은 유지하면서 build 단계의 반복 CSS 작성은 제거한다.

@@ -10,8 +10,9 @@ Validated Base Spec
   → Golden Runtime HTML
 ```
 
-이 구조는 디자인을 고정하지 않는다. Industry Pack은 산업 용어·공식·Agent 역할의 출발점만 제공하며,
-고객 Overlay가 `meta`, `story`, **전체 Adaptive Design DNA**를 반드시 소유한다.
+Industry Pack은 산업 용어·공식·Agent 역할의 출발점만 제공하며, 고객 Overlay가 `meta`, `story`와
+메뉴·데이터(핵심 route·Agent)를 소유한다. **디자인은 Microsoft 톤으로 고정**되어 base spec이 제공하므로
+Overlay는 `design`을 넣지 않는다.
 
 ## 1. 실시간 리서치는 매번 수행
 
@@ -68,7 +69,7 @@ Industry Pack에 금지되는 것:
 - `story`
 - 특정 고객명·공식 수치·최신 프로젝트 사실
 
-`designHints`는 고객 Design DNA를 결정할 때 참고만 하며 최종 Spec에 merge되지 않는다.
+`designHints`는 디자인이 Microsoft 톤으로 고정되어 있으므로 사용되지 않는다(무시).
 
 ### Customer Overlay
 
@@ -89,7 +90,6 @@ Industry Pack에 금지되는 것:
   },
   "spec": {
     "meta": {},
-    "design": {},
     "story": {}
   }
 }
@@ -99,7 +99,6 @@ Customer Overlay가 반드시 새로 결정하는 것:
 
 - 고객명·앱명·audience
 - Storyline과 climax
-- Design DNA 전체: archetype, theme, density, palette, shape, chart, avoid
 - Pack의 `requiredCustomerPaths`
 - 고객 공식 사실·KPI 현실 범위·Agent 답변
 
@@ -112,10 +111,9 @@ Customer Overlay가 반드시 새로 결정하는 것:
 - `{"$replace": <value>}`는 object를 recursive merge하지 않고 전체 교체
 - 순서: base → pack 순서대로 → customer
 - 최종 output에는 `_pack`, `_customer` metadata를 포함하지 않는다.
-- `meta`, `design`, `story`와 Pack의 `requiredCustomerPaths`는 Customer Overlay 값으로 **전체 교체**해
+- `meta`, `story`와 Pack의 `requiredCustomerPaths`는 Customer Overlay 값으로 **전체 교체**해
   base/pack 하위 값이 조용히 남지 않게 한다.
-- Customer Overlay는 canvas·surface·ink·brand·accent·radius·navWidth·fontScale 등 고객 visual
-  token 최소 집합을 직접 제공해야 한다.
+- `design`은 Microsoft 톤으로 고정이므로 Overlay가 정의하지 않는다. Overlay에 `design`이 있으면 Composer가 실패한다.
 
 ## 4. Composer
 
@@ -130,7 +128,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
 
 Composer는 다음 순서로 실패를 조기에 차단한다.
 
-1. Pack이 customer identity 또는 Design DNA를 포함하는지 검사
+1. Pack이 customer identity 또는 `design`을 포함하는지 + Overlay가 `design`을 정의하는지 검사(디자인 고정)
 2. Customer Overlay의 live research metadata 검사
 3. Pack이 요구하는 customer path가 Overlay에 있는지 검사
 4. layer deep merge

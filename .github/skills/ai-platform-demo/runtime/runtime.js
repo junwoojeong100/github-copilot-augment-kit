@@ -12,141 +12,6 @@
     'governance'
   ];
 
-  const ARCHETYPES = {
-    'precision-control-room': {
-      theme: 'dark',
-      density: 'executive',
-      tokens: {
-        canvas: '#08100e',
-        canvasAlt: '#0b1512',
-        surface: '#101c18',
-        surfaceAlt: '#0d1815',
-        surfaceStrong: '#13231d',
-        ink: '#f1f7f3',
-        inkMuted: '#a7bbb0',
-        inkFaint: '#6f877a',
-        brand: '#73bc5a',
-        brandAlt: '#a6d65f',
-        accent: '#35d4c7',
-        info: '#40a9ff',
-        success: '#54db8f',
-        warning: '#ffc85a',
-        danger: '#ff6b63',
-        violet: '#a78bfa',
-        line: 'rgba(223,255,235,.09)',
-        lineSoft: 'rgba(223,255,235,.055)',
-        radius: 16,
-        navWidth: 254,
-        fontScale: 1
-      }
-    },
-    'trusted-executive': {
-      theme: 'dark',
-      density: 'spacious',
-      tokens: {
-        canvas: '#09111d',
-        canvasAlt: '#0e1827',
-        surface: '#131f30',
-        surfaceAlt: '#101a29',
-        surfaceStrong: '#18263a',
-        ink: '#f3f7fc',
-        inkMuted: '#aab8cb',
-        inkFaint: '#6f8098',
-        brand: '#4f8cff',
-        brandAlt: '#72a5ff',
-        accent: '#4fd1c5',
-        info: '#60a5fa',
-        success: '#55d69e',
-        warning: '#f4c95d',
-        danger: '#f87171',
-        violet: '#a78bfa',
-        line: 'rgba(220,232,255,.09)',
-        lineSoft: 'rgba(220,232,255,.055)',
-        radius: 13,
-        navWidth: 258,
-        fontScale: 1
-      }
-    },
-    'operational-canvas': {
-      theme: 'light',
-      density: 'compact',
-      tokens: {
-        canvas: '#f3f6f8',
-        canvasAlt: '#ffffff',
-        surface: '#ffffff',
-        surfaceAlt: '#f7f9fb',
-        surfaceStrong: '#edf2f5',
-        ink: '#13211b',
-        inkMuted: '#52655b',
-        inkFaint: '#829087',
-        brand: '#168f63',
-        brandAlt: '#3bbd84',
-        accent: '#0f9fb4',
-        info: '#2878d0',
-        success: '#168f63',
-        warning: '#b87911',
-        danger: '#c4453d',
-        violet: '#7655c7',
-        line: 'rgba(19,33,27,.11)',
-        lineSoft: 'rgba(19,33,27,.065)',
-        radius: 14,
-        navWidth: 244,
-        fontScale: 1
-      }
-    },
-    'premium-minimal': {
-      theme: 'light',
-      density: 'spacious',
-      tokens: {
-        canvas: '#f7f5f0',
-        canvasAlt: '#fffefa',
-        surface: '#fffefa',
-        surfaceAlt: '#f1eee7',
-        surfaceStrong: '#e9e4da',
-        ink: '#231f1a',
-        inkMuted: '#655e54',
-        inkFaint: '#92897e',
-        brand: '#765b39',
-        brandAlt: '#ad8d61',
-        accent: '#2f7f7b',
-        info: '#3f6d9c',
-        success: '#3a7c58',
-        warning: '#a36b19',
-        danger: '#b74943',
-        violet: '#745f9b',
-        line: 'rgba(35,31,26,.11)',
-        lineSoft: 'rgba(35,31,26,.065)',
-        radius: 9,
-        navWidth: 260,
-        fontScale: 1.02
-      }
-    }
-  };
-
-  const TOKEN_MAP = {
-    canvas: '--canvas',
-    canvasAlt: '--canvas-alt',
-    surface: '--surface',
-    surfaceAlt: '--surface-alt',
-    surfaceStrong: '--surface-strong',
-    ink: '--ink',
-    inkMuted: '--ink-muted',
-    inkFaint: '--ink-faint',
-    brand: '--brand',
-    brandAlt: '--brand-alt',
-    accent: '--accent',
-    info: '--info',
-    success: '--success',
-    warning: '--warning',
-    danger: '--danger',
-    violet: '--violet',
-    line: '--line',
-    lineSoft: '--line-soft',
-    radius: '--radius',
-    navWidth: '--nav-width',
-    fontScale: '--font-scale'
-  };
-
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -170,21 +35,10 @@
     return;
   }
 
-  const design = spec.design || {};
-  const archetypeName = ARCHETYPES[design.archetype] ? design.archetype : 'precision-control-room';
-  const archetype = ARCHETYPES[archetypeName];
-  const mergedTokens = { ...archetype.tokens, ...(design.tokens || {}) };
-  const rootStyle = document.documentElement.style;
-  Object.entries(mergedTokens).forEach(([name, value]) => {
-    const cssName = TOKEN_MAP[name];
-    if (!cssName || value === undefined || value === null) return;
-    if (name === 'radius' || name === 'navWidth') rootStyle.setProperty(cssName, `${Number(value)}px`);
-    else rootStyle.setProperty(cssName, String(value));
-  });
-  document.body.dataset.archetype = archetypeName;
-  document.body.dataset.theme = design.theme || archetype.theme;
-  document.body.dataset.density = design.density || archetype.density;
-  document.body.dataset.motion = design.motion || 'balanced';
+  // Design is fixed (Microsoft-tone) in runtime.css :root — no per-customer color/theme derivation.
+  // Per customer only the menu (routes) and data change; the visual design stays constant.
+  document.body.dataset.theme = 'light';
+  document.body.dataset.density = 'executive';
 
   const meta = spec.meta;
   const navigation = spec.navigation;
