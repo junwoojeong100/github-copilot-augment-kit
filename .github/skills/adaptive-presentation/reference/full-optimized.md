@@ -31,7 +31,7 @@
 
 ## 3. 조사 병렬화
 
-입력 확정 후 다음 조사 축을 최대 2~3개로 나눠 동시에 수행할 수 있다.
+입력 확정 후 독립적인 조사 축을 **먼저 모두 나열한 뒤 한 번의 병렬 배치**로 동시에 실행한다(왕복 최소화).
 
 1. 주제·고객·산업 사실과 핵심 수치
 2. 제품·기술·규제의 현재 상태
@@ -51,7 +51,8 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 ```
 
 - 캐시는 저장소 밖에 둔다.
-- Python, `soffice`, PyMuPDF, Pillow, 폰트 경로를 한 번 확인한 뒤 같은 작업에서 반복 탐색하지 않는다.
+- `scripts/toolcheck.py`로 Python·`soffice`·PyMuPDF·Pillow·폰트를 한 번 탐지해 `toolchain.json`/
+  `fonts.txt`에 캐시하고, 같은 작업에서 반복 탐색하지 않는다.
 - 의존성 설치는 import 실패 또는 도구 부재가 확인될 때만 수행하고 검증된 캐시 환경을 재사용한다.
 - 고객 자료·시크릿·생성 산출물은 공용 도구 캐시에 넣지 않는다.
 - 도구 사전 준비는 콘텐츠를 만들지 않으므로 조사와 병렬로 실행할 수 있다.
@@ -62,6 +63,7 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 - 메인 에이전트가 잠긴 `storyline.md`를 기준으로 `build_<deck>.py`를 한 번에 작성한다.
 - 슬라이드는 `python-pptx`로 직접 만들고, 정보 유형에 맞는 시각 형태를 매번 다양하게 구성한다.
   고정 템플릿·고정 컴포넌트를 강제하지 않는다.
+- (선택) `pptx_helpers`(디자인 중립 프리미티브)를 import해 보일러플레이트만 줄이고, 색·레이아웃은 매 덱 자유 구성한다.
 - 여러 에이전트가 같은 생성 스크립트를 동시에 수정하지 않는다.
 
 ## 6. QA 최적화
@@ -70,7 +72,7 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 2. 최초 전체 렌더는 `--keep-pdf`로 세션 QA 폴더에 PDF를 유지한다.
 3. audit risk score로 선택된 슬라이드를 같은 PDF로 자동 상세 렌더하고 contact sheet와 함께 확인한다.
 4. 모든 결함을 `defects.md`에 모은 뒤 생성 스크립트를 한 번에 수정한다.
-5. PPTX를 재생성하고 구조 감사와 변경 슬라이드 검사를 수행한다.
+5. PPTX를 재생성한다. 국소 수정이면 전체 contact sheet를 다시 열지 말고 변경 슬라이드 이미지만 확인한다.
 6. 변경이 있었으면 마지막에 전체 렌더와 전체 contact sheet를 다시 생성한다. 변경이 없으면 최초 전체
    렌더가 최종 검증이다.
 

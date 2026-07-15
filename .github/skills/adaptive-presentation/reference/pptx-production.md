@@ -9,7 +9,8 @@
 2. 대량 데이터 처리·차트 계산에는 pandas/matplotlib를 쓸 수 있으나, 발표에 들어가는 핵심 도표는
    가능하면 PowerPoint 도형/네이티브 차트로 만들어 편집 가능하게 한다.
 3. 외부 이미지가 필요하면 사용권과 원본 URL을 기록한다.
-4. 도구 탐색·의존성 준비는 `reference/full-optimized.md`의 캐시 규칙을 따른다.
+4. 도구 탐색·의존성 준비는 `scripts/toolcheck.py`(soffice·PyMuPDF·Pillow·한글 폰트 1회 탐지·캐시)와
+   `reference/full-optimized.md`의 캐시 규칙을 따른다.
 
 ## 2. 파일 구조
 
@@ -84,6 +85,26 @@ if __name__ == "__main__":
 
 거대한 JSON 하나로 모든 장을 같은 레이아웃으로 렌더하지 않는다. 슬라이드마다 함수/구성을 나눠
 정보 유형에 맞는 형태를 만든다.
+
+### 선택: 디자인 중립 헬퍼로 보일러플레이트 줄이기
+
+`pptx_helpers`는 색·좌표를 **인자로 받는** 기계적 프리미티브(box·text·bullets·chip·chevron·grid_table·
+soft_shadow)만 제공한다. 팔레트·테마·슬라이드 유형이 없으므로 "정해진 틀 없이 자유 구성" 원칙을 그대로
+지키면서 반복 코드를 줄인다.
+
+```python
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path("<absolute-skill-dir>")))
+import pptx_helpers as H
+
+prs, blank = H.new_deck()                              # 16:9 치수(디자인 아님)
+INK, ACCENT = H.hexc("14203A"), H.hexc("1F63D8")       # 색은 매 덱 자유
+s = H.add_slide(prs, blank, bg=H.hexc("FFFFFF"))
+H.text(s, "결론형 제목", 0.72, 0.6, 11.9, 1.0, 30, INK, bold=True)
+H.bullets(s, ["근거 1", "근거 2"], 0.72, 1.9, 6.0, 2.0, 17, INK, marker_color=ACCENT)
+prs.save(OUT)
+```
 
 ## 4. 화면과 안전 영역
 
