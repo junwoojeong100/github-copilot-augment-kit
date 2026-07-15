@@ -7,23 +7,23 @@
 ## 1. 고정 토큰 (`runtime.css`의 `:root`)
 ```css
 :root{
-  --canvas:#0a1120; --canvas-alt:#0e1830;
-  --surface:#111d38; --surface-alt:#0e1830; --surface-strong:#16264a;
-  --ink:#f5f8ff; --ink-muted:#adbcd6; --ink-faint:#7f8fac;
-  --brand:#4aa5ff; --brand-alt:#7ac0ff;      /* Fluent 2 brand blue (on dark) */
-  --accent:#37d9cf;                           /* vivid teal */
-  --info:#4aa5ff; --success:#3ed889; --warning:#ffc24a; --danger:#ff6f6f; --violet:#b28bff;
-  --line:rgba(150,180,230,.14); --line-soft:rgba(150,180,230,.08);
-  --radius:12px; --nav-width:264px; --font-scale:1; --gap:16px; --panel-pad:20px;
-  --shadow:0 12px 34px rgba(0,0,0,.5);
+  --canvas:#f3f7fa; --canvas-alt:#e7f0f5;
+  --surface:#ffffff; --surface-alt:#f7fafc; --surface-strong:#eaf2f7;
+  --ink:#0f2330; --ink-muted:#405967; --ink-faint:#6f8491;
+  --brand:#007f8f; --brand-alt:#1a9aaa;      /* vivid teal */
+  --accent:#e08a1e;                          /* clear warm accent */
+  --info:#2878b5; --success:#16845e; --warning:#b96800; --danger:#c6404a; --violet:#6d54a3;
+  --line:rgba(20,65,90,.16); --line-soft:rgba(20,65,90,.065);
+  --radius:12px; --nav-width:276px; --font-scale:1; --gap:16px; --panel-pad:20px;
+  --shadow:0 16px 40px rgba(30,66,88,.12);
   --font:'Pretendard',-apple-system,'Segoe UI',sans-serif;
   --mono:'SFMono-Regular',Consolas,Menlo,monospace;
 }
 ```
-본문 기본 크기는 `body{font-size:calc(15.5px * var(--font-scale))}`이며, 컴포넌트 글자 크기는 가독성을 위해 상향돼 있다(최소 10.5px).
+본문 기본 크기는 `body{font-size:calc(16.2px * var(--font-scale))}`이며, 핵심 제목·KPI·표·내비게이션 글자 크기는 임원 시연 가독성을 위해 상향돼 있다.
 폰트 CDN(`<head>`): Pretendard(한글) + 시스템 폰트 폴백.
 
-상태 색 매핑: ok=success(green), warn=warning(amber), bad=danger(red), info=info(blue), AI/거버넌스=violet.
+상태 색 매핑: ok=success(green), warn=warning(amber), bad=danger(red), info=info(steel blue), AI/거버넌스=violet.
 
 ## 2. 컴포넌트 클래스 (구조 — `runtime.css` 정의)
 

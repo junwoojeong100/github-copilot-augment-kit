@@ -37,7 +37,7 @@
 
   // Design is fixed (Microsoft-tone) in runtime.css :root — no per-customer color/theme derivation.
   // Per customer only the menu (routes) and data change; the visual design stays constant.
-  document.body.dataset.theme = 'dark';
+  document.body.dataset.theme = 'light';
   document.body.dataset.density = 'executive';
 
   const meta = spec.meta;
