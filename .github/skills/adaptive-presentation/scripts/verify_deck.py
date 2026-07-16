@@ -13,6 +13,7 @@ from pathlib import Path
 
 import audit_pptx
 import render_pptx
+import rendered_overlap
 from tooling import path_is_within, paths_collide
 
 
@@ -34,11 +35,15 @@ def select_risk_slides(report: dict, count: int) -> list[int]:
     add(report.get("small_text_body_candidates", []), 5)
     add(report.get("small_text_label_candidates", []), 1)
     add(report.get("title_risks", []), 10)
+    add(report.get("title_size_inconsistencies", []), 12)
     add(report.get("group_shapes", []), 3)
     add(report.get("unsized_runs", []), 5)
     add(report.get("empty_text_frames", []), 1)
     add(report.get("ooxml_repair_risks", []), 30)
     add(report.get("unexpected_out_of_bounds", []), 20)
+    add(report.get("overlap_candidates", []), 20)
+    add(report.get("rendered_text_overlaps", []), 30)
+    add(report.get("rendered_text_overflow_candidates", []), 4)
 
     return [
         slide
@@ -70,10 +75,19 @@ def audit_namespace(args: argparse.Namespace, report_path: Path) -> argparse.Nam
         allow_small_text=audit_pptx.parse_slide_set(args.allow_small_text)
         if args.allow_small_text
         else set(),
+        allow_overlap=audit_pptx.parse_slide_set(args.allow_overlap)
+        if args.allow_overlap
+        else set(),
+        allow_title_size=audit_pptx.parse_slide_set(args.allow_title_size)
+        if args.allow_title_size
+        else set(),
+        title_size_tolerance_pt=args.title_size_tolerance_pt,
         fail_small_text=args.fail_small_text
         or args.strict,
         fail_unsized_runs=args.fail_unsized_runs or args.strict,
         fail_title_risks=args.fail_title_risks or args.strict,
+        fail_title_consistency=args.fail_title_consistency or args.strict,
+        fail_overlaps=args.fail_overlaps or args.strict,
         json=report_path,
         strict=args.strict,
     )
@@ -130,11 +144,6 @@ def verify(args: argparse.Namespace) -> dict:
         audit_report, audit_failures = audit_future.result()
         render_manifest = render_future.result()
 
-    audit_path.write_text(
-        json.dumps(audit_report, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
     with zipfile.ZipFile(deck) as archive:
         corrupt_member = archive.testzip()
     zip_integrity = "ok" if corrupt_member is None else corrupt_member
@@ -143,6 +152,28 @@ def verify(args: argparse.Namespace) -> dict:
             "Rendered PDF slide count differs from PPTX: "
             f"{render_manifest['total_slides']} vs {audit_report['slides']}"
         )
+    rendered_pdf = render_manifest.get("pdf")
+    if not rendered_pdf:
+        raise RuntimeError("Verification render did not retain its PDF")
+    rendered_findings = rendered_overlap.audit_rendered_text(
+        deck,
+        Path(rendered_pdf),
+        allowed_slides=audit_pptx.parse_slide_set(args.allow_overlap)
+        if args.allow_overlap
+        else set(),
+    )
+    audit_report.update(rendered_findings)
+    if (
+        args.fail_overlaps or args.strict
+    ) and rendered_findings["unexpected_rendered_text_overlaps"]:
+        audit_failures.append(
+            f"{len(rendered_findings['unexpected_rendered_text_overlaps'])} "
+            "rendered text overlap(s) require repair or --allow-overlap review"
+        )
+    audit_path.write_text(
+        json.dumps(audit_report, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
 
     selected = parse_slide_list(args.risk_slides)
     if selected is None:
@@ -220,7 +251,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--bounds-tolerance", type=audit_pptx.nonnegative_float, default=0.02
     )
-    parser.add_argument("--min-body-pt", type=audit_pptx.positive_float, default=16.0)
+    parser.add_argument("--min-body-pt", type=audit_pptx.positive_float, default=13.0)
     parser.add_argument("--min-title-pt", type=audit_pptx.positive_float, default=26.0)
     parser.add_argument("--footer-top", type=audit_pptx.nonnegative_float, default=6.9)
     parser.add_argument(
@@ -233,12 +264,32 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="SLIDES",
         help="Reviewed slides allowed sub-minimum body text, e.g. 4,8-9.",
     )
+    parser.add_argument(
+        "--allow-overlap",
+        default="",
+        metavar="SLIDES",
+        help="Reviewed slides allowed intentional geometry/render overlap, e.g. 4,8-9.",
+    )
+    parser.add_argument(
+        "--allow-title-size",
+        default="",
+        metavar="SLIDES",
+        help="Reviewed slides allowed a different content-title size, e.g. 6,12.",
+    )
+    parser.add_argument(
+        "--title-size-tolerance-pt",
+        type=audit_pptx.nonnegative_float,
+        default=0.5,
+        help="Allowed content-title size variation in points (default: 0.5).",
+    )
     parser.add_argument("--fail-unsized-runs", action="store_true")
     parser.add_argument("--fail-title-risks", action="store_true")
+    parser.add_argument("--fail-title-consistency", action="store_true")
+    parser.add_argument("--fail-overlaps", action="store_true")
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="Enable small-body, unsized-run, and title-risk failures",
+        help="Enable typography, title, and overlap failures",
     )
     return parser
 

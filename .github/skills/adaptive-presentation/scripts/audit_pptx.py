@@ -11,6 +11,7 @@ import sys
 import zipfile
 from collections import Counter
 from pathlib import Path
+from statistics import median
 
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
@@ -98,6 +99,7 @@ def iter_text_frames(
                     yield (
                         cell.text_frame,
                         None if in_group else shape.top,
+                        None if in_group else shape.height,
                         f"{shape_name(shape)} cell {row_number},{column_number}",
                         False,
                     )
@@ -105,6 +107,7 @@ def iter_text_frames(
             yield (
                 shape.text_frame,
                 None if in_group else shape.top,
+                None if in_group else shape.height,
                 shape_name(shape),
                 shape.shape_type == MSO_SHAPE_TYPE.TEXT_BOX,
             )
@@ -124,6 +127,19 @@ def shape_has_visible_text(shape) -> bool:
     return getattr(shape, "has_text_frame", False) and bool(shape.text.strip())
 
 
+def shape_text_content(shape) -> str:
+    if getattr(shape, "has_table", False):
+        return " ".join(
+            cell.text.strip()
+            for row in shape.table.rows
+            for cell in row.cells
+            if cell.text.strip()
+        )
+    if getattr(shape, "has_text_frame", False):
+        return shape.text.strip()
+    return ""
+
+
 def looks_like_label(text: str) -> bool:
     compact = " ".join(text.split())
     if not compact or "\n" in text or len(compact) > 28:
@@ -132,6 +148,321 @@ def looks_like_label(text: str) -> bool:
     if latin_letters and compact.upper() == compact:
         return True
     return len(compact.split()) <= 3 and len(compact) <= 20
+
+
+def shape_bounds(shape) -> tuple[int, int, int, int]:
+    return (
+        shape.left,
+        shape.top,
+        shape.left + shape.width,
+        shape.top + shape.height,
+    )
+
+
+def bounds_area(bounds: tuple[int, int, int, int]) -> int:
+    return max(0, bounds[2] - bounds[0]) * max(0, bounds[3] - bounds[1])
+
+
+def intersection_bounds(
+    first: tuple[int, int, int, int],
+    second: tuple[int, int, int, int],
+    tolerance: int,
+) -> tuple[int, int, int, int] | None:
+    overlap = (
+        max(first[0], second[0]),
+        max(first[1], second[1]),
+        min(first[2], second[2]),
+        min(first[3], second[3]),
+    )
+    if (
+        overlap[2] - overlap[0] <= tolerance
+        or overlap[3] - overlap[1] <= tolerance
+    ):
+        return None
+    return overlap
+
+
+def detect_geometry_overlap_candidates(
+    prs: Presentation,
+    tolerance: int,
+    allowed_slides: set[int],
+) -> list[dict]:
+    findings: list[dict] = []
+    thin_threshold = max(tolerance, Inches(0.08))
+
+    for slide_number, slide in enumerate(prs.slides, 1):
+        shapes = [
+            (z_index, shape, shape_bounds(shape))
+            for z_index, shape in enumerate(slide.shapes)
+            if shape.shape_type != MSO_SHAPE_TYPE.GROUP
+        ]
+        text_shapes = [
+            item for item in shapes if shape_text_content(item[1])
+        ]
+
+        for index, (_, first, first_bounds) in enumerate(text_shapes):
+            for _, second, second_bounds in text_shapes[index + 1 :]:
+                overlap = intersection_bounds(
+                    first_bounds, second_bounds, tolerance
+                )
+                if overlap is None:
+                    continue
+                overlap_area = bounds_area(overlap)
+                smaller_area = min(
+                    bounds_area(first_bounds), bounds_area(second_bounds)
+                )
+                findings.append(
+                    {
+                        "slide": slide_number,
+                        "kind": "text_text",
+                        "shape_a": shape_name(first),
+                        "shape_a_text": shape_text_content(first)[:120],
+                        "shape_b": shape_name(second),
+                        "shape_b_text": shape_text_content(second)[:120],
+                        "overlap_width_in": round(
+                            (overlap[2] - overlap[0]) / Inches(1), 3
+                        ),
+                        "overlap_height_in": round(
+                            (overlap[3] - overlap[1]) / Inches(1), 3
+                        ),
+                        "smaller_overlap_ratio": round(
+                            overlap_area / max(smaller_area, 1), 3
+                        ),
+                        "allowed": slide_number in allowed_slides,
+                    }
+                )
+
+        non_text_shapes = [
+            item
+            for item in shapes
+            if not shape_has_visible_text(item[1])
+            and item[1].shape_type != MSO_SHAPE_TYPE.LINE
+            and item[1].width > thin_threshold
+            and item[1].height > thin_threshold
+        ]
+        for index, (_, first, first_bounds) in enumerate(non_text_shapes):
+            for _, second, second_bounds in non_text_shapes[index + 1 :]:
+                overlap = intersection_bounds(
+                    first_bounds, second_bounds, tolerance
+                )
+                if overlap is None:
+                    continue
+                overlap_area = bounds_area(overlap)
+                first_area = bounds_area(first_bounds)
+                second_area = bounds_area(second_bounds)
+                smaller_ratio = overlap_area / max(
+                    min(first_area, second_area), 1
+                )
+                larger_ratio = overlap_area / max(
+                    max(first_area, second_area), 1
+                )
+                if (
+                    smaller_ratio < 0.10
+                    or larger_ratio < 0.001
+                    or smaller_ratio > 0.95
+                ):
+                    continue
+                findings.append(
+                    {
+                        "slide": slide_number,
+                        "kind": "shape_shape",
+                        "shape_a": shape_name(first),
+                        "shape_b": shape_name(second),
+                        "overlap_width_in": round(
+                            (overlap[2] - overlap[0]) / Inches(1), 3
+                        ),
+                        "overlap_height_in": round(
+                            (overlap[3] - overlap[1]) / Inches(1), 3
+                        ),
+                        "smaller_overlap_ratio": round(smaller_ratio, 3),
+                        "allowed": slide_number in allowed_slides,
+                    }
+                )
+
+        for text_z, text_shape, text_bounds in text_shapes:
+            if (
+                text_shape.shape_type != MSO_SHAPE_TYPE.TEXT_BOX
+                and not getattr(text_shape, "has_table", False)
+            ):
+                continue
+            text_area = bounds_area(text_bounds)
+            center_x = (text_bounds[0] + text_bounds[2]) / 2
+            center_y = (text_bounds[1] + text_bounds[3]) / 2
+            containers: list[tuple[int, object, tuple[int, int, int, int], float]] = []
+            for shape_z, shape, bounds in non_text_shapes:
+                if shape_z >= text_z:
+                    continue
+                if shape.width < text_shape.width or shape.height < text_shape.height:
+                    continue
+                if not (
+                    bounds[0] <= center_x <= bounds[2]
+                    and bounds[1] <= center_y <= bounds[3]
+                ):
+                    continue
+                overlap = intersection_bounds(text_bounds, bounds, 0)
+                if overlap is None:
+                    continue
+                coverage = bounds_area(overlap) / max(text_area, 1)
+                if 0.50 <= coverage < 0.98:
+                    containers.append((shape_z, shape, bounds, coverage))
+            if not containers:
+                continue
+            _, container, container_bounds, coverage = min(
+                containers,
+                key=lambda item: bounds_area(item[2]),
+            )
+            overflow = {
+                "left": max(0, container_bounds[0] - text_bounds[0]),
+                "top": max(0, container_bounds[1] - text_bounds[1]),
+                "right": max(0, text_bounds[2] - container_bounds[2]),
+                "bottom": max(0, text_bounds[3] - container_bounds[3]),
+            }
+            if max(overflow.values()) <= tolerance:
+                continue
+            findings.append(
+                {
+                    "slide": slide_number,
+                    "kind": "text_container",
+                    "shape_a": shape_name(text_shape),
+                    "shape_a_text": shape_text_content(text_shape)[:120],
+                    "shape_b": shape_name(container),
+                    "text_coverage_ratio": round(coverage, 3),
+                    "overflow_in": {
+                        edge: round(value / Inches(1), 3)
+                        for edge, value in overflow.items()
+                        if value > tolerance
+                    },
+                    "allowed": slide_number in allowed_slides,
+                }
+            )
+
+    return findings
+
+
+def detect_title_size_consistency(
+    prs: Presentation,
+    *,
+    min_title_pt: float,
+    tolerance_pt: float,
+    allowed_slides: set[int],
+) -> dict:
+    title_rows: list[dict] = []
+    for slide_number, slide in enumerate(prs.slides, 1):
+        candidates: list[dict] = []
+        for shape in slide.shapes:
+            if (
+                not getattr(shape, "has_text_frame", False)
+                or not shape.text.strip()
+                or shape.top < Inches(0.25)
+                or shape.top > Inches(1.85)
+            ):
+                continue
+            sizes = sorted(
+                {
+                    round(run.font.size.pt, 2)
+                    for paragraph in shape.text_frame.paragraphs
+                    for run in paragraph.runs
+                    if run.text.strip() and run.font.size
+                }
+            )
+            if not sizes or max(sizes) < min_title_pt:
+                continue
+            candidates.append(
+                {
+                    "slide": slide_number,
+                    "shape": shape_name(shape),
+                    "text": " ".join(shape.text.split())[:160],
+                    "top_in": round(shape.top / Inches(1), 3),
+                    "left_in": round(shape.left / Inches(1), 3),
+                    "width_in": round(shape.width / Inches(1), 3),
+                    "size_pt": max(sizes),
+                    "run_sizes_pt": sizes,
+                }
+            )
+        if candidates:
+            title_rows.append(
+                max(
+                    candidates,
+                    key=lambda item: (
+                        item["size_pt"],
+                        item["width_in"],
+                        -item["top_in"],
+                    ),
+                )
+            )
+
+    if len(title_rows) < 2:
+        return {
+            "title_rows": title_rows,
+            "content_title_reference_pt": None,
+            "content_title_size_range_pt": 0.0,
+            "title_size_inconsistencies": [],
+            "unexpected_title_size_inconsistencies": [],
+        }
+
+    top_buckets = Counter(round(item["top_in"] * 10) for item in title_rows)
+    dominant_top_bucket = min(
+        top_buckets,
+        key=lambda bucket: (-top_buckets[bucket], bucket),
+    )
+    content_titles = [
+        item
+        for item in title_rows
+        if abs(item["top_in"] - dominant_top_bucket / 10) <= 0.11
+    ]
+    baseline_titles = [
+        item
+        for item in content_titles
+        if item["slide"] not in allowed_slides
+    ]
+    if not baseline_titles:
+        baseline_titles = content_titles
+    reference = (
+        round(median(item["size_pt"] for item in baseline_titles), 2)
+        if baseline_titles
+        else None
+    )
+    size_range = (
+        round(
+            max(item["size_pt"] for item in baseline_titles)
+            - min(item["size_pt"] for item in baseline_titles),
+            2,
+        )
+        if baseline_titles
+        else 0.0
+    )
+
+    inconsistencies: list[dict] = []
+    if reference is not None:
+        for item in content_titles:
+            delta = abs(item["size_pt"] - reference)
+            mixed_runs = (
+                max(item["run_sizes_pt"]) - min(item["run_sizes_pt"])
+                > tolerance_pt
+            )
+            if delta <= tolerance_pt and not mixed_runs:
+                continue
+            issue = dict(item)
+            issue.update(
+                {
+                    "reference_size_pt": reference,
+                    "delta_pt": round(delta, 2),
+                    "mixed_run_sizes": mixed_runs,
+                    "allowed": item["slide"] in allowed_slides,
+                }
+            )
+            inconsistencies.append(issue)
+
+    unexpected = [
+        item for item in inconsistencies if not item["allowed"]
+    ]
+    return {
+        "title_rows": title_rows,
+        "content_title_reference_pt": reference,
+        "content_title_size_range_pt": size_range,
+        "title_size_inconsistencies": inconsistencies,
+        "unexpected_title_size_inconsistencies": unexpected,
+    }
 
 
 def detect_repair_risks(prs) -> list[dict]:
@@ -213,6 +544,8 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
     for option, slides in (
         ("--allow-bleed", args.allow_bleed),
         ("--allow-small-text", args.allow_small_text),
+        ("--allow-overlap", args.allow_overlap),
+        ("--allow-title-size", args.allow_title_size),
     ):
         invalid = sorted(slide for slide in slides if slide > slide_count)
         if invalid:
@@ -240,6 +573,15 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
     unsized_runs: list[dict] = []
     group_shapes: list[dict] = []
     slides_with_sources: list[int] = []
+    overlap_candidates = detect_geometry_overlap_candidates(
+        prs, tolerance, args.allow_overlap
+    )
+    title_consistency = detect_title_size_consistency(
+        prs,
+        min_title_pt=args.min_title_pt,
+        tolerance_pt=args.title_size_tolerance_pt,
+        allowed_slides=args.allow_title_size,
+    )
 
     for slide_number, slide in enumerate(prs.slides, 1):
         slide_chars = 0
@@ -272,7 +614,7 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
                 }
                 out_of_bounds.append(issue)
 
-        for text_frame, top, target_name, report_empty in iter_text_frames(
+        for text_frame, top, frame_height, target_name, report_empty in iter_text_frames(
             slide.shapes, slide_number, group_shapes
         ):
             text = text_frame.text.strip()
@@ -323,7 +665,12 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
                             "text": run_text[:120],
                             "allowed": slide_number in args.allow_small_text,
                         }
-                        if looks_like_label(paragraph_text):
+                        is_compact_annotation = (
+                            frame_height is not None
+                            and frame_height <= Inches(0.36)
+                            and len(paragraph_text) <= 100
+                        )
+                        if looks_like_label(paragraph_text) or is_compact_annotation:
                             small_text_labels.append(issue)
                         else:
                             small_text_body.append(issue)
@@ -345,6 +692,9 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
     ]
     unexpected_small_text_body = [
         item for item in small_text_body if not item["allowed"]
+    ]
+    unexpected_overlap_candidates = [
+        item for item in overlap_candidates if not item["allowed"]
     ]
     report = {
         "deck": str(deck),
@@ -372,8 +722,11 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
         "small_text_label_candidates": small_text_labels,
         "empty_text_frames": empty_text_frames,
         "title_risks": title_risks,
+        **title_consistency,
         "unsized_runs": unsized_runs,
         "group_shapes": group_shapes,
+        "overlap_candidates": overlap_candidates,
+        "unexpected_overlap_candidates": unexpected_overlap_candidates,
         "ooxml_repair_risks": repair_risks,
     }
 
@@ -402,9 +755,22 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
         failures.append(
             f"{len(title_risks)} slides have no text at or above {args.min_title_pt} pt"
         )
+    if (
+        args.fail_title_consistency
+        and title_consistency["unexpected_title_size_inconsistencies"]
+    ):
+        failures.append(
+            f"{len(title_consistency['unexpected_title_size_inconsistencies'])} "
+            "content slide title(s) differ from the deck title-size standard"
+        )
     if args.fail_unsized_runs and unsized_runs:
         failures.append(
             f"{len(unsized_runs)} non-empty text runs have no explicit font size"
+        )
+    if args.fail_overlaps and unexpected_overlap_candidates:
+        failures.append(
+            f"{len(unexpected_overlap_candidates)} geometry overlap candidate(s) "
+            "require repair or --allow-overlap review"
         )
 
     return report, failures
@@ -442,7 +808,18 @@ def print_report(report: dict, failures: list[str]) -> None:
     )
     print(f"Unsized runs: {len(report['unsized_runs'])}")
     print(f"Group shapes: {len(report['group_shapes'])}")
+    print(
+        "Geometry overlaps: "
+        f"{len(report.get('overlap_candidates', []))} total, "
+        f"{len(report.get('unexpected_overlap_candidates', []))} unapproved"
+    )
     print(f"Title risks: {len(report['title_risks'])}")
+    print(
+        "Title-size consistency: "
+        f"reference={report.get('content_title_reference_pt')} pt, "
+        f"range={report.get('content_title_size_range_pt')} pt, "
+        f"{len(report.get('unexpected_title_size_inconsistencies', []))} unapproved"
+    )
     print(f"OOXML repair risks: {len(report.get('ooxml_repair_risks', []))}")
 
     for label, items in (
@@ -450,7 +827,12 @@ def print_report(report: dict, failures: list[str]) -> None:
         ("Small body text", report["small_text_body_candidates"]),
         ("Unsized runs", report["unsized_runs"]),
         ("Group shapes", report["group_shapes"]),
+        ("Geometry overlaps", report.get("overlap_candidates", [])),
         ("Title risks", report["title_risks"]),
+        (
+            "Title-size inconsistencies",
+            report.get("title_size_inconsistencies", []),
+        ),
         ("OOXML repair risks", report.get("ooxml_repair_risks", [])),
     ):
         if items:
@@ -495,8 +877,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--min-body-pt",
         type=positive_float,
-        default=16.0,
-        help="Flag likely non-footer body text below this size (default: 16)",
+        default=13.0,
+        help="Flag likely non-footer body text below this size (default: 13)",
     )
     parser.add_argument(
         "--min-title-pt",
@@ -525,6 +907,26 @@ def build_parser() -> argparse.ArgumentParser:
         help="Reviewed slides allowed to contain sub-minimum body text, e.g. 4,8-9",
     )
     parser.add_argument(
+        "--allow-overlap",
+        type=parse_slide_set,
+        default=set(),
+        metavar="SLIDES",
+        help="Reviewed slides allowed intentional geometry overlap, e.g. 4,8-9",
+    )
+    parser.add_argument(
+        "--allow-title-size",
+        type=parse_slide_set,
+        default=set(),
+        metavar="SLIDES",
+        help="Reviewed slides allowed a different content-title size, e.g. 6,12",
+    )
+    parser.add_argument(
+        "--title-size-tolerance-pt",
+        type=nonnegative_float,
+        default=0.5,
+        help="Allowed content-title size variation in points (default: 0.5)",
+    )
+    parser.add_argument(
         "--fail-small-text",
         action="store_true",
         help="Return nonzero when small-text candidates exist",
@@ -540,6 +942,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Return nonzero when a slide lacks title-sized text",
     )
     parser.add_argument(
+        "--fail-title-consistency",
+        action="store_true",
+        help="Return nonzero when content-slide title sizes are inconsistent",
+    )
+    parser.add_argument(
+        "--fail-overlaps",
+        action="store_true",
+        help="Return nonzero when unapproved geometry overlap candidates exist",
+    )
+    parser.add_argument(
         "--json",
         type=Path,
         help="Write the full audit report as JSON",
@@ -547,7 +959,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="Enable small-body, unsized-run, and title-risk failures",
+        help="Enable typography, title, and overlap failures",
     )
     return parser
 
@@ -559,6 +971,8 @@ def main() -> int:
         args.fail_small_text = True
         args.fail_unsized_runs = True
         args.fail_title_risks = True
+        args.fail_title_consistency = True
+        args.fail_overlaps = True
     report, failures = audit(args)
     print_report(report, failures)
 

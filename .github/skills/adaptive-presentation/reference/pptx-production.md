@@ -108,6 +108,18 @@ H.bullets(s, ["근거 1", "근거 2"], 0.72, 1.9, 6.0, 2.0, 17, INK, marker_colo
 prs.save(OUT)
 ```
 
+### 편집형 비즈니스 덱 기본값
+
+`Claude Cowork처럼`, `컨설팅 덱처럼`, `임원용으로 더 전문적으로`라는 요청은
+[`editorial-business-style.md`](./editorial-business-style.md)를 따른다.
+
+- 샘플 deck/template이 있으면 자체 팔레트보다 그 master·grid·font·layout을 우선한다.
+- 샘플이 없으면 강한 제목, 정밀한 column/grid, 넓은 여백, hairline rule, native chart/table/diagram을
+  기본 시각 언어로 사용한다.
+- 모든 슬라이드에 편집 가능한 visual structure가 하나 이상 있어야 한다.
+- 한 가지 visual motif를 반복하되 같은 layout을 반복하지 않는다.
+- 제목 밑 짧은 accent line, 과도한 rounded card·pill chip·soft shadow는 기본값으로 금지한다.
+
 ## 4. 화면과 안전 영역
 
 - 기본: 13.333 × 7.5 inch
@@ -116,6 +128,14 @@ prs.save(OUT)
 - 본문 영역: 약 1.6~6.75 inch
 - 출처/페이지: 7.0 inch 부근
 - 장식 도형은 의도적으로 bleed할 수 있지만 텍스트는 안전 영역 안에 둔다
+- 사용자가 `완전 흰 배경`을 요청하면 모든 슬라이드의 `slide.background.fill`을 `#FFFFFF`로 직접
+  지정한다. slide 전체를 덮는 배경 도형도 흰색이어야 하며, 섹션별 `#F7F7F7` canvas 교대는 사용하지
+  않는다. 카드와 강조 영역의 light neutral surface는 별도 역할이므로 유지할 수 있다.
+- 제목·본문·주석·출처의 전용 행을 먼저 예약하고, 한 영역의 도형이나 텍스트가 다른 영역을 침범하지 않게
+  좌표를 잡는다.
+- 포함 관계가 아닌 콘텐츠 도형끼리는 bounding box가 겹치지 않게 한다. 배지·라벨처럼 의도적으로 도형
+  위에 놓는 텍스트도 컨테이너 안에 완전히 들어가야 한다.
+- 연결선과 화살표는 텍스트 상자 아래를 통과시키지 않는다. 공간이 부족하면 선을 우회시키거나 내용을 줄인다.
 
 ## 5. 텍스트
 
@@ -124,18 +144,33 @@ prs.save(OUT)
 - 모든 run에 font name/size/color를 직접 적용
 - 한글과 영문 혼용 렌더를 실제 PDF에서 확인
 - 줄 간격과 paragraph spacing을 명시
+- 텍스트가 들어가는 도형은 PowerPoint/LibreOffice의 폰트 메트릭 차이를 고려해 가로·세로 8~12%의
+  여유를 둔다. 한 환경에서 간신히 맞는 상태는 합격이 아니다.
+- 제목은 제목 전용 행 안에서 끝나야 하며 구분선·섹션 chip을 침범하지 않아야 한다. 카드 문구는 카드
+  border 안에 완전히 들어가야 한다.
 
 크기:
 
-- 제목 28~40pt
-- 주요 본문 18~24pt
-- 보조 14~17pt
-- 출처 8.5~10pt
+- 제목 30~42pt
+- 주요 본문 15~19pt
+- 보조 13~15pt
+- 표·도식 label 11~13pt
+- 출처 8~9.5pt
 
-16pt 미만 본문이 필요하면 정보가 과밀하다는 신호다. 폰트를 줄이지 말고 내용을 줄인다.
+표지·section divider를 제외한 본문 슬라이드 title role은 덱 전체에서 한 가지 크기를 사용한다. 같은 title
+row가 슬라이드마다 31/32/34pt로 달라지면 위계가 흔들린다. 긴 제목은 문구 단축, title frame 폭·높이,
+명시적 줄바꿈으로 해결하고 해당 슬라이드만 축소하지 않는다. 정말 다른 위계인 슬라이드만 예외로 기록한다.
 
-밀도: 일반 슬라이드는 주요 본문 35~55단어, 기술 슬라이드도 문장 수를 제한한다. 표/부록은 필요하면
-명확히 Appendix로 구분한다.
+긴 제목은 2줄 전용 높이를 확보하거나 문구를 줄인다. 28~29pt는 의미를 훼손하지 않고 줄일 수 없을 때만
+허용한다. 컨테이너 오버플로는
+문구 단축·도형 높이/폭·명시적 줄바꿈을 먼저 조정한다. 사용자가 글자 축소를 요청했거나 소폭 축소로
+해결되는 경우에는 역할별 기준을 먼저 0.5~2pt 일관되게 낮춘다. 그래도 남는 문제 frame만 0.5pt 단위로
+줄이되, 주요 본문 15pt·보조 13pt 아래로 내리지 않는다.
+
+밀도: 일반 슬라이드는 주요 본문 40~65단어를 기본 범위로 삼고, 기술 슬라이드도 문장 수를 제한한다.
+글자 축소로 생긴 여백에는 검증 근거, KPI, owner, 예외 조건처럼 발표자의 설명력을 높이는 정보만
+1~2개 보강한다. 이미 밀도가 높은 슬라이드는 내용을 늘리지 않으며, 표/부록은 필요하면 명확히
+Appendix로 구분한다.
 
 ## 6. 한글 폰트
 
@@ -158,11 +193,23 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 
 ## 7. 색과 대비
 
-- 색은 주제와 (있다면) 사용자 브랜드에서 자유롭게 정한다. 고정 팔레트를 강제하지 않는다.
+- 색은 주제와 (있다면) 사용자 브랜드에서 자유롭게 정한다. 고정 팔레트를 강제하지 않되, 먼저
+  `canvas / surface / ink / primary / optional secondary` 역할을 정하고 덱 전체에서 재사용한다.
+- 브랜드·템플릿이 없는 CIO/임원 자료의 기본값은 Microsoft Fluent 계열의 white/light neutral canvas,
+  dark neutral ink, Microsoft Blue primary, 선택적 blue-teal secondary다.
+- 임원 자료는 neutral을 포함해 **3~4개 색상 계열**로 제한한다. 같은 hue의 tint/shade는 한 계열로 보며,
+  채도가 높은 accent는 최대 2계열만 쓴다.
+- dominant color 하나가 약 60~70%의 시각 무게를 담당하고 support 1~2개와 sharp accent 1개만 보조한다.
+- 카드·단계·팀마다 서로 다른 accent를 배정하지 않는다. 구분은 우선 위치·여백·크기·선 굵기·타이포
+  계층으로 만들고, 색은 선택·강조·흐름에만 사용한다.
+- 같은 의미와 상태는 덱 전체에서 같은 색을 사용한다.
 - 본문과 배경 대비 최소 4.5:1
 - 제목은 크더라도 낮은 대비 회색으로 두지 않는다
 - 색만으로 상태를 전달하지 않고 GA/PREVIEW/위험 텍스트를 병기
+- 상태색이 꼭 필요하면 해당 슬라이드의 국소 예외로 제한하고, 구조 색상 체계를 rainbow palette로
+  확장하지 않는다.
 - PDF 변환에서 색이 달라질 수 있으므로 렌더를 확인
+- 흰 canvas 요청은 렌더뿐 아니라 PPTX 구조에서도 각 slide background가 `FFFFFF`인지 확인한다.
 
 ## 8. 도형과 연결선
 
@@ -171,6 +218,16 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 - 교차선 최소화
 - 화살표 방향은 발표 흐름과 일치
 - 포함 관계와 연결 관계를 다른 스타일로 표현
+- 의도하지 않은 도형 겹침은 금지한다. 그림자와 얇은 border 접촉은 허용하지만, 콘텐츠 면적이나 텍스트가
+  다른 객체를 가리면 결함이다.
+- chevron·arrow·connector는 인접 카드 사이의 명시적 gap 안에 들어가야 한다. connector 폭이 gap보다
+  크거나 대상 카드 아래로 숨어 들어가면 폭·간격을 다시 잡는다.
+- 단계 번호·짧은 라벨도 예상보다 자주 강제 줄바꿈된다. `01`·`02` 같은 두 자리 숫자는 실제 글꼴에서
+  한 줄로 들어가는 폭과 높이를 확보하고, 다음 본문 행과 독립된 frame을 사용한다.
+- 최종 좌표 검사는 text/text, shape/shape, text/container를 모두 포함한다. frame 좌표가 겹치지 않아도
+  줄바꿈된 글리프가 frame 밖으로 렌더될 수 있으므로 PDF text-span 검사까지 통과해야 한다.
+- 편집형 비즈니스 덱은 square surface와 hairline separator를 우선한다. rounded rectangle·pill·shadow는
+  의미가 있을 때만 국소적으로 사용하고 반복 motif로 삼지 않는다.
 
 ## 9. 표
 
@@ -214,13 +271,14 @@ Source: Organization · Document title (accessed YYYY-MM-DD)
 
 ## 13. 상태·불확실성
 
-- GA: green 계열 + `GA`
-- Partial GA: amber 계열 + `PARTIAL GA`
-- Preview: 별도 accent + `PREVIEW`
+- GA: neutral/primary style + `GA`
+- Partial GA: secondary 또는 outline style + `PARTIAL GA`
+- Preview: secondary accent + `PREVIEW`
 - 가정: `ASSUMPTION`
 - 시연 수치: `DEMO DATA`
 
-색은 자유롭게 조정하되 텍스트 라벨은 반드시 유지한다.
+상태마다 새 hue를 추가하지 않는다. 경고색이 꼭 필요한 위험 정보만 국소 예외로 쓰고, 텍스트 라벨은
+반드시 유지한다.
 
 ## 14. 완성 직전
 

@@ -5,6 +5,16 @@
 아래 구조는 필요할 때만 출발점으로 참고하되 그대로 복제하지 않는다. 슬라이드마다 내용에 가장 맞는
 형태를 직접 만드는 것이 우선이다.
 
+## Editorial business mode
+
+- 제목은 30~42pt의 강한 hierarchy를 만들고, 긴 제목은 2줄 전용 높이를 예약한다.
+- 2~4열 editorial column, native table/chart, metric-led page, process band, architecture split,
+  decision tree, roadmap처럼 공통 축이 분명한 구조를 우선한다.
+- column은 card gap보다 hairline rule과 정렬로 구분할 수 있다.
+- 이미지가 없어도 숫자·도식·표·차트·타임라인 중 하나를 사용한다.
+- 한 가지 motif는 반복하되 동일한 rounded-card grid는 반복하지 않는다.
+- 제목 바로 아래 장식선, 반복 pill chip, soft shadow는 기본값으로 사용하지 않는다.
+
 ## 1. Cover / thesis
 
 - 사용: 덱의 약속과 정서 설정
@@ -212,3 +222,10 @@
 - 카드 grid에 지나치게 의존하지 않는가? (관계형 구조로 일부 교체 가능)
 - 시각 구조가 제목의 논리와 맞는가?
 - 모든 슬라이드의 밀도와 배경이 똑같아 섹션 리듬이 없지는 않은가?
+- 임원 자료가 neutral + primary + optional secondary의 3~4개 색상 계열을 넘어서지 않는가?
+- 배지·주석·연결선·예외 문장이 카드나 본문 텍스트와 겹치지 않는가?
+- `완전 흰 배경` 요청 시 slide canvas 전체가 `#FFFFFF`이고, 카드 surface만 연한 neutral을 쓰는가?
+- 긴 제목과 카드 문구가 경계에 붙지 않고 렌더링 차이를 견딜 여유를 확보했는가?
+- 모든 장에 편집 가능한 visual structure가 있는가?
+- 제목·본문·caption의 크기 위계가 thumbnail에서도 즉시 구분되는가?
+- 제목 밑 장식선·pill·rounded card·shadow가 내용보다 더 반복되지는 않는가?
