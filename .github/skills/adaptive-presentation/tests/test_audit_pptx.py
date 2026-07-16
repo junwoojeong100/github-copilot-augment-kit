@@ -13,6 +13,7 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from pptx import Presentation  # noqa: E402
+from pptx.enum.shapes import MSO_SHAPE  # noqa: E402
 from pptx.util import Inches, Pt  # noqa: E402
 
 import audit_pptx  # noqa: E402
@@ -24,14 +25,19 @@ def audit_args(deck: Path, **overrides) -> Namespace:
         "expected_slides": 1,
         "allow_bleed": set(),
         "allow_small_text": set(),
+        "allow_overlap": set(),
+        "allow_title_size": set(),
         "bounds_tolerance": 0.02,
-        "min_body_pt": 16.0,
+        "min_body_pt": 13.0,
         "min_title_pt": 26.0,
+        "title_size_tolerance_pt": 0.5,
         "footer_top": 6.9,
         "min_small_text_chars": 10,
         "fail_small_text": True,
         "fail_unsized_runs": True,
         "fail_title_risks": True,
+        "fail_title_consistency": True,
+        "fail_overlaps": True,
         "json": None,
         "strict": True,
     }
@@ -45,7 +51,7 @@ class AuditPptxTests(unittest.TestCase):
         self.addCleanup(self.temp_dir.cleanup)
         self.work_dir = Path(self.temp_dir.name)
 
-    def make_deck(self, body_size: float = 16.0, explicit_body_size: bool = True) -> Path:
+    def make_deck(self, body_size: float = 13.0, explicit_body_size: bool = True) -> Path:
         prs = Presentation()
         prs.slide_width = Inches(13.333)
         prs.slide_height = Inches(7.5)
@@ -62,7 +68,7 @@ class AuditPptxTests(unittest.TestCase):
         prs.save(out)
         return out
 
-    def test_strict_typography_passes_at_sixteen_points(self):
+    def test_strict_typography_passes_at_thirteen_points(self):
         report, failures = audit_pptx.audit(audit_args(self.make_deck()))
         self.assertEqual(failures, [])
         self.assertEqual(report["empty_text_frames"], [])
@@ -74,9 +80,9 @@ class AuditPptxTests(unittest.TestCase):
             audit_pptx.nonnegative_float("inf")
 
     def test_small_text_exception_is_slide_scoped(self):
-        deck = self.make_deck(body_size=15)
+        deck = self.make_deck(body_size=12)
         _, failures = audit_pptx.audit(audit_args(deck))
-        self.assertTrue(any("below 16.0 pt" in item for item in failures))
+        self.assertTrue(any("below 13.0 pt" in item for item in failures))
         report, failures = audit_pptx.audit(
             audit_args(deck, allow_small_text={1})
         )
@@ -85,9 +91,26 @@ class AuditPptxTests(unittest.TestCase):
 
     def test_fractional_size_below_threshold_fails_before_rounding(self):
         _, failures = audit_pptx.audit(
-            audit_args(self.make_deck(body_size=15.99))
+            audit_args(self.make_deck(body_size=12.99))
         )
-        self.assertTrue(any("below 16.0 pt" in item for item in failures))
+        self.assertTrue(any("below 13.0 pt" in item for item in failures))
+
+    def test_compact_secondary_annotation_is_reported_as_label(self):
+        deck = self.make_deck()
+        prs = Presentation(deck)
+        annotation = prs.slides[0].shapes.add_textbox(
+            Inches(1), Inches(3.3), Inches(8), Inches(0.3)
+        )
+        annotation.text = (
+            "Compact secondary annotation may use a smaller role-specific size."
+        )
+        annotation.text_frame.paragraphs[0].runs[0].font.size = Pt(12)
+        prs.save(deck)
+
+        report, failures = audit_pptx.audit(audit_args(deck))
+        self.assertEqual(failures, [])
+        self.assertEqual(report["small_text_body_candidates"], [])
+        self.assertEqual(len(report["small_text_label_candidates"]), 1)
 
     def test_split_runs_cannot_bypass_body_length_threshold(self):
         deck = self.make_deck()
@@ -97,12 +120,12 @@ class AuditPptxTests(unittest.TestCase):
         for value in ("Split ", "body ", "across ", "short ", "runs."):
             run = paragraph.add_run()
             run.text = value
-            run.font.size = Pt(15)
+            run.font.size = Pt(12)
         prs.save(deck)
 
         report, failures = audit_pptx.audit(audit_args(deck))
         self.assertGreaterEqual(len(report["small_text_body_candidates"]), 1)
-        self.assertTrue(any("below 16.0 pt" in item for item in failures))
+        self.assertTrue(any("below 13.0 pt" in item for item in failures))
 
     def test_unsized_nonempty_run_fails(self):
         _, failures = audit_pptx.audit(
@@ -119,6 +142,59 @@ class AuditPptxTests(unittest.TestCase):
         self.assertEqual(report["title_risks"][0]["slide"], 1)
         self.assertTrue(any("no text at or above" in item for item in failures))
 
+    def test_content_title_sizes_are_consistent_while_cover_is_excluded(self):
+        prs = Presentation()
+        prs.slide_width = Inches(13.333)
+        prs.slide_height = Inches(7.5)
+        blank = prs.slide_layouts[6]
+
+        cover = prs.slides.add_slide(blank)
+        cover_title = cover.shapes.add_textbox(
+            Inches(1), Inches(1.2), Inches(10), Inches(0.9)
+        )
+        cover_title.text = "Cover title"
+        cover_title.text_frame.paragraphs[0].runs[0].font.size = Pt(40)
+
+        for number, size in enumerate((32, 32, 34), 1):
+            slide = prs.slides.add_slide(blank)
+            title = slide.shapes.add_textbox(
+                Inches(1), Inches(0.7), Inches(10), Inches(1.1)
+            )
+            title.text = f"Content title {number}"
+            title.text_frame.paragraphs[0].runs[0].font.size = Pt(size)
+            body = slide.shapes.add_textbox(
+                Inches(1), Inches(2), Inches(8), Inches(1)
+            )
+            body.text = "This body sentence is long enough to be classified."
+            body.text_frame.paragraphs[0].runs[0].font.size = Pt(15)
+
+        deck = self.work_dir / "title-sizes.pptx"
+        prs.save(deck)
+        report, failures = audit_pptx.audit(
+            audit_args(deck, expected_slides=4)
+        )
+        self.assertEqual(report["content_title_reference_pt"], 32)
+        self.assertEqual(
+            [
+                item["slide"]
+                for item in report["unexpected_title_size_inconsistencies"]
+            ],
+            [4],
+        )
+        self.assertTrue(
+            any("title(s) differ" in item for item in failures)
+        )
+
+        report, failures = audit_pptx.audit(
+            audit_args(
+                deck,
+                expected_slides=4,
+                allow_title_size={4},
+            )
+        )
+        self.assertEqual(failures, [])
+        self.assertTrue(report["title_size_inconsistencies"][0]["allowed"])
+
     def test_table_cell_text_is_audited(self):
         deck = self.make_deck()
         prs = Presentation(deck)
@@ -128,13 +204,65 @@ class AuditPptxTests(unittest.TestCase):
         ).table
         run = table.cell(0, 0).text_frame.paragraphs[0].add_run()
         run.text = "Table body content that must meet the same size threshold."
-        run.font.size = Pt(15)
+        run.font.size = Pt(12)
         prs.save(deck)
 
         report, failures = audit_pptx.audit(audit_args(deck))
         candidates = report["small_text_body_candidates"]
         self.assertTrue(any("cell 1,1" in item["shape"] for item in candidates))
-        self.assertTrue(any("below 16.0 pt" in item for item in failures))
+        self.assertTrue(any("below 13.0 pt" in item for item in failures))
+
+    def test_overlapping_text_frames_fail_and_allow_slide_exception(self):
+        deck = self.make_deck()
+        prs = Presentation(deck)
+        overlap = prs.slides[0].shapes.add_textbox(
+            Inches(1.5), Inches(2.2), Inches(4), Inches(0.6)
+        )
+        overlap.text = "A second body sentence overlaps the first text frame."
+        overlap.text_frame.paragraphs[0].runs[0].font.size = Pt(13)
+        prs.save(deck)
+
+        report, failures = audit_pptx.audit(audit_args(deck))
+        self.assertTrue(
+            any(
+                item["kind"] == "text_text"
+                for item in report["unexpected_overlap_candidates"]
+            )
+        )
+        self.assertTrue(any("geometry overlap" in item for item in failures))
+
+        report, failures = audit_pptx.audit(
+            audit_args(deck, allow_overlap={1})
+        )
+        self.assertEqual(failures, [])
+        self.assertTrue(report["overlap_candidates"][0]["allowed"])
+
+    def test_shape_and_text_container_overlaps_are_reported(self):
+        deck = self.make_deck()
+        prs = Presentation(deck)
+        slide = prs.slides[0]
+        chevron = slide.shapes.add_shape(
+            MSO_SHAPE.CHEVRON,
+            Inches(2.9),
+            Inches(4.3),
+            Inches(0.2),
+            Inches(0.3),
+        )
+        self.assertIsNotNone(chevron)
+        text = slide.shapes.add_textbox(
+            Inches(1.2), Inches(4.72), Inches(1.6), Inches(0.5)
+        )
+        text.text = "Text protruding below its intended card."
+        text.text_frame.paragraphs[0].runs[0].font.size = Pt(13)
+        prs.save(deck)
+
+        report, failures = audit_pptx.audit(audit_args(deck))
+        kinds = {
+            item["kind"] for item in report["unexpected_overlap_candidates"]
+        }
+        self.assertIn("shape_shape", kinds)
+        self.assertIn("text_container", kinds)
+        self.assertTrue(any("geometry overlap" in item for item in failures))
 
     def test_text_table_cannot_use_decorative_bleed_exception(self):
         deck = self.make_deck()

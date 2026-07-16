@@ -54,25 +54,48 @@ class VerifyDeckTests(unittest.TestCase):
             expected_slides=5,
             allow_bleed="",
             bounds_tolerance=0.02,
-            min_body_pt=16.0,
+            min_body_pt=13.0,
             min_title_pt=26.0,
+            title_size_tolerance_pt=0.5,
             footer_top=6.9,
             min_small_text_chars=10,
             fail_small_text=False,
             allow_small_text="",
+            allow_overlap="",
+            allow_title_size="",
             fail_unsized_runs=False,
             fail_title_risks=False,
+            fail_title_consistency=False,
+            fail_overlaps=False,
             strict=True,
         )
         namespace = audit_namespace(args, self.work_dir / "audit.json")
         self.assertTrue(namespace.fail_small_text)
         self.assertTrue(namespace.fail_title_risks)
+        self.assertTrue(namespace.fail_title_consistency)
         self.assertTrue(namespace.fail_unsized_runs)
+        self.assertTrue(namespace.fail_overlaps)
 
         args.allow_small_text = "2"
         namespace = audit_namespace(args, self.work_dir / "audit.json")
         self.assertEqual(namespace.allow_small_text, {2})
         self.assertTrue(namespace.fail_small_text)
+
+        args.allow_overlap = "3"
+        namespace = audit_namespace(args, self.work_dir / "audit.json")
+        self.assertEqual(namespace.allow_overlap, {3})
+
+        args.allow_title_size = "4"
+        namespace = audit_namespace(args, self.work_dir / "audit.json")
+        self.assertEqual(namespace.allow_title_size, {4})
+
+    def test_risk_selection_prioritizes_rendered_overlap(self):
+        report = {
+            "text_chars_per_slide": {"values": [100, 100, 100]},
+            "rendered_text_overlaps": [{"slide": 3}],
+            "overlap_candidates": [{"slide": 2}],
+        }
+        self.assertEqual(select_risk_slides(report, 3), [3, 2, 1])
 
     def test_runner_clears_stale_qa_artifacts(self):
         detail = self.work_dir / "qa-detail"
