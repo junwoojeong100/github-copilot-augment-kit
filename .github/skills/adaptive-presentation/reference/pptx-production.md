@@ -1,7 +1,8 @@
 # PPTX Production
 
 슬라이드는 고정 생성 엔진이나 컴포넌트 라이브러리 없이 **`python-pptx`로 직접** 만든다. 매 덱마다
-주제에 맞는 시각 형태를 자유롭게 구성하되, 아래 품질·위생 기준은 지킨다.
+주제에 맞는 시각 형태를 자유롭게 구성하되, 결론이 가장 짧은 경로로 읽히는 Straightforward 구조와
+아래 품질·위생 기준을 지킨다.
 
 ## 1. 도구
 
@@ -117,6 +118,8 @@ prs.save(OUT)
 - 샘플이 없으면 강한 제목, 정밀한 column/grid, 넓은 여백, hairline rule, native chart/table/diagram을
   기본 시각 언어로 사용한다.
 - 모든 슬라이드에 편집 가능한 visual structure가 하나 이상 있어야 한다.
+- 한 화면의 primary reading path는 좌→우 또는 상→하 하나로 고정하고, 결론과 무관한 장식·중첩
+  container·중복 label은 제거한다.
 - 한 가지 visual motif를 반복하되 같은 layout을 반복하지 않는다.
 - 제목 밑 짧은 accent line, 과도한 rounded card·pill chip·soft shadow는 기본값으로 금지한다.
 
