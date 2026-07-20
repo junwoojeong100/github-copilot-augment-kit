@@ -1,6 +1,6 @@
 # GitHub Copilot Augment Kit
 
-GitHub Copilot을 특정 모델에 종속되지 않는 **고성능 엔지니어링 에이전트**로 확장하는 경량 커스터마이징 킷입니다. 단일 지침 파일과 온디맨드 스킬, 재사용 가능한 생성 엔진으로 사고·소통·안전·코딩·Git·팩트체크·웹 조사·고객 데모·PPTX 제작 워크플로를 제공합니다.
+GitHub Copilot을 특정 모델에 종속되지 않는 **고성능 엔지니어링 에이전트**로 확장하는 경량 커스터마이징 킷입니다. 단일 지침 파일과 온디맨드 스킬, 재사용 가능한 생성 엔진으로 사고·소통·안전·코딩·Git·팩트체크·웹 조사·고객 데모·PPTX 제작 워크플로를 제공하며, 모든 결과는 결론과 다음 행동이 먼저 보이는 **Straightforward** 형식을 우선합니다.
 
 이 리포의 `.github/` 폴더를 프로젝트에 두면 GitHub Copilot(VS Code Chat의 Agent mode·터미널 CLI)이
 지침과 스킬을 자동으로 읽습니다. `.vscode/mcp.json`까지 적용하면 VS Code Agent mode에서도
@@ -15,7 +15,7 @@ Microsoft Learn MCP를 사용할 수 있습니다.
 ## 이게 뭔가요? (3줄 요약)
 
 - **무엇**: GitHub Copilot에 입힐 수 있는 단일 지침 + 전문 스킬 모음입니다.
-- **왜**: 기반 모델이 바뀌어도 일관된 품질·안전·전문 워크플로를 유지하도록 Copilot의 실행 방식을 보강합니다.
+- **왜**: 기반 모델이 바뀌어도 Straightforward한 결과와 일관된 품질·안전·전문 워크플로를 유지하도록 Copilot의 실행 방식을 보강합니다.
 - **어떻게**: `.github/`를 두면 지침·스킬이 자동 로드되고, 생성 스킬은 실시간 조사·스토리라인 같은 의미 계층과 Golden Runtime·통합 QA Runner 같은 검증 엔진을 조합해 반복 구현 시간을 줄입니다.
 
 ---
@@ -24,8 +24,8 @@ Microsoft Learn MCP를 사용할 수 있습니다.
 
 | 블록 | 위치 | 동작 방식 | 내용 |
 |------|------|----------|------|
-| **Instructions** | `.github/copilot-instructions.md` | 매 대화 **자동 로드** | 페르소나 · 사고 · 소통 · 안전 · 코딩 · Git · MS/GitHub 가치 · 팩트체크 · 출처 |
-| **Skills** | `.github/skills/` | 관련 질문 시 **자동 활성화** 또는 `/skill-name` | 실시간 웹·공식 문서 검색 · 고객·산업별 AI 플랫폼 데모 · 적응형 PPTX 생성 |
+| **Instructions** | `.github/copilot-instructions.md` | 매 대화 **자동 로드** | Straightforward 결과 · 페르소나 · 사고 · 소통 · 안전 · 코딩 · Git · MS/GitHub 가치 · 팩트체크 · 출처 |
+| **Skills** | `.github/skills/` | 관련 질문 시 **자동 활성화** 또는 `/skill-name` | 결론 우선 실시간 검색 · 고객·산업별 AI/App Platform 데모 · 적응형 PPTX 생성 |
 | **MCP (사전 번들)** | `.github/mcp.json` · `.vscode/mcp.json` | clone 후 신뢰/Start 승인 시 활성화 | Microsoft Learn MCP — 공식 문서·코드 샘플 검색 |
 
 > 상시 적용 원칙은 **단일 파일로 통합**해 중복을 줄이고, 상세 워크플로는 관련 작업에서만 스킬로 불러옵니다.
@@ -123,7 +123,7 @@ npm install -g @github/copilot
 └── skills/                              # 전문 스킬 (온디맨드)
     ├── google-web-search/               # 실시간 웹·공식 문서 검색
     │   └── SKILL.md
-    ├── ai-platform-demo/                # 고객·산업별 AI 플랫폼 데모(단일 HTML) 생성기
+    ├── ai-platform-demo/                # 고객·산업별 AI·App Platform 데모(단일 HTML) 생성기
     │   ├── SKILL.md                     # 실시간 리서치→메뉴·데이터 매핑→Overlay 합성→검증
     │   ├── runtime/                     # 검증된 SPA shell·CSS·JavaScript Golden Runtime
     │   ├── packs/                       # 디자인·고객 사실을 고정하지 않는 산업별 기본 구조
@@ -152,33 +152,39 @@ npm install -g @github/copilot
 | 섹션 | 핵심 |
 |------|------|
 | 페르소나 & 사고 | 지적 겸손, 단계적 추론, 불확실성 표기 |
-| 커뮤니케이션 | 결론 우선(BLUF), 적응적 소통, 한국어 존댓말+영문 병기 |
+| 커뮤니케이션 | Straightforward 결과, 결론 우선(BLUF), 적응적 소통, 한국어 존댓말+영문 병기 |
 | 안전 & 윤리 | 해로운 콘텐츠 거부, PII/시크릿 보호 |
 | 코딩 | 가독성·보안(OWASP) 우선, 언어별 베스트 프랙티스 |
 | Git 워크플로우 | 영어 커밋, Conventional Commits, PR 규칙 |
-| MS/GitHub 가치 | 구체 서비스로 통제·가치 매핑(Foundry·Entra·Purview·Copilot 등) |
+| MS/GitHub 가치 | 구체 서비스로 통제·가치 매핑(Foundry·Agent Framework·GitHub Platform·AKS·ACA 등) |
 | 팩트체크 · 출처 | 답변 끝 사실 검증 표, 출처 명시 |
 
 ### [Skills](https://docs.github.com/copilot/concepts/agents/about-agent-skills) — 자연어 또는 `/skill-name`
 
 | 스킬 | 트리거 예시 | 기능 |
 |------|-----------|------|
-| **google-web-search** | "최신 버전 알려줘", "최근 업데이트" | 공식 소스 우선 실시간 웹·문서 검색 |
-| **ai-platform-demo** | "○○ 고객 △△ 산업 AI 데모 만들어줘", "임원 데모", "운영 대시보드 데모" | 실시간 조사 + 스토리라인 + 메뉴·데이터 Overlay → 고정 GitHub Primer Dark Dimmed 계열 soft-dark 디자인의 단일 HTML SaaS 데모(8화면) 생성·전체 QA |
-| **adaptive-presentation** | "병원 경영진 대상 의료 AI 전략 PPT 20장", "기술 발표자료 만들어줘", "제품 소개 슬라이드" | 실시간 조사 + 스토리라인 설계 + python-pptx 자유 슬라이드 제작 + 통합 QA Runner → 편집 가능한 PPTX 생성·빠른 렌더 검증 |
+| **google-web-search** | "최신 버전 알려줘", "최근 업데이트" | 공식 원문을 검증한 뒤 결론부터 Straightforward하게 답변 |
+| **ai-platform-demo** | "○○ 고객 AI 데모", "AKS/ACA App Platform 데모", "CI/CD 임원 데모" | 실시간 조사 + focus별 스토리라인 + 메뉴·데이터 Overlay → 고정 GitHub Primer Dark Dimmed 계열 soft-dark 디자인의 단일 HTML SaaS 데모(8화면) 생성·전체 QA |
+| **adaptive-presentation** | "병원 경영진 대상 의료 AI 전략 PPT 20장", "기술 발표자료 만들어줘", "제품 소개 슬라이드" | 결론·다음 행동 우선 스토리라인 + 실시간 조사 + python-pptx 자유 제작 + 통합 QA Runner → 편집 가능한 PPTX |
 
 ---
 
-## AI 플랫폼 데모 스킬 (`ai-platform-demo`)
+## AI · App Platform 데모 스킬 (`ai-platform-demo`)
 
-고객사 임원 보고·영업용 **"실제로 동작하는" AI 운영 플랫폼 데모를 단일 HTML 하나**로 생성합니다. 슬라이드가 아니라, 임원이 직접 클릭·질문·조작하는 SaaS 앱입니다.
+고객사 임원 보고·영업용 **"실제로 동작하는" AI·App Platform 운영 데모를 단일 HTML 하나**로
+생성합니다. AI 중심, App Platform·CI/CD 중심, 균형형 focus를 지원하며 슬라이드가 아니라 임원이 직접
+클릭·질문·조작하는 SaaS 앱입니다.
 
-**무엇을 만드나** — 사이드바 + 실시간 대시보드 + 도메인 운영 콘솔 + AI 에이전트 채팅 + 거버넌스 등 **8개 화면 SPA**. 실시간 KPI·스트리밍 차트·움직이는 객체·토스트·멀티에이전트 협업까지 동작합니다.
+**무엇을 만드나** — 사이드바 + 실시간 대시보드 + 도메인/App Platform 운영 콘솔 + GitHub 기반
+개발·배포 + AI 에이전트 채팅 + 통합 거버넌스 등 **8개 화면 SPA**. 첫 화면에서 고객 결과·KPI·primary
+action이 보이고, 실시간 KPI·스트리밍 차트·움직이는 객체·토스트·멀티에이전트 협업까지 동작합니다.
 
-**사용법** — 자연어로 고객과 산업만 알려주면 됩니다.
+**사용법** — 자연어로 고객과 산업을 알려주고, 필요하면 AI 중심 또는 App Platform·CI/CD 중심 focus를
+지정하면 됩니다.
 
 ```
 > 현대제철 대상으로 철강 제조 AI 운영 플랫폼 데모 만들어줘. 청중은 CDO·생산본부장.
+> OO사 대상으로 GitHub Actions와 AKS/ACA 운영을 강조한 App Platform 임원 데모 만들어줘.
 ```
 
 스킬이 자동 로드되어 ① **매 요청 실시간** 고객·산업 리서치 → ② Storyline·메뉴/데이터 매핑(8개 화면 계약) →
@@ -204,7 +210,7 @@ npm install -g @github/copilot
 계열 soft-dark로 고정**(`runtime.css`)되어 있고, 고객별로는 화면 구성·KPI·공식·에이전트·서사(=메뉴와 데이터)만
 Spec에서 결정하므로 HTML·CSS·JavaScript를 처음부터 다시 쓰는 시간을 줄입니다.
 
-**Industry Pack은 산업 terminology·KPI 공식·Agent 역할의 출발점**만 제공하며 고객명·Storyline을
+**Industry Pack은 산업 terminology·KPI 공식·Agent/Platform 역할의 출발점**만 제공하며 고객명·Storyline을
 포함할 수 없습니다. Composer는 **Customer Overlay가 `design`을 정의하거나**(디자인은 고정) 실시간
 research metadata가 오래됐거나 핵심 고객 path가 빠지면 실패합니다. 따라서 같은 산업이라도 고객별
 운영 flow·KPI·에이전트·climax(=데이터)가 달라지되, **디자인은 모든 고객이 동일한 soft-dark 톤**입니다.
@@ -225,7 +231,8 @@ python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
 |------|------|
 | 고객명 / 산업 | "삼표산업 / 레미콘·골재·시멘트" |
 | 청중(임원) | "CIO, 재무팀장, CI팀장" |
-| 강조 서비스 | Microsoft Foundry · Agent Framework · GitHub Copilot |
+| 데모 focus | 균형형 / AI 중심 / App Platform·CI/CD 중심 |
+| 강조 서비스 | Microsoft Foundry · Microsoft Agent Framework · GitHub Copilot · GitHub Platform · AKS · Azure Container Apps |
 
 > 산출물은 **단일 `.html`**(인라인 CSS/JS, 오프라인 동작). 모든 화면에 `● DEMO DATA` 배지로 시연 데이터임을 명시합니다.
 
@@ -255,7 +262,9 @@ cp -R .github/skills/ai-platform-demo ~/.copilot/skills/
 
 이 스킬의 무게 중심은 **① 실시간 데이터 수집(Fact Ledger)** 과 **② 목적에 맞는 스토리라인 설계**입니다.
 슬라이드 시각화는 고정 템플릿이나 고정 생성 프레임워크에 의존하지 않고, 매 요청마다 주제에 맞게
-**자유롭고 다양하게** `python-pptx`로 직접 구성하되 제작·검증 시간은 최소화합니다.
+**자유롭고 다양하게** `python-pptx`로 직접 구성하되 제작·검증 시간은 최소화합니다. 표지와 첫 본문
+슬라이드에서 결론·가치·다음 행동이 보이고, 이후 장은 그 결론에 필요한 근거만 쌓는 Straightforward
+구성을 최우선으로 합니다.
 
 진행 순서: ① **매번 실시간 공식 자료 조사**·Fact Ledger → ② 목적별 Storyline 설계 →
 ③ `python-pptx`로 슬라이드 자유 제작(정보 유형에 맞는 시각 형태를 매번 다양하게) →

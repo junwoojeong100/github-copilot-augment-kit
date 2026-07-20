@@ -10,12 +10,19 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 가장 빠른 방법: **`examples/precision-manufacturing.example.json`을 복사해 내부 ID는 그대로 두고
 사람이 보는 문자열·숫자만 교체**한다(ID 연동이 자동으로 유지됨).
 
-## 1. 임원용 한글 우선 문구
+## 1. Straightforward + 임원용 한글 우선
+
+- `dashboard.hero.title`에서 고객 결과를 한 문장으로 먼저 말한다. 회사 소개·제품 목록·아키텍처 설명으로
+  시작하지 않는다.
+- 각 route는 임원 질문 하나와 primary action 하나만 강조하고, 클릭 전/후 상태가 눈에 띄게 달라야 한다.
+- `DEMO_FOCUS`가 App Platform·CI/CD 중심이면 DevOps→운영 route가 climax를 담당하고, Agent route는
+  Platform·SRE·Release 지원 역할로 배치한다.
 
 - `meta.language`가 `ko`이면 메뉴 `name`·`short`·`crumb`와 모든 화면의 `hero.title`·
   `hero.subtitle`는 한글을 기본으로 쓴다. linter가 이 핵심 노출면을 검사한다.
 - KPI명, 버튼, 상태, 표 머리글, 토스트, 에이전트 이름·설명·답변도 자연스러운 한글로 작성한다.
-- 공식 제품명(`Microsoft Foundry`, `GitHub Copilot`, `Microsoft Entra ID`), 일반 약어·단위
+- 공식 제품명(`Microsoft Foundry`, `Microsoft Agent Framework`, `GitHub Copilot`, `GitHub Actions`,
+  `Azure Container Apps`, `Microsoft Entra ID`), 일반 약어·단위
   (`AI`, `KPI`, `OEE`, `API`, `PR`, `ESS`, `MWh`, `SOC`), 코드 식별자는 영어를 유지할 수 있다.
 - 장식용 영어를 남기지 않는다: `Overview`→`전체 현황`, `Live`→`실시간`,
   `Agent Studio`→`AI 에이전트`, `Governed`→`정책 적용`.

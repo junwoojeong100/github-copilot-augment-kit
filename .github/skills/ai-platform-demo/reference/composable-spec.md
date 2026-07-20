@@ -96,9 +96,9 @@ Industry Pack에 금지되는 것:
 Customer Overlay가 반드시 새로 결정하는 것:
 
 - 고객명·앱명·audience
-- Storyline과 climax
+- `DEMO_FOCUS`에 맞는 Storyline·핵심 4~6개 시연 동선·climax
 - Pack의 `requiredCustomerPaths`
-- 고객 공식 사실·KPI 현실 범위·Agent 답변
+- 고객 공식 사실·KPI 현실 범위·DevOps/Agent 답변
 
 ## 3. Merge 규칙
 
@@ -142,6 +142,10 @@ HTTP(S) 원문인지 확인한다.
 ## 5. 품질 유지 원칙
 
 - Pack은 초안 가속 장치이며 고객의 storyline을 대신하지 않는다.
-- Hero, 핵심 운영 flow, simulator, Agent profiles, orchestration climax는 고객 Overlay에서 새로 작성한다.
+- Hero는 제품 소개가 아니라 고객 결과를 바로 말한다. route마다 임원 질문 하나와 primary action 하나를
+  유지한다.
+- Hero, 핵심 운영 flow, simulator, DevOps/Agent profiles, focus별 climax는 고객 Overlay에서 새로 작성한다.
 - Governance와 DevOps의 안정적인 interaction copy는 재사용 가능하지만 고객 가치 매핑은 갱신한다.
+- Microsoft Foundry·Microsoft Agent Framework, GitHub Copilot·GitHub Platform, AKS·Azure Container
+  Apps는 제품 catalog가 아니라 지능·delivery·runtime 역할로 연결한다.
 - 최종 8-route browser QA는 줄이지 않는다.
