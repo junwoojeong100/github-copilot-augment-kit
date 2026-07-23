@@ -36,7 +36,7 @@ build/
 *.pyc
 pip-log.txt
 
-# PowerPoint / generated decks
+# Generated presentation artifacts (do not commit)
 *.ppt
 *.pptx
 
