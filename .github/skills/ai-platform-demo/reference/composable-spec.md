@@ -155,4 +155,4 @@ HTTP(S) 원문인지 확인한다.
 - Governance와 DevOps의 안정적인 interaction copy는 재사용 가능하지만 고객 가치 매핑은 갱신한다.
 - Microsoft Foundry·Microsoft Agent Framework, GitHub Copilot·GitHub Platform, AKS·Azure Container
   Apps는 제품 catalog가 아니라 지능·delivery·runtime 역할로 연결한다.
-- 최종 8-route browser QA는 줄이지 않는다.
+- 최종 browser QA는 `story.routeScope`에 노출된 4~8개 route를 모두 검사한다.

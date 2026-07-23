@@ -226,6 +226,7 @@
 - 배지·주석·연결선·예외 문장이 카드나 본문 텍스트와 겹치지 않는가?
 - `완전 흰 배경` 요청 시 slide canvas 전체가 `#FFFFFF`이고, 카드 surface만 연한 neutral을 쓰는가?
 - 긴 제목과 카드 문구가 경계에 붙지 않고 렌더링 차이를 견딜 여유를 확보했는가?
-- 모든 장에 편집 가능한 visual structure가 있는가?
+- 본문 장에 편집 가능한 visual structure가 있는가? 표지·구분·단순 마무리에 장식적 visual을 억지로
+  넣지는 않았는가?
 - 제목·본문·caption의 크기 위계가 thumbnail에서도 즉시 구분되는가?
 - 제목 밑 장식선·pill·rounded card·shadow가 내용보다 더 반복되지는 않는가?

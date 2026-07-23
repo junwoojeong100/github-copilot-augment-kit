@@ -59,6 +59,28 @@ class RenderDemoTests(unittest.TestCase):
             spec = render_demo.sanitize_rich_fields(spec)
             render_demo.validate_spec(spec)
 
+    def test_route_scope_supports_focused_demos(self):
+        spec = copy.deepcopy(BASE)
+        spec["story"]["routeScope"] = [
+            "dashboard",
+            "operations",
+            "agents",
+            "governance",
+        ]
+        render_demo.validate_spec(render_demo.sanitize_rich_fields(spec))
+
+    def test_route_scope_requires_dashboard_and_canonical_order(self):
+        self.invalid(
+            lambda spec: spec["story"].update(
+                routeScope=["operations", "dashboard", "agents", "governance"]
+            )
+        )
+        self.invalid(
+            lambda spec: spec["story"].update(
+                routeScope=["dashboard", "operations", "agents"]
+            )
+        )
+
     def test_research_provenance_requires_timezone_timestamp(self):
         valid_research = {
             "checkedAt": "2026-07-23T10:30:00+09:00",

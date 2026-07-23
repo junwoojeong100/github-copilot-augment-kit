@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -9,7 +10,13 @@ SKILL = Path(__file__).resolve().parents[1] / "SKILL.md"
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "research_scenarios.json"
 ADAPTIVE_SKILL = SKILL.parents[1] / "adaptive-presentation" / "SKILL.md"
 DEMO_SKILL = SKILL.parents[1] / "ai-platform-demo" / "SKILL.md"
+ADAPTIVE_FULL_OPTIMIZED = (
+    ADAPTIVE_SKILL.parent / "reference" / "full-optimized.md"
+)
+DEMO_FULL_OPTIMIZED = DEMO_SKILL.parent / "reference" / "full-optimized.md"
 REPOSITORY_ROOT = SKILL.parents[3]
+COPILOT_INSTRUCTIONS = REPOSITORY_ROOT / ".github" / "copilot-instructions.md"
+README = REPOSITORY_ROOT / "README.md"
 CLI_MCP_CONFIG = REPOSITORY_ROOT / ".github" / "mcp.json"
 VSCODE_MCP_CONFIG = REPOSITORY_ROOT / ".vscode" / "mcp.json"
 FACT_LEDGER_SCHEMA = SKILL.parent / "schema" / "fact-ledger.schema.json"
@@ -104,24 +111,81 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertIn("고객/기업 조사", self.description)
         self.assertIn("시장 규모", self.description)
 
-    def test_downstream_skills_preserve_common_ledger_fields(self):
-        common_fields = (
-            "ID",
-            "Type",
-            "Claim",
-            "Evidence",
-            "Source",
-            "Publisher",
-            "Published/updated",
-            "Accessed",
-            "Scope/status",
-            "Confidence",
-        )
-        for downstream in (ADAPTIVE_SKILL, DEMO_SKILL):
+    def test_skill_contracts_are_concise_and_bounded(self):
+        limits = {
+            SKILL: 100,
+            ADAPTIVE_SKILL: 120,
+            DEMO_SKILL: 150,
+        }
+        for skill, limit in limits.items():
+            content = skill.read_text(encoding="utf-8")
+            with self.subTest(skill=skill.parent.name):
+                self.assertLessEqual(len(content.splitlines()), limit)
+                self.assertIn("NOT WHEN:", content.split("---", 2)[1])
+                workflow_headings = re.findall(
+                    r"^## .*워크플로.*$", content, flags=re.MULTILINE
+                )
+                self.assertEqual(len(workflow_headings), 1)
+
+    def test_downstream_skills_delegate_search_backend_selection(self):
+        for skill, guide in (
+            (ADAPTIVE_SKILL, ADAPTIVE_FULL_OPTIMIZED),
+            (DEMO_SKILL, DEMO_FULL_OPTIMIZED),
+        ):
+            skill_content = skill.read_text(encoding="utf-8")
+            guide_content = guide.read_text(encoding="utf-8")
+            combined = f"{skill_content}\n{guide_content}"
+            with self.subTest(skill=skill.parent.name):
+                self.assertIn("검색 backend", skill_content)
+                self.assertIn("`web-search`", skill_content)
+                self.assertNotIn("Research agent", combined)
+                self.assertNotIn("/research", combined)
+                self.assertNotIn("/fleet", combined)
+
+    def test_demo_story_starts_from_customer_research(self):
+        content = DEMO_SKILL.read_text(encoding="utf-8")
+        self.assertIn("조사로 확인한 고객 과제와 사업 언어에서", content)
+        self.assertNotIn("Satya Nadella", content)
+        self.assertNotIn("frontier ecosystem", content)
+        self.assertNotIn("x.com/satyanadella", content)
+
+    def test_performance_metrics_are_optional(self):
+        for guide in (ADAPTIVE_FULL_OPTIMIZED, DEMO_FULL_OPTIMIZED):
+            content = guide.read_text(encoding="utf-8")
+            with self.subTest(skill=guide.parents[1].name):
+                self.assertIn("선택적 시간 측정", content)
+                self.assertIn("완료 조건", content)
+
+    def test_downstream_skills_reference_common_ledger_without_duplication(self):
+        for downstream, extension in (
+            (ADAPTIVE_SKILL, "Slide candidate"),
+            (DEMO_SKILL, "Demo candidate"),
+        ):
             content = downstream.read_text(encoding="utf-8")
-            for field in common_fields:
-                with self.subTest(skill=downstream.parent.name, field=field):
-                    self.assertIn(field, content)
+            with self.subTest(skill=downstream.parent.name):
+                self.assertIn("공통 Fact Ledger 계약", content)
+                self.assertIn(extension, content)
+                self.assertNotIn("| ID | Type | Claim |", content)
+
+    def test_factcheck_policy_is_risk_scoped(self):
+        content = COPILOT_INSTRUCTIONS.read_text(encoding="utf-8")
+        self.assertIn("최신성·수치·논쟁성·의사결정 영향", content)
+        self.assertIn("단순·저위험 답변에는 표를 붙이지 않는다", content)
+        self.assertNotIn("팩트체크 (항상)", content)
+
+    def test_demo_language_and_route_scope_are_explicit(self):
+        content = DEMO_SKILL.read_text(encoding="utf-8")
+        self.assertIn("지정 언어를 준수", content)
+        self.assertIn("한국어일 때만", content)
+        self.assertIn("`story.routeScope`", content)
+        self.assertIn("4~8개 route", content)
+
+    def test_readme_matches_current_search_and_research_contracts(self):
+        content = README.read_text(encoding="utf-8")
+        self.assertIn("검색 backend와 원문 검증은 `web-search` 계약이 결정합니다", content)
+        self.assertIn("사용자 제공 자료만 재구성하거나 외부 사실이 없는 창작형 덱", content)
+        self.assertNotIn("research agent·`/fleet`에 위임하지 않습니다", content)
+        self.assertNotIn("매번 실시간 공식 자료 조사", content)
 
     def test_research_scenario_policies(self):
         scenarios = json.loads(FIXTURES.read_text(encoding="utf-8"))

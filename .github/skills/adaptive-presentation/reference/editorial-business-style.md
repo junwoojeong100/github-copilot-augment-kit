@@ -40,7 +40,8 @@
 
 ## 5. 레이아웃
 
-매 슬라이드에 정보 관계와 맞는 시각 구조를 하나 이상 둔다.
+내용 전달이 목적인 본문 슬라이드에는 정보 관계와 맞는 시각 구조를 하나 이상 둔다. 표지·section
+divider·단순 마무리 장에는 장식적 visual을 억지로 추가하지 않는다.
 
 - metric-led page: 큰 숫자 + 작은 해설 + 기준/출처
 - editorial columns: hairline으로 분리한 2~4열 비교
@@ -55,7 +56,7 @@ process, hierarchy 같은 **편집 가능한 native visual**이 있어야 한다
 
 ## 6. QA
 
-- 모든 장에 시각 구조가 있는가?
+- 본문 장에 정보 관계를 설명하는 시각 구조가 있는가?
 - 같은 레이아웃이 의도 없이 3장 연속 반복되는가?
 - 제목 밑 장식선·pill·rounded card·shadow가 내용보다 더 눈에 띄는가?
 - dominant/support/accent의 우선순위가 보이는가?

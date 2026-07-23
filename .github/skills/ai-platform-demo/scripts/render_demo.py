@@ -586,6 +586,19 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "$.story.audienceMessages",
         ["audience", "message"],
     )
+    route_scope = story.get("routeScope", ROUTE_IDS)
+    if "routeScope" in story:
+        route_scope = require_list(story, "routeScope", "$.story", minimum=4)
+    expected_scope = [route_id for route_id in ROUTE_IDS if route_id in route_scope]
+    if (
+        len(route_scope) > len(ROUTE_IDS)
+        or route_scope != expected_scope
+        or route_scope[0] != "dashboard"
+    ):
+        raise SpecError(
+            "$.story.routeScope must contain 4-8 unique route IDs in canonical order, "
+            "starting with dashboard"
+        )
 
     navigation = require_list(spec, "navigation", "$", minimum=8)
     nav_ids = [item.get("id") if isinstance(item, dict) else None for item in navigation]
@@ -1307,7 +1320,8 @@ def main() -> int:
         "spec": str(spec_path),
         "customer": spec["meta"]["customer"],
         "archetype": spec["design"]["archetype"],
-        "routes": len(spec["navigation"]),
+        "routes": len(spec["story"].get("routeScope", spec["navigation"])),
+        "dataRoutes": len(spec["navigation"]),
         "agents": len(spec["agents"]["profiles"]),
         "valid": True,
     }

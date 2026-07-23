@@ -143,7 +143,25 @@
             }
           }
         },
-        "climax": {"type": "string", "minLength": 1}
+        "climax": {"type": "string", "minLength": 1},
+        "routeScope": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "dashboard",
+              "operations",
+              "simulator",
+              "improvement",
+              "finance",
+              "devops",
+              "agents",
+              "governance"
+            ]
+          }
+        }
       }
     },
     "navigation": {

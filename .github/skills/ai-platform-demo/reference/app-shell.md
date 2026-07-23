@@ -34,7 +34,8 @@
 
 ## 2. Spec navigation + 사이드바 렌더
 ```js
-const navigation=spec.navigation; // validator가 고정 8-route 순서를 보장
+const routeScope=spec.story.routeScope || REQUIRED_ROUTES;
+const navigation=spec.navigation.filter(route=>routeScope.includes(route.id));
 const navEl=document.getElementById('nav');
 navEl.innerHTML=navigation.map(route=>`<a data-route="${escapeHtml(route.id)}">
   <span class="nav-icon">${escapeHtml(route.icon)}</span>
