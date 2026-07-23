@@ -44,10 +44,14 @@ Pack과 Overlay를 `demo-spec.json`으로 만들며 이후 수정 surface는 HTM
 2. 고객의 DX·AI 현황과 최근 이슈
 3. Microsoft·GitHub 서비스의 현재 상태
 
-각 검색 결과에서 1차 출처 URL·확인일·핵심 근거만 추출한다. 메인 에이전트가 결과를 하나의 Fact Ledger로
-합치고 충돌을 해결한 뒤에만 스토리라인을 시작한다. 기존 원장이 있으면 안정적인 회사 사실은 출처를
+각 검색 결과에서 `web-search` 공통 Fact Ledger의 ID·Type·Claim·Evidence·Source·Publisher·
+Published/updated·Accessed·Scope/status·Confidence를 추출한다. 메인 에이전트가 결과를 하나의 Fact
+Ledger로 합치고 충돌을 해결한 뒤에만 스토리라인을 시작한다. 기존 원장이 있으면 안정적인 회사 사실은 출처를
 찾는 참고로만 사용하고, **고객 요청마다 공식 원문을 실시간으로 다시 확인한다.** 이전 Fact Ledger나
 Industry Pack의 사실이 새 조사를 대체하면 안 된다.
+AI 데모 빌드 전에는 같은 내용을 `web-search/schema/fact-ledger.schema.json`에 맞춘
+`fact-ledger.json`으로 저장하고, timezone이 포함된 `checkedAt`과 서로 다른 canonical Fact source URL
+2개 이상을 확인한다.
 
 ## 4. Puppeteer 공용 캐시
 
@@ -68,8 +72,8 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/ai-platform-demo/puppeteer/
 ## 5. Golden Runtime 기반 단일 소유 빌드
 
 - 화면별 HTML/CSS/JS를 여러 실행 주체에 분산하지 않는다.
-- 메인 에이전트가 잠긴 storyline·view contract(메뉴·데이터)와 실시간 research metadata를
-  `customer-overlay.json`으로 작성한다(디자인은 고정이라 넣지 않는다).
+- 메인 에이전트가 잠긴 storyline·view contract(메뉴·데이터)를 `customer-overlay.json`으로 작성하고,
+  실시간 research metadata는 `fact-ledger.json`에서 주입한다(디자인은 고정이라 넣지 않는다).
 - `scripts/compose_demo_spec.py`가 base + Industry Pack + Customer Overlay를 합치고
   `scripts/render_demo.py` validation을 거쳐 단일 HTML까지 생성한다.
 - Industry Pack은 `meta`, `story`, `design`을 소유하지 않으며, 고객 Overlay가 `design`을

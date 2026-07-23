@@ -27,6 +27,7 @@ def audit_args(deck: Path, **overrides) -> Namespace:
         "allow_small_text": set(),
         "allow_overlap": set(),
         "allow_title_size": set(),
+        "require_sources": set(),
         "bounds_tolerance": 0.02,
         "min_body_pt": 13.0,
         "min_title_pt": 26.0,
@@ -72,6 +73,53 @@ class AuditPptxTests(unittest.TestCase):
         report, failures = audit_pptx.audit(audit_args(self.make_deck()))
         self.assertEqual(failures, [])
         self.assertEqual(report["empty_text_frames"], [])
+
+    def test_required_source_must_be_in_footer(self):
+        deck = self.make_deck()
+        _, failures = audit_pptx.audit(
+            audit_args(deck, require_sources={1})
+        )
+        self.assertTrue(any("source footer missing" in item for item in failures))
+
+        prs = Presentation(deck)
+        empty_source = prs.slides[0].shapes.add_textbox(
+            Inches(1), Inches(6.95), Inches(10), Inches(0.2)
+        )
+        empty_source.text = "Source: "
+        empty_source.text_frame.paragraphs[0].runs[0].font.size = Pt(8)
+        prs.save(deck)
+        _, failures = audit_pptx.audit(
+            audit_args(deck, require_sources={1})
+        )
+        self.assertTrue(any("source footer missing" in item for item in failures))
+
+        prs = Presentation(deck)
+        body_source = prs.slides[0].shapes.add_textbox(
+            Inches(1), Inches(5), Inches(10), Inches(0.2)
+        )
+        body_source.text = "Source: https://example.com/not-a-footer"
+        body_source.text_frame.paragraphs[0].runs[0].font.size = Pt(8)
+        prs.save(deck)
+        _, failures = audit_pptx.audit(
+            audit_args(deck, require_sources={1})
+        )
+        self.assertTrue(any("source footer missing" in item for item in failures))
+
+        prs = Presentation(deck)
+        for source_shape in list(prs.slides[0].shapes)[-2:]:
+            source_shape._element.getparent().remove(source_shape._element)
+        footer_source = prs.slides[0].shapes.add_textbox(
+            Inches(1), Inches(6.95), Inches(10), Inches(0.2)
+        )
+        footer_source.text = "출처: https://example.com/canonical"
+        footer_source.text_frame.paragraphs[0].runs[0].font.size = Pt(8)
+        prs.save(deck)
+        report, failures = audit_pptx.audit(
+            audit_args(deck, require_sources={1})
+        )
+        self.assertEqual(failures, [])
+        self.assertEqual(report["slides_with_footer_sources"], [1])
+        self.assertEqual(report["missing_required_source_slides"], [])
 
     def test_nonfinite_thresholds_are_rejected(self):
         with self.assertRaises(argparse.ArgumentTypeError):

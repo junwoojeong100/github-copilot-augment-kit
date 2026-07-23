@@ -24,6 +24,9 @@ Composition은 조사 캐시의 대체 수단이 아니다.
 - 공식·권위 소스 URL을 2개 이상 기록한다.
 - 기본 Composer는 24시간보다 오래된 research metadata를 거부한다.
 - `--allow-stale-research`는 repository `examples/`·`tests/` 아래 입력에만 허용되며 다른 경로에서는 Composer가 거부한다.
+- 기본 생성 경로에서는 `web-search`의 machine-readable `fact-ledger.json`을 `--fact-ledger`로 전달한다.
+  Composer가 `checkedAt`, `sourceUrls`, Ledger ID를 생성하므로 Overlay에 research metadata를 중복
+  작성하지 않는다. 기존 metadata가 있으면 Ledger와 정확히 일치해야 한다.
 
 ## 2. Layer 책임
 
@@ -121,6 +124,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
   --base .github/skills/ai-platform-demo/examples/precision-manufacturing.example.json \
   --pack .github/skills/ai-platform-demo/packs/renewable-energy-holdings.pack.json \
   --customer <session>/<app>-work/customer-overlay.json \
+  --fact-ledger <session>/<app>-work/fact-ledger.json \
   --output <session>/<app>-work/demo-spec.json \
   --html-output <session>/<app>-work/<app>.html
 ```
@@ -134,6 +138,9 @@ Composer는 다음 순서로 실패를 조기에 차단한다.
 5. 금지어·placeholder 누출 검사
 6. `render_demo.py`의 full semantic/security validation
 7. 선택적으로 단일 HTML까지 한 번에 생성
+
+Composer는 최종 Spec의 `meta.research`와 HTML의 inline Spec에 `checkedAt`, canonical source,
+Ledger ID를 보존한다. 따라서 최종 artifact에서도 Fact Ledger provenance를 추적할 수 있다.
 
 누출 검사는 HTML entity와 inline rich-text tag를 렌더된 텍스트로 정규화하고, acronym은 token
 boundary로 검사한다. Research source URL은 fragment를 제거해 canonicalize한 뒤 서로 다른 2개 이상의

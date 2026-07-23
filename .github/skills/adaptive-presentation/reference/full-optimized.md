@@ -41,8 +41,10 @@
 2. 제품·기술·규제의 현재 상태
 3. 사례·성과·경쟁 또는 도입 근거
 
-각 축에서는 URL·확인일·인용 가능한 근거만 수집한다. 메인 에이전트가 결과를 하나의 Fact Ledger로 합친
-후에만 스토리라인을 시작한다. 조사 자체는 캐시로 생략하지 않는다. 이전 Fact Ledger와 canonical URL은
+각 축에서는 `web-search` 공통 Fact Ledger의 ID·Type·Claim·Evidence·Source·Publisher·
+Published/updated·Accessed·Scope/status·Confidence를 수집하고, 슬라이드 후보를 추가한다. 메인 에이전트가
+결과를 하나의 Fact Ledger로 합친 후에만 스토리라인을 시작한다. 조사 자체는 캐시로 생략하지 않는다.
+이전 Fact Ledger와 canonical URL은
 검색 출발점으로만 쓰고, 발표에 들어가는 외부 사실은 매 요청 시점의 공식 원문으로 다시 검증한다.
 
 ## 4. 도구 캐시와 사전 준비

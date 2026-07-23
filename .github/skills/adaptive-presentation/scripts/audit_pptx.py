@@ -150,6 +150,18 @@ def looks_like_label(text: str) -> bool:
     return len(compact.split()) <= 3 and len(compact) <= 20
 
 
+def has_source_citation(text: str) -> bool:
+    for line in text.splitlines():
+        stripped = line.strip()
+        lowered = stripped.lower()
+        for marker in ("source:", "출처:"):
+            if lowered.startswith(marker):
+                citation = stripped[len(marker) :].strip()
+                if len(citation) >= 3:
+                    return True
+    return False
+
+
 def shape_bounds(shape) -> tuple[int, int, int, int]:
     return (
         shape.left,
@@ -573,6 +585,7 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
     unsized_runs: list[dict] = []
     group_shapes: list[dict] = []
     slides_with_sources: list[int] = []
+    slides_with_footer_sources: list[int] = []
     overlap_candidates = detect_geometry_overlap_candidates(
         prs, tolerance, args.allow_overlap
     )
@@ -587,6 +600,7 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
         slide_chars = 0
         max_font_size = 0.0
         has_source = False
+        has_footer_source = False
 
         for shape in slide.shapes:
             left = shape.left
@@ -623,11 +637,10 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
                 empty_text_frames.append(
                     {"slide": slide_number, "shape": target_name}
                 )
-            if any(
-                line.strip().lower().startswith(("source:", "출처:"))
-                for line in text.splitlines()
-            ):
+            if has_source_citation(text):
                 has_source = True
+                if top is not None and top >= footer_top:
+                    has_footer_source = True
 
             for paragraph in text_frame.paragraphs:
                 paragraph_text = paragraph.text.strip()
@@ -678,6 +691,8 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
         text_chars.append(slide_chars)
         if has_source:
             slides_with_sources.append(slide_number)
+        if has_footer_source:
+            slides_with_footer_sources.append(slide_number)
         if max_font_size < args.min_title_pt:
             title_risks.append(
                 {
@@ -696,6 +711,12 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
     unexpected_overlap_candidates = [
         item for item in overlap_candidates if not item["allowed"]
     ]
+    required_source_slides = sorted(
+        getattr(args, "require_sources", set())
+    )
+    missing_required_source_slides = sorted(
+        set(required_source_slides) - set(slides_with_footer_sources)
+    )
     report = {
         "deck": str(deck),
         "slides": len(prs.slides),
@@ -715,6 +736,9 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
             "values": text_chars,
         },
         "slides_with_sources": slides_with_sources,
+        "slides_with_footer_sources": slides_with_footer_sources,
+        "required_source_slides": required_source_slides,
+        "missing_required_source_slides": missing_required_source_slides,
         "out_of_bounds": out_of_bounds,
         "unexpected_out_of_bounds": unexpected_bounds,
         "small_text_body_candidates": small_text_body,
@@ -772,6 +796,11 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
             f"{len(unexpected_overlap_candidates)} geometry overlap candidate(s) "
             "require repair or --allow-overlap review"
         )
+    if missing_required_source_slides:
+        failures.append(
+            "Required source footer missing on slide(s): "
+            + ", ".join(str(slide) for slide in missing_required_source_slides)
+        )
 
     return report, failures
 
@@ -793,8 +822,15 @@ def print_report(report: dict, failures: list[str]) -> None:
     )
     print(
         "Sources: "
-        f"{len(report['slides_with_sources'])}/{report['slides']} slides"
+        f"{len(report['slides_with_footer_sources'])}/{report['slides']} footer, "
+        f"{len(report['slides_with_sources'])}/{report['slides']} anywhere"
     )
+    if report["required_source_slides"]:
+        print(
+            "Required source slides: "
+            f"{report['required_source_slides']} | "
+            f"missing={report['missing_required_source_slides']}"
+        )
     print(
         "Bounds: "
         f"{len(report['out_of_bounds'])} total, "
@@ -919,6 +955,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=set(),
         metavar="SLIDES",
         help="Reviewed slides allowed a different content-title size, e.g. 6,12",
+    )
+    parser.add_argument(
+        "--require-sources",
+        type=parse_slide_set,
+        default=set(),
+        metavar="SLIDES",
+        help="Slides with factual claims that must contain a Source:/출처: footer",
     )
     parser.add_argument(
         "--title-size-tolerance-pt",

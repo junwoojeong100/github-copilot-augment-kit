@@ -10,9 +10,11 @@ import json
 import math
 import re
 import sys
+from datetime import datetime
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse, urlunparse
 
 
 REQUIRED_SECTIONS = [
@@ -75,6 +77,10 @@ LANGUAGE_TAG_PATTERN = re.compile(
     r"|[A-Za-z]{5,8}"
     r")(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*$"
 )
+ISO_TIMESTAMP_PATTERN = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"
+    r"(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
 
 UNSAFE_PATTERNS = [
     re.compile(r"<\s*script", re.IGNORECASE),
@@ -88,6 +94,35 @@ RICH_TEXT_CLASSES = {
     "message-stat-label",
     "message-stat-value",
 }
+
+
+def canonical_http_url(value: str) -> str | None:
+    try:
+        parsed = urlparse(value)
+        port = parsed.port
+    except ValueError:
+        return None
+    if (
+        parsed.scheme.lower() not in {"http", "https"}
+        or not parsed.hostname
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        return None
+    scheme = parsed.scheme.lower()
+    hostname = parsed.hostname.lower()
+    rendered_hostname = f"[{hostname}]" if ":" in hostname else hostname
+    default_port = (scheme == "http" and port == 80) or (
+        scheme == "https" and port == 443
+    )
+    netloc = (
+        rendered_hostname
+        if port is None or default_port
+        else f"{rendered_hostname}:{port}"
+    )
+    return urlunparse(
+        (scheme, netloc, parsed.path or "/", "", parsed.query, "")
+    )
 
 
 class SpecError(ValueError):
@@ -467,6 +502,61 @@ def validate_spec(spec: dict[str, Any]) -> None:
         raise SpecError("$.meta.initials must be 1-4 characters")
     if not LANGUAGE_TAG_PATTERN.fullmatch(meta["language"]):
         raise SpecError("$.meta.language must be a supported BCP 47 language tag")
+    research = require_mapping(meta, "research", "$.meta")
+    checked_at = require_string(research, "checkedAt", "$.meta.research")
+    if not ISO_TIMESTAMP_PATTERN.fullmatch(checked_at):
+        raise SpecError(
+            "$.meta.research.checkedAt must be a timezone-aware ISO 8601 timestamp"
+        )
+    try:
+        parsed_checked_at = datetime.fromisoformat(
+            checked_at.replace("Z", "+00:00")
+        )
+    except ValueError as error:
+        raise SpecError(
+            "$.meta.research.checkedAt must be a timezone-aware ISO 8601 timestamp"
+        ) from error
+    if parsed_checked_at.tzinfo is None:
+        raise SpecError("$.meta.research.checkedAt must include a timezone")
+    if "ledgerIds" in research:
+        ledger_ids = require_list(
+            research, "ledgerIds", "$.meta.research", minimum=1
+        )
+        if not all(
+            isinstance(ledger_id, str) and ledger_id
+            for ledger_id in ledger_ids
+        ):
+            raise SpecError(
+                "$.meta.research.ledgerIds must contain non-empty strings"
+            )
+    sources = require_list(research, "sources", "$.meta.research", minimum=2)
+    canonical_sources: set[str] = set()
+    for index, source in enumerate(sources):
+        source_path = f"$.meta.research.sources[{index}]"
+        if not isinstance(source, dict):
+            raise SpecError(f"{source_path} must be an object")
+        url = require_string(source, "url", source_path)
+        canonical_url = canonical_http_url(url)
+        if canonical_url is None:
+            raise SpecError(f"{source_path}.url must be an HTTP(S) URL")
+        canonical_sources.add(canonical_url)
+        for optional in ("title", "publisher"):
+            if optional in source:
+                require_string(source, optional, source_path)
+        if "ledgerIds" in source:
+            ledger_ids = require_list(source, "ledgerIds", source_path, minimum=1)
+            if not all(
+                isinstance(ledger_id, str) and ledger_id
+                for ledger_id in ledger_ids
+            ):
+                raise SpecError(
+                    f"{source_path}.ledgerIds must contain non-empty strings"
+                )
+    if len(canonical_sources) < 2:
+        raise SpecError(
+            "$.meta.research.sources must contain at least two unique "
+            "canonical HTTP(S) URLs"
+        )
 
     design = require_mapping(spec, "design", "$")
     for key, expected in FIXED_DESIGN.items():

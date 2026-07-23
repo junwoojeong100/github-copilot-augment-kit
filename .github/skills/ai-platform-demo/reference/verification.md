@@ -16,6 +16,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
   --base .github/skills/ai-platform-demo/examples/precision-manufacturing.example.json \
   --pack .github/skills/ai-platform-demo/packs/<industry>.pack.json \
   --customer <session>/<app>-work/customer-overlay.json \
+  --fact-ledger <session>/<app>-work/fact-ledger.json \
   --output <session>/<app>-work/demo-spec.json \
   --html-output <session>/<app>-work/<app>.html
 

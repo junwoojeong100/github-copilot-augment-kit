@@ -7,7 +7,32 @@
     "initials": "CP",
     "language": "ko",
     "infrastructureLabel": "Microsoft Foundry · 참조 아키텍처",
-    "demoNote": "모든 회사명·라인·수치·재무 결과는 Golden Runtime 검증을 위한 시연용 가정치입니다."
+    "demoNote": "모든 회사명·라인·수치·재무 결과는 Golden Runtime 검증을 위한 시연용 가정치입니다.",
+    "research": {
+      "checkedAt": "2026-07-23T10:30:00+09:00",
+      "ledgerIds": [
+        "EXAMPLE-001",
+        "EXAMPLE-002"
+      ],
+      "sources": [
+        {
+          "title": "Microsoft Learn MCP Server overview",
+          "url": "https://learn.microsoft.com/training/support/mcp",
+          "publisher": "Microsoft",
+          "ledgerIds": [
+            "EXAMPLE-001"
+          ]
+        },
+        {
+          "title": "About agent skills",
+          "url": "https://docs.github.com/copilot/concepts/agents/about-agent-skills",
+          "publisher": "GitHub",
+          "ledgerIds": [
+            "EXAMPLE-002"
+          ]
+        }
+      ]
+    }
   },
   "design": {
     "conceptWords": [

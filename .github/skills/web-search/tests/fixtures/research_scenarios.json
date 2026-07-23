@@ -1,0 +1,38 @@
+[
+  {
+    "name": "general-search-backend-unavailable",
+    "expected_policy": [
+      "사용자가 출발 URL을 제공",
+      "현재 지식만으로 최신 사실을 만들지 않는다"
+    ]
+  },
+  {
+    "name": "canonical-sources-conflict",
+    "expected_policy": [
+      "상충하는 주장은 각각 보존",
+      "채택 근거와 남은 불확실성"
+    ]
+  },
+  {
+    "name": "source-is-inaccessible-or-untrusted",
+    "expected_policy": [
+      "접근 실패·페이월·신뢰 기준 미달 자료",
+      "제외 사유를 별도로 남긴다"
+    ]
+  },
+  {
+    "name": "time-and-product-status-sensitive",
+    "expected_policy": [
+      "Published/updated",
+      "GA/Preview",
+      "`YYYY-MM-DD`"
+    ]
+  },
+  {
+    "name": "long-report-requires-locator",
+    "expected_policy": [
+      "PDF·보고서·긴 문서",
+      "원문 위치(locator)"
+    ]
+  }
+]

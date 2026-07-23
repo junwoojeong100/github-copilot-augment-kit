@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-07-23T10:30:00+09:00",
+  "facts": [
+    {
+      "id": "F-001",
+      "type": "Fact",
+      "claim": "Microsoft Learn exposes an MCP endpoint for documentation access.",
+      "evidence": "The official support page documents the Microsoft Learn MCP server.",
+      "source": {
+        "title": "Microsoft Learn MCP Server overview",
+        "url": "https://learn.microsoft.com/training/support/mcp"
+      },
+      "publisher": "Microsoft",
+      "publishedOrUpdated": "확인 불가",
+      "accessed": "2026-07-23",
+      "scopeOrStatus": "Microsoft Learn documentation",
+      "confidence": "High"
+    },
+    {
+      "id": "F-002",
+      "type": "Fact",
+      "claim": "GitHub documents agent skills for Copilot.",
+      "evidence": "The official GitHub documentation describes agent skill structure and use.",
+      "source": {
+        "title": "About agent skills",
+        "url": "https://docs.github.com/copilot/concepts/agents/about-agent-skills"
+      },
+      "publisher": "GitHub",
+      "publishedOrUpdated": "확인 불가",
+      "accessed": "2026-07-23",
+      "scopeOrStatus": "GitHub Copilot",
+      "confidence": "High"
+    }
+  ]
+}

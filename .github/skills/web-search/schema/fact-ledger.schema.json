@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/junwoojeong100/github-copilot-augment-kit/main/.github/skills/web-search/schema/fact-ledger.schema.json",
+  "title": "Web Search Fact Ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "checkedAt", "facts"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "facts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "claim",
+          "evidence",
+          "source",
+          "publisher",
+          "publishedOrUpdated",
+          "accessed",
+          "scopeOrStatus",
+          "confidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "enum": ["Fact", "Inference", "Assumption"]
+          },
+          "claim": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "url"],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https?://"
+              }
+            }
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1
+          },
+          "publishedOrUpdated": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "const": "확인 불가"
+              }
+            ]
+          },
+          "accessed": {
+            "type": "string",
+            "format": "date"
+          },
+          "scopeOrStatus": {
+            "type": "string",
+            "minLength": 1
+          },
+          "confidence": {
+            "enum": ["High", "Medium", "Low"]
+          }
+        }
+      }
+    }
+  }
+}
