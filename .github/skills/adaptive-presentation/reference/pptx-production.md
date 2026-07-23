@@ -117,7 +117,8 @@ prs.save(OUT)
 - 샘플 deck/template이 있으면 자체 팔레트보다 그 master·grid·font·layout을 우선한다.
 - 샘플이 없으면 강한 제목, 정밀한 column/grid, 넓은 여백, hairline rule, native chart/table/diagram을
   기본 시각 언어로 사용한다.
-- 모든 슬라이드에 편집 가능한 visual structure가 하나 이상 있어야 한다.
+- 내용 전달이 목적인 본문 슬라이드에는 편집 가능한 visual structure가 하나 이상 있어야 한다.
+  표지·section divider·단순 마무리 장은 예외다.
 - 한 화면의 primary reading path는 좌→우 또는 상→하 하나로 고정하고, 결론과 무관한 장식·중첩
   container·중복 label은 제거한다.
 - 한 가지 visual motif를 반복하되 같은 layout을 반복하지 않는다.

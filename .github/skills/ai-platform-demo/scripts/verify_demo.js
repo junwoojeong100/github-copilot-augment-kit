@@ -41,7 +41,6 @@ if (!fullQa && !requestedRoutes.length) {
   console.error('VERIFY_ROUTES must include at least one supported route in targeted mode.');
   process.exit(2);
 }
-const routes = fullQa ? allRoutes : requestedRoutes;
 const appHtmlInput = path.resolve(process.env.APP_HTML || '');
 const shotsDir = path.resolve(process.env.SHOTS_DIR || '');
 
@@ -120,6 +119,15 @@ let browser;
 
   await page.goto(pathToFileURL(appHtml).href, { waitUntil: 'networkidle0' });
   const qaSpec = await page.evaluate(() => JSON.parse(document.getElementById('demo-spec').textContent));
+  const activeRoutes = qaSpec.story.routeScope || allRoutes;
+  const inactiveRequestedRoutes = requestedRoutes.filter(route => !activeRoutes.includes(route));
+  if (!fullQa && inactiveRequestedRoutes.length) {
+    throw new Error(
+      `VERIFY_ROUTES contains route(s) outside story.routeScope: ${inactiveRequestedRoutes.join(', ')}`
+    );
+  }
+  const routes = fullQa ? activeRoutes : requestedRoutes;
+  const hasRoute = route => activeRoutes.includes(route);
   const waitForEnabled = async (selector, timeout) => {
     await page.waitForFunction(target => {
       const button = document.querySelector(target);
@@ -174,177 +182,191 @@ let browser;
   }
 
   if (fullQa) {
-    await page.evaluate(() => { location.hash = 'operations'; });
-    await sleep(650);
-    const recommendationBefore = await page.$eval('#opsRecommendation', element => element.textContent);
-    await page.click('#reopt');
-    await waitForEnabled('#reopt', qaSpec.operations.action.durationMs + 2000);
-    const recommendationAfter = await page.$eval('#opsRecommendation', element => element.textContent);
-    if (recommendationBefore === recommendationAfter) failures.push('operations: reoptimization did not change recommendation');
-
-    await page.evaluate(() => { location.hash = 'simulator'; });
-    await sleep(650);
-    const simulationBefore = await page.$eval('#simValue', element => element.textContent);
-    await page.$eval('#simInputs input[type="range"]', element => {
-      element.value = String(Number(element.max) - 1);
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-    });
-    const simulationAfter = await page.$eval('#simValue', element => element.textContent);
-    if (simulationBefore === simulationAfter) failures.push('simulator: slider did not change output');
-
-    await page.evaluate(() => { location.hash = 'improvement'; });
-    await sleep(650);
-    await page.click('#runAnalysis');
-    await waitForEnabled('#runAnalysis', qaSpec.improvement.action.durationMs + 2000);
-    await sleep(150 + qaSpec.improvement.factors.length * 100);
-    const improvement = await page.evaluate(() => ({
-      visibleSteps: document.querySelectorAll('#analysisSteps .step.visible').length,
-      visibleBars: [...document.querySelectorAll('#factorBars .bar-fill')]
-        .filter(bar => parseFloat(getComputedStyle(bar).width) > 0).length
-    }));
-    if (improvement.visibleSteps < 5 || improvement.visibleBars < 4) {
-      failures.push(`improvement: incomplete animation ${JSON.stringify(improvement)}`);
+    if (hasRoute('operations')) {
+      await page.evaluate(() => { location.hash = 'operations'; });
+      await sleep(650);
+      const recommendationBefore = await page.$eval('#opsRecommendation', element => element.textContent);
+      await page.click('#reopt');
+      await waitForEnabled('#reopt', qaSpec.operations.action.durationMs + 2000);
+      const recommendationAfter = await page.$eval('#opsRecommendation', element => element.textContent);
+      if (recommendationBefore === recommendationAfter) failures.push('operations: reoptimization did not change recommendation');
     }
 
-    await page.evaluate(() => { location.hash = 'finance'; });
-    await sleep(650);
-    const marginBefore = await page.$eval('#marginValue', element => element.textContent);
-    await page.$eval('#financeLevers input[type="range"]', element => {
-      element.value = String(Number(element.max) - 1);
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-    });
-    const marginAfter = await page.$eval('#marginValue', element => element.textContent);
-    if (marginBefore === marginAfter) failures.push('finance: lever did not change margin');
+    if (hasRoute('simulator')) {
+      await page.evaluate(() => { location.hash = 'simulator'; });
+      await sleep(650);
+      const simulationBefore = await page.$eval('#simValue', element => element.textContent);
+      await page.$eval('#simInputs input[type="range"]', element => {
+        element.value = String(Number(element.max) - 1);
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      const simulationAfter = await page.$eval('#simValue', element => element.textContent);
+      if (simulationBefore === simulationAfter) failures.push('simulator: slider did not change output');
+    }
 
-    await page.evaluate(() => { location.hash = 'devops'; });
-    await sleep(650);
-    const issueIndexes = await page.evaluate(() => {
-      const data = JSON.parse(document.getElementById('demo-spec').textContent).devops;
-      return {
-        autonomous: data.issues.findIndex(issue => !issue.highRisk),
-        highRisk: data.issues.findIndex(issue => issue.highRisk)
-      };
-    });
-    if (issueIndexes.autonomous < 0) failures.push('devops: no autonomous issue configured');
-    if (issueIndexes.highRisk < 0) failures.push('devops: no high-risk issue configured');
-    if (issueIndexes.autonomous >= 0) {
-      await page.click(`#issueTable tbody tr[data-index="${issueIndexes.autonomous}"]`);
-      await page.click('#assignIssue');
-      await waitForEnabled('#assignIssue', qaSpec.devops.action.durationMs + 2000);
-      const autonomous = await page.evaluate(index => {
+    if (hasRoute('improvement')) {
+      await page.evaluate(() => { location.hash = 'improvement'; });
+      await sleep(650);
+      await page.click('#runAnalysis');
+      await waitForEnabled('#runAnalysis', qaSpec.improvement.action.durationMs + 2000);
+      await sleep(150 + qaSpec.improvement.factors.length * 100);
+      const improvement = await page.evaluate(() => ({
+        visibleSteps: document.querySelectorAll('#analysisSteps .step.visible').length,
+        visibleBars: [...document.querySelectorAll('#factorBars .bar-fill')]
+          .filter(bar => parseFloat(getComputedStyle(bar).width) > 0).length
+      }));
+      if (improvement.visibleSteps < 5 || improvement.visibleBars < 4) {
+        failures.push(`improvement: incomplete animation ${JSON.stringify(improvement)}`);
+      }
+    }
+
+    if (hasRoute('finance')) {
+      await page.evaluate(() => { location.hash = 'finance'; });
+      await sleep(650);
+      const marginBefore = await page.$eval('#marginValue', element => element.textContent);
+      await page.$eval('#financeLevers input[type="range"]', element => {
+        element.value = String(Number(element.max) - 1);
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      const marginAfter = await page.$eval('#marginValue', element => element.textContent);
+      if (marginBefore === marginAfter) failures.push('finance: lever did not change margin');
+    }
+
+    if (hasRoute('devops')) {
+      await page.evaluate(() => { location.hash = 'devops'; });
+      await sleep(650);
+      const issueIndexes = await page.evaluate(() => {
         const data = JSON.parse(document.getElementById('demo-spec').textContent).devops;
-        const issue = data.issues[index];
         return {
-          actual: {
-            title: document.getElementById('prTitle').textContent,
-            gate: document.getElementById('prGate').textContent,
-            result: document.getElementById('prSub').textContent,
-            status: document.getElementById('prStatus').textContent
-          },
-          expected: {
-            title: data.action.prReady
-              .replace('{{number}}', String(data.action.prBase + index))
-              .replace('{{title}}', issue.title),
-            gate: data.action.checksPassed,
-            result: data.action.prResult,
-            status: data.action.prStatus
-          }
+          autonomous: data.issues.findIndex(issue => !issue.highRisk),
+          highRisk: data.issues.findIndex(issue => issue.highRisk)
         };
-      }, issueIndexes.autonomous);
-      if (JSON.stringify(autonomous.actual) !== JSON.stringify(autonomous.expected)) {
-        failures.push(`devops: autonomous result mismatch ${JSON.stringify(autonomous)}`);
+      });
+      if (issueIndexes.autonomous < 0) failures.push('devops: no autonomous issue configured');
+      if (issueIndexes.highRisk < 0) failures.push('devops: no high-risk issue configured');
+      if (issueIndexes.autonomous >= 0) {
+        await page.click(`#issueTable tbody tr[data-index="${issueIndexes.autonomous}"]`);
+        await page.click('#assignIssue');
+        await waitForEnabled('#assignIssue', qaSpec.devops.action.durationMs + 2000);
+        const autonomous = await page.evaluate(index => {
+          const data = JSON.parse(document.getElementById('demo-spec').textContent).devops;
+          const issue = data.issues[index];
+          return {
+            actual: {
+              title: document.getElementById('prTitle').textContent,
+              gate: document.getElementById('prGate').textContent,
+              result: document.getElementById('prSub').textContent,
+              status: document.getElementById('prStatus').textContent
+            },
+            expected: {
+              title: data.action.prReady
+                .replace('{{number}}', String(data.action.prBase + index))
+                .replace('{{title}}', issue.title),
+              gate: data.action.checksPassed,
+              result: data.action.prResult,
+              status: data.action.prStatus
+            }
+          };
+        }, issueIndexes.autonomous);
+        if (JSON.stringify(autonomous.actual) !== JSON.stringify(autonomous.expected)) {
+          failures.push(`devops: autonomous result mismatch ${JSON.stringify(autonomous)}`);
+        }
       }
-    }
-    if (issueIndexes.highRisk >= 0) {
-      await page.click(`#issueTable tbody tr[data-index="${issueIndexes.highRisk}"]`);
-      await page.click('#assignIssue');
-      await waitForEnabled('#assignIssue', qaSpec.devops.action.durationMs + 2000);
-      const highRisk = await page.evaluate(index => {
-        const data = JSON.parse(document.getElementById('demo-spec').textContent).devops;
-        const issue = data.issues[index];
-        return {
-          actual: {
-            title: document.getElementById('prTitle').textContent,
-            gate: document.getElementById('prGate').textContent,
-            result: document.getElementById('prSub').textContent,
-            status: document.getElementById('prStatus').textContent
-          },
-          expected: {
-            title: data.action.planReady.replace('{{issue}}', issue.id),
-            gate: data.action.humanImplementation,
-            result: data.action.humanResult,
-            status: data.action.planStatus
-          }
-        };
-      }, issueIndexes.highRisk);
-      if (JSON.stringify(highRisk.actual) !== JSON.stringify(highRisk.expected)) {
-        failures.push(`devops: high-risk result mismatch ${JSON.stringify(highRisk)}`);
+      if (issueIndexes.highRisk >= 0) {
+        await page.click(`#issueTable tbody tr[data-index="${issueIndexes.highRisk}"]`);
+        await page.click('#assignIssue');
+        await waitForEnabled('#assignIssue', qaSpec.devops.action.durationMs + 2000);
+        const highRisk = await page.evaluate(index => {
+          const data = JSON.parse(document.getElementById('demo-spec').textContent).devops;
+          const issue = data.issues[index];
+          return {
+            actual: {
+              title: document.getElementById('prTitle').textContent,
+              gate: document.getElementById('prGate').textContent,
+              result: document.getElementById('prSub').textContent,
+              status: document.getElementById('prStatus').textContent
+            },
+            expected: {
+              title: data.action.planReady.replace('{{issue}}', issue.id),
+              gate: data.action.humanImplementation,
+              result: data.action.humanResult,
+              status: data.action.planStatus
+            }
+          };
+        }, issueIndexes.highRisk);
+        if (JSON.stringify(highRisk.actual) !== JSON.stringify(highRisk.expected)) {
+          failures.push(`devops: high-risk result mismatch ${JSON.stringify(highRisk)}`);
+        }
       }
     }
 
-    await page.evaluate(() => { location.hash = 'agents'; });
-    await sleep(700);
-    agentTitles = await page.evaluate(() => {
-      const titles = [];
-      for (const row of document.querySelectorAll('#agentList .agent-row')) {
-        row.click();
-        titles.push(document.getElementById('chatTitle')?.textContent || '');
+    if (hasRoute('agents')) {
+      await page.evaluate(() => { location.hash = 'agents'; });
+      await sleep(700);
+      agentTitles = await page.evaluate(() => {
+        const titles = [];
+        for (const row of document.querySelectorAll('#agentList .agent-row')) {
+          row.click();
+          titles.push(document.getElementById('chatTitle')?.textContent || '');
+        }
+        return titles;
+      });
+      if (agentTitles.length < 5 || new Set(agentTitles).size !== agentTitles.length) {
+        failures.push(`agents: row switching failed ${JSON.stringify(agentTitles)}`);
       }
-      return titles;
-    });
-    if (agentTitles.length < 5 || new Set(agentTitles).size !== agentTitles.length) {
-      failures.push(`agents: row switching failed ${JSON.stringify(agentTitles)}`);
-    }
-    await page.$eval('#chatInput', element => { element.value = '전환 중 응답 테스트'; });
-    await page.$eval('#sendBtn', button => button.click());
-    await page.click('#agentList .agent-row');
-    await sleep(1150);
-    const switchedChatCount = await page.$$eval('#chatLog .message', elements => elements.length);
-    if (switchedChatCount !== 1) {
-      failures.push(`agents: delayed response leaked across agent switch (${switchedChatCount} messages)`);
-    }
-    await page.$eval('#chatInput', element => { element.value = '자유 질문 테스트'; });
-    await page.$eval('#sendBtn', button => button.click());
-    await page.waitForFunction(
-      () => (
-        document.querySelectorAll('#chatLog .message').length >= 3
-        && !document.querySelector('#chatLog .message.typing')
-      ),
-      { timeout: 3000 }
-    ).catch(() => {});
-    const chatCount = await page.$$eval('#chatLog .message', elements => elements.length);
-    if (chatCount < 3) failures.push(`agents: chat response missing (${chatCount} messages)`);
-    await page.click('#orchRun');
-    await waitForEnabled(
-      '#orchRun',
-      800 + qaSpec.agents.orchestration.stages.length * 520 + 2000
-    );
-    const orchestrationText = await page.$eval('#chatLog', element => element.textContent);
-    if (!/decision package|의사결정 패키지/i.test(orchestrationText)) {
-      failures.push('agents: orchestration summary missing');
+      await page.$eval('#chatInput', element => { element.value = '전환 중 응답 테스트'; });
+      await page.$eval('#sendBtn', button => button.click());
+      await page.click('#agentList .agent-row');
+      await sleep(1150);
+      const switchedChatCount = await page.$$eval('#chatLog .message', elements => elements.length);
+      if (switchedChatCount !== 1) {
+        failures.push(`agents: delayed response leaked across agent switch (${switchedChatCount} messages)`);
+      }
+      await page.$eval('#chatInput', element => { element.value = '자유 질문 테스트'; });
+      await page.$eval('#sendBtn', button => button.click());
+      await page.waitForFunction(
+        () => (
+          document.querySelectorAll('#chatLog .message').length >= 3
+          && !document.querySelector('#chatLog .message.typing')
+        ),
+        { timeout: 3000 }
+      ).catch(() => {});
+      const chatCount = await page.$$eval('#chatLog .message', elements => elements.length);
+      if (chatCount < 3) failures.push(`agents: chat response missing (${chatCount} messages)`);
+      await page.click('#orchRun');
+      await waitForEnabled(
+        '#orchRun',
+        800 + qaSpec.agents.orchestration.stages.length * 520 + 2000
+      );
+      const orchestrationText = await page.$eval('#chatLog', element => element.textContent);
+      if (!/decision package|의사결정 패키지/i.test(orchestrationText)) {
+        failures.push('agents: orchestration summary missing');
+      }
     }
 
-    await page.evaluate(() => { location.hash = 'governance'; });
-    await sleep(650);
-    const evaluationBefore = await page.$eval('#evalScore', element => element.textContent);
-    await page.click('#evalRun');
-    await waitForEnabled(
-      '#evalRun',
-      qaSpec.governance.evaluation.runLines.length * 250 + 2200
-    );
-    const evaluationAfter = await page.$eval('#evalScore', element => element.textContent);
-    const evaluationBeforeNumber = Number(evaluationBefore);
-    const evaluationAfterNumber = Number(evaluationAfter);
-    if (
-      !Number.isFinite(evaluationBeforeNumber)
-      || !Number.isFinite(evaluationAfterNumber)
-      || evaluationBeforeNumber === evaluationAfterNumber
-    ) {
-      failures.push('governance: evaluation score did not change numerically');
+    if (hasRoute('governance')) {
+      await page.evaluate(() => { location.hash = 'governance'; });
+      await sleep(650);
+      const evaluationBefore = await page.$eval('#evalScore', element => element.textContent);
+      await page.click('#evalRun');
+      await waitForEnabled(
+        '#evalRun',
+        qaSpec.governance.evaluation.runLines.length * 250 + 2200
+      );
+      const evaluationAfter = await page.$eval('#evalScore', element => element.textContent);
+      const evaluationBeforeNumber = Number(evaluationBefore);
+      const evaluationAfterNumber = Number(evaluationAfter);
+      if (
+        !Number.isFinite(evaluationBeforeNumber)
+        || !Number.isFinite(evaluationAfterNumber)
+        || evaluationBeforeNumber === evaluationAfterNumber
+      ) {
+        failures.push('governance: evaluation score did not change numerically');
+      }
     }
 
     for (let iteration = 0; iteration < 4; iteration++) {
-      for (const route of allRoutes) {
+      for (const route of activeRoutes) {
         await page.evaluate(next => { location.hash = next; }, route);
         await sleep(80);
       }

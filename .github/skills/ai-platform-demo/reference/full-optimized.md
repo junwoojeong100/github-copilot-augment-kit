@@ -8,9 +8,10 @@
 - 5단계 순서를 유지하며 리서치가 합쳐지기 전에는 스토리라인을 시작하지 않는다.
 - 스토리라인, 화면 계약, 고객 Demo Spec, 최종 단일 HTML은 한 에이전트가 소유한다(디자인은 고정).
 - 공통 shell·CSS·JavaScript는 Golden Runtime에서 재사용하며 고객별로 다시 작성하지 않는다.
-- 독립적인 조사 축은 메인 에이전트가 병렬 tool call로 직접 수행한다.
-- 수정 중에는 변경 화면만 빠르게 확인할 수 있지만, 완료 전에는 8개 화면·스트레스 전환·에이전트
-  전환·채팅을 포함한 전체 검증을 다시 수행한다.
+- 조사 backend 선택과 원문 검증은 `web-search` 계약을 따른다. 이 가이드에서 특정 backend를 추가로
+  금지하거나 강제하지 않는다.
+- 수정 중에는 변경 화면만 빠르게 확인할 수 있지만, 완료 전에는 `story.routeScope`에 노출된 모든
+  화면·스트레스 전환·에이전트 전환·채팅을 포함한 전체 검증을 다시 수행한다.
 - 저장소와 최종 출력 폴더에는 결과 HTML 하나만 남긴다.
 
 ## 2. 세션 작업 계약
@@ -27,7 +28,7 @@
   customer-overlay.json
   demo-spec.json
   defects.md
-  metrics.json
+  metrics.json                  # 성능 측정이 필요한 경우만
   shots/
 ```
 
@@ -44,11 +45,10 @@ Pack과 Overlay를 `demo-spec.json`으로 만들며 이후 수정 surface는 HTM
 2. 고객의 DX·AI 현황과 최근 이슈
 3. Microsoft·GitHub 서비스의 현재 상태
 
-각 검색 결과에서 `web-search` 공통 Fact Ledger의 ID·Type·Claim·Evidence·Source·Publisher·
-Published/updated·Accessed·Scope/status·Confidence를 추출한다. 메인 에이전트가 결과를 하나의 Fact
-Ledger로 합치고 충돌을 해결한 뒤에만 스토리라인을 시작한다. 기존 원장이 있으면 안정적인 회사 사실은 출처를
-찾는 참고로만 사용하고, **고객 요청마다 공식 원문을 실시간으로 다시 확인한다.** 이전 Fact Ledger나
-Industry Pack의 사실이 새 조사를 대체하면 안 된다.
+각 검색 결과는 `web-search`의 공통 Fact Ledger 계약으로 기록하고 `Demo candidate`만 확장한다. 메인
+에이전트가 결과를 하나의 Fact Ledger로 합치고 충돌을 해결한 뒤에만 스토리라인을 시작한다. 기존
+원장이 있으면 안정적인 회사 사실은 출처를 찾는 참고로만 사용하고, **고객 요청마다 공식 원문을
+실시간으로 다시 확인한다.** 이전 Fact Ledger나 Industry Pack의 사실이 새 조사를 대체하면 안 된다.
 AI 데모 빌드 전에는 같은 내용을 `web-search/schema/fact-ledger.schema.json`에 맞춘
 `fact-ledger.json`으로 저장하고, timezone이 포함된 `checkedAt`과 서로 다른 canonical Fact source URL
 2개 이상을 확인한다.
@@ -85,8 +85,9 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/ai-platform-demo/puppeteer/
 
 ## 6. 검증 최적화
 
-1. 최초 빌드 후 `FULL_QA=1`로 8개 화면, 스트레스 전환, 모든 에이전트, 채팅을 한 브라우저 세션에서 검사한다.
-2. 8개 스크린샷과 오류를 모두 검토해 `defects.md`에 모은다.
+1. 최초 빌드 후 `FULL_QA=1`로 노출된 4~8개 화면, 스트레스 전환, 모든 에이전트, 채팅을 한 브라우저
+   세션에서 검사한다.
+2. 노출 route의 스크린샷과 오류를 모두 검토해 `defects.md`에 모은다.
 3. 결함을 한 번에 수정한다.
 4. 수정 중에는 `VERIFY_ROUTES`와 `FULL_QA=0`으로 영향받은 화면만 빠르게 확인한다.
 5. 완료 전에는 다시 `FULL_QA=1`로 전체 검증한다. 수정이 없으면 최초 전체 검증이 최종 검증이다.
@@ -94,7 +95,10 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/ai-platform-demo/puppeteer/
 화면마다 브라우저를 새로 시작하지 않는다. 한 번의 검증 실행에서 같은 browser/page를 재사용하고,
 route만 전환한다.
 
-## 7. 시간 측정
+## 7. 선택적 시간 측정
+
+반복 최적화나 benchmark가 필요한 작업에서만 `metrics.json`을 기록한다. 일반 데모 생성의 완료 조건은
+아니다.
 
 ```json
 {
@@ -113,4 +117,4 @@ route만 전환한다.
 }
 ```
 
-`metrics.json`은 세션 작업 폴더에만 두고 다음 최적화의 근거로 사용한다.
+기록한 `metrics.json`은 세션 작업 폴더에만 두고 다음 최적화의 근거로 사용한다.

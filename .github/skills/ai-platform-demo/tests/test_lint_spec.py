@@ -67,7 +67,7 @@ class LintSpecTests(unittest.TestCase):
 
     def test_structural_error_is_caught(self):
         spec = json.loads(BASE.read_text(encoding="utf-8"))
-        spec["navigation"] = spec["navigation"][:7]  # break the fixed 8-route contract
+        spec["navigation"] = spec["navigation"][:7]  # break the runtime data contract
         with tempfile.TemporaryDirectory() as directory:
             result = run_lint(write_temp(spec, directory))
         self.assertEqual(result.returncode, 1, result.stdout)

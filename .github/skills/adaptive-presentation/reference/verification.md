@@ -102,7 +102,8 @@ python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
 - 임원 자료의 색상 계열이 3~4개 안에서 일관되는가? 여러 카드가 빨강·초록·보라·노랑으로 각각
   구분되는 rainbow palette가 아닌가?
 - 같은 의미가 슬라이드마다 다른 색으로 바뀌지 않는가?
-- 모든 슬라이드에 stat·chart·table·process·hierarchy·timeline 등 편집 가능한 visual structure가 있는가?
+- 본문 슬라이드에 stat·chart·table·process·hierarchy·timeline 등 편집 가능한 visual structure가
+  있는가? 표지·section divider·단순 마무리 장에는 장식적 visual을 강제하지 않았는가?
 - 제목·본문·caption의 위계가 thumbnail에서도 즉시 보이는가?
 - 제목 바로 아래 장식선, pill chip, rounded-card grid, soft shadow가 반복되는 AI 생성물 패턴은 아닌가?
 - dominant/support/accent의 우선순위가 보이고 모든 색이 같은 비중으로 경쟁하지 않는가?
@@ -153,7 +154,7 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 | Source/footer | 8~9.5pt 허용 |
 | Editorial hierarchy | title 30~42pt, primary body 15~19pt, secondary 13~15pt, label 11~13pt |
 | Density after reduction | 여백이 생긴 장만 근거·KPI·owner·예외 조건을 1~2개 보강하고, 고밀도 장은 유지 |
-| Native visual | 모든 장에 편집 가능한 visual structure 1개 이상 |
+| Native visual | 본문 장에 편집 가능한 visual structure 1개 이상; 표지·section divider·단순 마무리 제외 |
 | Repetition | 같은 layout이 의도 없이 3장 연속되지 않음 |
 | Requested white canvas | 모든 slide background와 전체 화면 canvas 도형이 `#FFFFFF` |
 | Executive palette | 브랜드가 없으면 neutral + primary + optional secondary의 3~4개 색상 계열 |

@@ -670,7 +670,8 @@ def main() -> int:
             source["url"] for source in provenance["sources"]
         ],
         "researchLedgerIds": customer_metadata["research"].get("ledgerIds", []),
-        "routes": len(composed["navigation"]),
+        "routes": len(composed["story"].get("routeScope", composed["navigation"])),
+        "dataRoutes": len(composed["navigation"]),
         "agents": len(composed["agents"]["profiles"]),
         "specOutput": str(output),
         "specBytes": output.stat().st_size,

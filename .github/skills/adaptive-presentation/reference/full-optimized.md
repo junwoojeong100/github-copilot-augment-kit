@@ -8,7 +8,8 @@
 
 - 데이터 수집 → Fact Ledger → 스토리라인 → 슬라이드 제작 → 전체 QA 순서를 유지한다.
 - Fact Ledger, storyline, 생성 스크립트, 최종 PPTX는 한 에이전트가 일관되게 소유한다.
-- 조사에는 research agent나 `/fleet`을 사용하지 않고 공식 검색·문서 도구의 병렬 tool call만 사용한다.
+- 조사 backend 선택과 원문 검증은 `web-search` 계약을 따른다. 이 가이드에서 특정 backend를 추가로
+  금지하거나 강제하지 않는다.
 - 수정 후에는 항상 새 PPTX에서 PDF를 다시 변환한다. 국소·비구조 수정은 변경 슬라이드만 이미지로
   렌더하고, 다수 슬라이드나 구조 변경은 전체 contact sheet까지 다시 생성한다.
 - 저장소와 최종 출력 폴더에는 사용자가 요청한 PPTX/PDF만 남긴다.
@@ -24,7 +25,7 @@
   storyline.md
   build_<deck>.py
   defects.md
-  metrics.json
+  metrics.json                  # 성능 측정이 필요한 경우만
   qa/
   qa-detail/
 ```
@@ -41,9 +42,9 @@
 2. 제품·기술·규제의 현재 상태
 3. 사례·성과·경쟁 또는 도입 근거
 
-각 축에서는 `web-search` 공통 Fact Ledger의 ID·Type·Claim·Evidence·Source·Publisher·
-Published/updated·Accessed·Scope/status·Confidence를 수집하고, 슬라이드 후보를 추가한다. 메인 에이전트가
-결과를 하나의 Fact Ledger로 합친 후에만 스토리라인을 시작한다. 조사 자체는 캐시로 생략하지 않는다.
+각 축에서는 `web-search`의 공통 Fact Ledger 계약으로 근거를 수집하고 `Slide candidate`만 확장한다.
+메인 에이전트가 결과를 하나의 Fact Ledger로 합친 후에만 스토리라인을 시작한다. 조사 자체는 캐시로
+생략하지 않는다.
 이전 Fact Ledger와 canonical URL은
 검색 출발점으로만 쓰고, 발표에 들어가는 외부 사실은 매 요청 시점의 공식 원문으로 다시 검증한다.
 
@@ -88,9 +89,10 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 `--reuse-pdf`는 PPTX와 PDF SHA-256이 manifest와 모두 일치할 때만 동작한다. 어느 파일이든 변경되면
 실패하도록 설계되어 오래되거나 부분 생성된 PDF로 검수하는 품질 저하를 막는다.
 
-## 7. 시간 측정
+## 7. 선택적 시간 측정
 
-`metrics.json`에는 최소한 다음을 기록한다.
+반복 최적화나 benchmark가 필요한 작업에서만 `metrics.json`을 기록한다. 일반 덱 생성의 완료 조건은
+아니며, 기록할 때는 다음 필드를 사용할 수 있다.
 
 ```json
 {
@@ -105,5 +107,5 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 }
 ```
 
-측정 파일은 세션 작업 폴더에만 둔다. 다음 작업에서 실제 병목이 조사, 생성, LibreOffice 변환, 시각 수정
-중 어디인지 판단하는 근거로 사용한다.
+측정 파일은 세션 작업 폴더에만 둔다. 실제 병목이 조사, 생성, LibreOffice 변환, 시각 수정 중 어디인지
+판단할 때만 사용한다.

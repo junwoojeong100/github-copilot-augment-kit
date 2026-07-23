@@ -70,8 +70,9 @@
   document.body.dataset.density = 'executive';
 
   const meta = spec.meta;
-  const navigation = spec.navigation;
-  const routeById = Object.fromEntries(navigation.map(route => [route.id, route]));
+  const routeScope = spec.story.routeScope || REQUIRED_ROUTES;
+  const routeById = Object.fromEntries(spec.navigation.map(route => [route.id, route]));
+  const navigation = spec.navigation.filter(route => routeScope.includes(route.id));
   const viewTimers = [];
   const viewCleanups = [];
   let sparkSequence = 0;
@@ -1290,7 +1291,7 @@
 
   function navigate() {
     const requested = location.hash.slice(1) || 'dashboard';
-    const routeId = REQUIRED_ROUTES.includes(requested) ? requested : 'dashboard';
+    const routeId = routeScope.includes(requested) ? requested : 'dashboard';
     const route = routeById[routeId];
     clearViewLifecycle();
     $$('#nav a').forEach(link => link.classList.toggle('active', link.dataset.route === routeId));
