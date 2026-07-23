@@ -11,7 +11,7 @@ import math
 import re
 import sys
 import unicodedata
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
@@ -23,6 +23,25 @@ import render_demo
 DELETE_MARKER = {"$delete": True}
 REPLACE_KEY = "$replace"
 PLACEHOLDER_PATTERN = re.compile(r"__[A-Z][A-Z0-9_-]*__")
+ISO_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+ISO_TIMESTAMP_PATTERN = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"
+    r"(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
+FACT_LEDGER_KEYS = {"schemaVersion", "checkedAt", "facts"}
+FACT_KEYS = {
+    "id",
+    "type",
+    "claim",
+    "evidence",
+    "source",
+    "publisher",
+    "publishedOrUpdated",
+    "accessed",
+    "scopeOrStatus",
+    "confidence",
+}
+SOURCE_KEYS = {"title", "url"}
 
 
 class ComposeError(ValueError):
@@ -71,6 +90,11 @@ def parse_args() -> argparse.Namespace:
         help="Industry pack. May be provided multiple times.",
     )
     parser.add_argument("--customer", type=Path, required=True, help="Customer overlay.")
+    parser.add_argument(
+        "--fact-ledger",
+        type=Path,
+        help="Machine-readable web-search fact-ledger.json used as research source of truth.",
+    )
     parser.add_argument("--output", type=Path, required=True, help="Composed demo-spec.json.")
     parser.add_argument("--html-output", type=Path, help="Optional rendered HTML output.")
     parser.add_argument(
@@ -281,6 +305,172 @@ def canonical_source_url(value: str) -> str | None:
     return urlunparse((scheme, netloc, path, "", parsed.query, ""))
 
 
+def fact_ledger_research(
+    document: Any,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    if (
+        not isinstance(document, dict)
+        or set(document) != FACT_LEDGER_KEYS
+        or type(document.get("schemaVersion")) is not int
+        or document["schemaVersion"] != 1
+    ):
+        raise ComposeError("Fact Ledger requires schemaVersion 1")
+    checked_at = document.get("checkedAt")
+    if not isinstance(checked_at, str) or not ISO_TIMESTAMP_PATTERN.fullmatch(
+        checked_at
+    ):
+        raise ComposeError(
+            "Fact Ledger checkedAt must be a timezone-aware ISO 8601 timestamp"
+        )
+    parse_checked_at(checked_at)
+    facts = document.get("facts")
+    if not isinstance(facts, list) or not facts:
+        raise ComposeError("Fact Ledger facts must be a non-empty array")
+
+    required_strings = (
+        "id",
+        "type",
+        "claim",
+        "evidence",
+        "publisher",
+        "publishedOrUpdated",
+        "accessed",
+        "scopeOrStatus",
+        "confidence",
+    )
+    seen_ids: set[str] = set()
+    sources_by_url: dict[str, dict[str, Any]] = {}
+    for index, fact in enumerate(facts):
+        path = f"Fact Ledger facts[{index}]"
+        if not isinstance(fact, dict) or set(fact) != FACT_KEYS:
+            raise ComposeError(f"{path} must match the Fact Ledger schema")
+        for key in required_strings:
+            value = fact.get(key)
+            if not isinstance(value, str) or not value.strip():
+                raise ComposeError(f"{path}.{key} must be a non-empty string")
+        if fact["type"] not in {"Fact", "Inference", "Assumption"}:
+            raise ComposeError(f"{path}.type is invalid")
+        if fact["confidence"] not in {"High", "Medium", "Low"}:
+            raise ComposeError(f"{path}.confidence is invalid")
+        if fact["id"] in seen_ids:
+            raise ComposeError(f"Fact Ledger ID is duplicated: {fact['id']}")
+        seen_ids.add(fact["id"])
+        if not ISO_DATE_PATTERN.fullmatch(fact["accessed"]):
+            raise ComposeError(f"{path}.accessed must be YYYY-MM-DD")
+        try:
+            date.fromisoformat(fact["accessed"])
+        except ValueError as error:
+            raise ComposeError(f"{path}.accessed must be YYYY-MM-DD") from error
+        published_or_updated = fact["publishedOrUpdated"]
+        if published_or_updated != "확인 불가":
+            if not ISO_DATE_PATTERN.fullmatch(published_or_updated):
+                raise ComposeError(
+                    f"{path}.publishedOrUpdated must be YYYY-MM-DD or 확인 불가"
+                )
+            try:
+                date.fromisoformat(published_or_updated)
+            except ValueError as error:
+                raise ComposeError(
+                    f"{path}.publishedOrUpdated must be YYYY-MM-DD or 확인 불가"
+                ) from error
+
+        source = fact.get("source")
+        if not isinstance(source, dict) or set(source) != SOURCE_KEYS:
+            raise ComposeError(f"{path}.source must match the Fact Ledger schema")
+        title = source.get("title")
+        source_url = source.get("url")
+        if not isinstance(title, str) or not title.strip():
+            raise ComposeError(f"{path}.source.title must be a non-empty string")
+        if not isinstance(source_url, str):
+            raise ComposeError(f"{path}.source.url must be an HTTP(S) URL")
+        canonical_url = canonical_source_url(source_url)
+        if canonical_url is None:
+            raise ComposeError(f"{path}.source.url must be an HTTP(S) URL")
+        if fact["type"] != "Fact":
+            continue
+        if canonical_url not in sources_by_url:
+            sources_by_url[canonical_url] = {
+                "title": title.strip(),
+                "url": canonical_url,
+                "publisher": fact["publisher"].strip(),
+                "ledgerIds": [],
+            }
+        sources_by_url[canonical_url]["ledgerIds"].append(fact["id"])
+
+    if len(sources_by_url) < 2:
+        raise ComposeError(
+            "AI demo Fact Ledger requires at least two unique canonical Fact sources"
+        )
+    source_urls = list(sources_by_url)
+    research = {
+        "mode": "live",
+        "checkedAt": checked_at,
+        "sourceUrls": source_urls,
+        "ledgerIds": sorted(seen_ids),
+    }
+    provenance = {
+        "checkedAt": checked_at,
+        "ledgerIds": sorted(seen_ids),
+        "sources": list(sources_by_url.values()),
+    }
+    return research, provenance
+
+
+def apply_fact_ledger(
+    customer_document: Any,
+    fact_ledger: Any,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    if not isinstance(customer_document, dict):
+        raise ComposeError("Customer overlay must be an object")
+    metadata = customer_document.get("_customer")
+    if not isinstance(metadata, dict):
+        raise ComposeError("Customer overlay requires an _customer object")
+    research, provenance = fact_ledger_research(fact_ledger)
+    existing = metadata.get("research")
+    if existing is not None:
+        if not isinstance(existing, dict):
+            raise ComposeError("_customer.research must be an object")
+        existing_checked_at = existing.get("checkedAt")
+        existing_urls = existing.get("sourceUrls")
+        if not isinstance(existing_checked_at, str) or not isinstance(
+            existing_urls, list
+        ):
+            raise ComposeError(
+                "Existing _customer.research must match the supplied Fact Ledger"
+            )
+        try:
+            existing_checked = parse_checked_at(existing_checked_at)
+        except ComposeError as error:
+            raise ComposeError(
+                "Existing _customer.research must match the supplied Fact Ledger"
+            ) from error
+        canonical_existing = [
+            canonical_source_url(value) if isinstance(value, str) else None
+            for value in existing_urls
+        ]
+        if (
+            existing_checked != parse_checked_at(research["checkedAt"])
+            or None in canonical_existing
+            or set(canonical_existing) != set(research["sourceUrls"])
+        ):
+            raise ComposeError(
+                "Existing _customer.research does not match the supplied Fact Ledger"
+            )
+    updated = copy.deepcopy(customer_document)
+    updated["_customer"]["research"] = research
+    return updated, provenance
+
+
+def research_provenance(research: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "checkedAt": research["checkedAt"],
+        "sources": [
+            {"url": canonical_source_url(url)}
+            for url in research["sourceUrls"]
+        ],
+    }
+
+
 def validate_customer(
     document: Any,
     required_paths: list[str],
@@ -426,6 +616,12 @@ def main() -> int:
         )
 
     customer_document = load_json(customer_path)
+    ledger_provenance = None
+    if args.fact_ledger is not None:
+        customer_document, ledger_provenance = apply_fact_ledger(
+            customer_document,
+            load_json(args.fact_ledger),
+        )
     customer_spec, customer_metadata = validate_customer(
         customer_document,
         required_paths,
@@ -433,6 +629,10 @@ def main() -> int:
         max_age_hours=args.max_research_age_hours,
     )
     composed = apply_customer_layer(composed, customer_spec, required_paths)
+    provenance = ledger_provenance or research_provenance(
+        customer_metadata["research"]
+    )
+    composed["meta"]["research"] = provenance
     composed = render_demo.sanitize_rich_fields(composed)
     check_output_leaks(
         composed,
@@ -447,6 +647,8 @@ def main() -> int:
         *(path.expanduser().resolve() for path in args.pack),
         *render_demo.runtime_input_paths(args.runtime_dir),
     }
+    if args.fact_ledger is not None:
+        input_paths.add(args.fact_ledger.expanduser().resolve())
     html_output = args.html_output.expanduser().resolve() if args.html_output else None
     validate_output_paths(output, html_output, input_paths)
     rendered_html = (
@@ -464,6 +666,10 @@ def main() -> int:
         "customer": composed["meta"]["customer"],
         "archetype": composed["design"]["archetype"],
         "researchCheckedAt": customer_metadata["research"]["checkedAt"],
+        "researchSources": [
+            source["url"] for source in provenance["sources"]
+        ],
+        "researchLedgerIds": customer_metadata["research"].get("ledgerIds", []),
         "routes": len(composed["navigation"]),
         "agents": len(composed["agents"]["profiles"]),
         "specOutput": str(output),

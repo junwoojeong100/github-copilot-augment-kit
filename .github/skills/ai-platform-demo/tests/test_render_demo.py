@@ -59,6 +59,44 @@ class RenderDemoTests(unittest.TestCase):
             spec = render_demo.sanitize_rich_fields(spec)
             render_demo.validate_spec(spec)
 
+    def test_research_provenance_requires_timezone_timestamp(self):
+        valid_research = {
+            "checkedAt": "2026-07-23T10:30:00+09:00",
+            "sources": [
+                {"url": "https://example.com/a"},
+                {"url": "https://example.com/b"},
+            ],
+        }
+        spec = copy.deepcopy(BASE)
+        spec["meta"]["research"] = valid_research
+        render_demo.validate_spec(render_demo.sanitize_rich_fields(spec))
+
+        self.invalid(
+            lambda invalid_spec: invalid_spec["meta"].update(
+                research={**valid_research, "checkedAt": "not-a-date"}
+            )
+        )
+        self.invalid(
+            lambda invalid_spec: invalid_spec["meta"].update(
+                research={
+                    **valid_research,
+                    "checkedAt": "2026-07-23T10:30:00",
+                }
+            )
+        )
+        self.invalid(
+            lambda invalid_spec: invalid_spec["meta"].update(
+                research={
+                    **valid_research,
+                    "sources": [
+                        {"url": "https://example.com/source#one"},
+                        {"url": "https://EXAMPLE.com:443/source#two"},
+                    ],
+                }
+            )
+        )
+        self.invalid(lambda invalid_spec: invalid_spec["meta"].pop("research"))
+
     def test_table_shape_must_match_headers(self):
         self.invalid(
             lambda spec: spec["dashboard"]["table"]["rows"][0]["cells"].append(

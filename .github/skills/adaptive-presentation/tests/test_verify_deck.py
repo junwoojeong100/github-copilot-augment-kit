@@ -63,6 +63,7 @@ class VerifyDeckTests(unittest.TestCase):
             allow_small_text="",
             allow_overlap="",
             allow_title_size="",
+            require_sources="1,3-4",
             fail_unsized_runs=False,
             fail_title_risks=False,
             fail_title_consistency=False,
@@ -75,6 +76,7 @@ class VerifyDeckTests(unittest.TestCase):
         self.assertTrue(namespace.fail_title_consistency)
         self.assertTrue(namespace.fail_unsized_runs)
         self.assertTrue(namespace.fail_overlaps)
+        self.assertEqual(namespace.require_sources, {1, 3, 4})
 
         args.allow_small_text = "2"
         namespace = audit_namespace(args, self.work_dir / "audit.json")

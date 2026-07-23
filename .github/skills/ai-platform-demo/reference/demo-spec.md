@@ -210,7 +210,10 @@ secondary = base + Σ((value - input.value) * weights[input.id])
 
 ## 7. Spec 작성 순서
 
-1. 고객 요청마다 실시간 Fact Ledger를 새로 만들고 검증된 사실과 DEMO 가정을 분리한다.
+1. 고객 요청마다 `web-search` 공통 계약을 따르는 실시간 `fact-ledger.md`와 machine-readable
+   `fact-ledger.json`을 새로 만들고 검증된 사실과 DEMO 가정을 분리한다.
+   직접 Spec을 작성하는 경우에도 `meta.research`에 현재 Ledger의 `checkedAt`, canonical source 2개 이상,
+   Ledger ID를 포함해야 하며 누락된 Spec은 Renderer가 거부한다.
 2. `DEMO_FOCUS`와 핵심 4~6개 시연 동선을 view contract에 정하고 Storyline·audience message를
    `story`에 잠근다.
 3. 디자인은 GitHub soft-dark로 고정되어 base가 제공한다(고객 Overlay에는 `design`을 넣지 않는다).

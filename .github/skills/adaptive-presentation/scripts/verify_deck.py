@@ -44,6 +44,13 @@ def select_risk_slides(report: dict, count: int) -> list[int]:
     add(report.get("overlap_candidates", []), 20)
     add(report.get("rendered_text_overlaps", []), 30)
     add(report.get("rendered_text_overflow_candidates", []), 4)
+    add(
+        [
+            {"slide": slide}
+            for slide in report.get("missing_required_source_slides", [])
+        ],
+        15,
+    )
 
     return [
         slide
@@ -80,6 +87,9 @@ def audit_namespace(args: argparse.Namespace, report_path: Path) -> argparse.Nam
         else set(),
         allow_title_size=audit_pptx.parse_slide_set(args.allow_title_size)
         if args.allow_title_size
+        else set(),
+        require_sources=audit_pptx.parse_slide_set(args.require_sources)
+        if args.require_sources
         else set(),
         title_size_tolerance_pt=args.title_size_tolerance_pt,
         fail_small_text=args.fail_small_text
@@ -277,6 +287,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Reviewed slides allowed a different content-title size, e.g. 6,12.",
     )
     parser.add_argument(
+        "--require-sources",
+        default="",
+        metavar="SLIDES",
+        help="Slides with factual claims that must contain a Source:/출처: footer.",
+    )
+    parser.add_argument(
         "--title-size-tolerance-pt",
         type=audit_pptx.nonnegative_float,
         default=0.5,
@@ -289,7 +305,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="Enable typography, title, and overlap failures",
+        help="Enable typography, title, overlap, and configured source failures",
     )
     return parser
 

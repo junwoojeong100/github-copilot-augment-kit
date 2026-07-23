@@ -295,7 +295,8 @@ PPTX_OUT="<absolute-output>/<deck>.pptx" python3 -B <work-dir>/build_<deck>.py
 # 감사와 렌더는 같은 immutable PPTX를 읽으므로 병렬 실행 가능
 python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py \
   <absolute-output>/<deck>.pptx --expected-slides <count> --strict \
-  --fail-small-text --fail-title-risks --fail-unsized-runs
+  --fail-small-text --fail-title-risks --fail-unsized-runs \
+  --require-sources <external-fact-slides>
 python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
   <absolute-output>/<deck>.pptx --out <work-dir>/qa --keep-pdf
 

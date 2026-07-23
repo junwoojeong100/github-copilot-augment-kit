@@ -7,7 +7,8 @@
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  deck.pptx --out <work-dir> --expected-slides 30 --strict
+  deck.pptx --out <work-dir> --expected-slides 30 --strict \
+  --require-sources <external-fact-slides>
 ```
 
 Runner가 구조 감사와 전체 렌더를 읽기 전용으로 병렬 실행하고, risk score가 높은 슬라이드를 같은 PDF로
@@ -15,6 +16,9 @@ Runner가 구조 감사와 전체 렌더를 읽기 전용으로 병렬 실행하
 결함을 일괄 수정한다. `--strict`는 13pt 미만의 likely body 후보, 명시적 크기가 없는 run, title risk,
 본문 title row의 font-size 불일치, 승인되지 않은 geometry overlap, 서로 다른 text frame에서 실제
 렌더된 글자의 충돌을 실패 처리한다.
+`--require-sources`에는 Storyline에서 Fact Ledger의 외부 사실을 사용하는 슬라이드를 모두 전달한다.
+해당 슬라이드의 footer 영역에 `Source:` 또는 `출처:`가 없으면 strict 검증이 실패한다. 외부 사실을
+사용하지 않는 덱에서만 이 옵션을 생략한다.
 사람이 확인한 의도적 예외가 있을 때만 `--allow-small-text 4,8-9` 또는
 `--allow-overlap 6,8`, `--allow-title-size 12`처럼 슬라이드 번호를 명시한다. footer와 짧은
 label/chip은 별도로 분류된다.
