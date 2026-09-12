@@ -10,7 +10,6 @@ from pathlib import Path
 SKILL = Path(__file__).resolve().parents[1] / "SKILL.md"
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "research_scenarios.json"
 ADAPTIVE_SKILL = SKILL.parents[1] / "adaptive-presentation" / "SKILL.md"
-DEMO_SKILL = SKILL.parents[1] / "ai-platform-demo" / "SKILL.md"
 ADAPTIVE_FULL_OPTIMIZED = (
     ADAPTIVE_SKILL.parent / "reference" / "full-optimized.md"
 )
@@ -26,7 +25,6 @@ ADAPTIVE_EXCEPTION_SCHEMA = (
 ADAPTIVE_VISUAL_SCHEMA = (
     ADAPTIVE_SKILL.parent / "schema" / "visual-review.schema.json"
 )
-DEMO_FULL_OPTIMIZED = DEMO_SKILL.parent / "reference" / "full-optimized.md"
 REPOSITORY_ROOT = SKILL.parents[3]
 COPILOT_INSTRUCTIONS = REPOSITORY_ROOT / ".github" / "copilot-instructions.md"
 README = REPOSITORY_ROOT / "README.md"
@@ -180,7 +178,6 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         limits = {
             SKILL: 100,
             ADAPTIVE_SKILL: 120,
-            DEMO_SKILL: 150,
         }
         for skill, limit in limits.items():
             content = skill.read_text(encoding="utf-8")
@@ -192,46 +189,41 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
                 )
                 self.assertEqual(len(workflow_headings), 1)
 
-    def test_downstream_skills_delegate_search_backend_selection(self):
-        for skill, guide in (
-            (ADAPTIVE_SKILL, ADAPTIVE_FULL_OPTIMIZED),
-            (DEMO_SKILL, DEMO_FULL_OPTIMIZED),
-        ):
-            skill_content = skill.read_text(encoding="utf-8")
-            guide_content = guide.read_text(encoding="utf-8")
-            combined = f"{skill_content}\n{guide_content}"
-            with self.subTest(skill=skill.parent.name):
-                self.assertIn("검색 backend", skill_content)
-                self.assertIn("`web-search`", skill_content)
-                self.assertNotIn("Research agent", combined)
-                self.assertNotIn("/research", combined)
-                self.assertNotIn("/fleet", combined)
+    def test_skill_catalog_matches_available_skills(self):
+        available = {
+            path.parent.name for path in SKILL.parents[1].glob("*/SKILL.md")
+        }
+        self.assertEqual(available, {SKILL.parent.name, ADAPTIVE_SKILL.parent.name})
+        readme = README.read_text(encoding="utf-8")
+        skill_table = readme.split("### [Skills]", 1)[1].split("\n---", 1)[0]
+        documented = set(re.findall(r"^\| \*\*([^*]+)\*\* \|", skill_table, re.MULTILINE))
+        self.assertEqual(documented, available)
+        instructions = COPILOT_INSTRUCTIONS.read_text(encoding="utf-8")
+        skill_section = instructions.split("## 스킬", 1)[1]
+        instructed = set(re.findall(r"^- ([\w-]+):", skill_section, re.MULTILINE))
+        self.assertEqual(instructed, available)
 
-    def test_demo_story_starts_from_customer_research(self):
-        content = DEMO_SKILL.read_text(encoding="utf-8")
-        self.assertIn("조사로 확인한 고객 과제와 사업 언어에서", content)
-        self.assertNotIn("Satya Nadella", content)
-        self.assertNotIn("frontier ecosystem", content)
-        self.assertNotIn("x.com/satyanadella", content)
+    def test_downstream_skill_delegates_search_backend_selection(self):
+        skill_content = ADAPTIVE_SKILL.read_text(encoding="utf-8")
+        guide_content = ADAPTIVE_FULL_OPTIMIZED.read_text(encoding="utf-8")
+        combined = f"{skill_content}\n{guide_content}"
+        self.assertIn("검색 backend", skill_content)
+        self.assertIn("`web-search`", skill_content)
+        self.assertNotIn("Research agent", combined)
+        self.assertNotIn("/research", combined)
+        self.assertNotIn("/fleet", combined)
 
     def test_performance_metrics_are_optional(self):
-        for guide in (ADAPTIVE_FULL_OPTIMIZED, DEMO_FULL_OPTIMIZED):
-            content = guide.read_text(encoding="utf-8")
-            with self.subTest(skill=guide.parents[1].name):
-                self.assertIn("선택적 시간 측정", content)
-                self.assertIn("완료 조건", content)
+        content = ADAPTIVE_FULL_OPTIMIZED.read_text(encoding="utf-8")
+        self.assertIn("선택적 시간 측정", content)
+        self.assertIn("완료 조건", content)
 
-    def test_downstream_skills_keep_mapping_outside_common_ledger(self):
-        for downstream, mapping_contract in (
-            (ADAPTIVE_SKILL, "storyline과 deck spec"),
-            (DEMO_SKILL, "Customer Overlay와 demo spec"),
-        ):
-            content = downstream.read_text(encoding="utf-8")
-            with self.subTest(skill=downstream.parent.name):
-                self.assertIn("공통 Fact Ledger 계약", content)
-                self.assertIn(mapping_contract, content)
-                self.assertIn("Ledger를 확장하지 않고", content)
-                self.assertNotIn("| ID | Type | Claim |", content)
+    def test_downstream_skill_keeps_mapping_outside_common_ledger(self):
+        content = ADAPTIVE_SKILL.read_text(encoding="utf-8")
+        self.assertIn("공통 Fact Ledger 계약", content)
+        self.assertIn("storyline과 deck spec", content)
+        self.assertIn("Ledger를 확장하지 않고", content)
+        self.assertNotIn("| ID | Type | Claim |", content)
 
     def test_factcheck_policy_is_risk_scoped(self):
         content = COPILOT_INSTRUCTIONS.read_text(encoding="utf-8")
@@ -246,14 +238,6 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertIn("acceptance criteria", content)
         self.assertIn("validator·schema", content)
         self.assertIn("사용자가 요청한 경우에만 수행", content)
-
-    def test_demo_language_and_route_scope_are_explicit(self):
-        content = DEMO_SKILL.read_text(encoding="utf-8")
-        self.assertIn("지정 언어를 준수", content)
-        self.assertIn("한국어일 때만", content)
-        self.assertIn("`story.routeScope`", content)
-        self.assertIn("총 5~8개를 canonical 순서로 선택", content)
-        self.assertIn("`design.tokens.brand/accent`", content)
 
     def test_adaptive_skill_exposes_canonical_session_and_qa_contract(self):
         content = ADAPTIVE_SKILL.read_text(encoding="utf-8")
@@ -352,11 +336,9 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
 
     def test_readme_matches_current_search_and_research_contracts(self):
         content = README.read_text(encoding="utf-8")
-        self.assertIn("검색 backend와 원문 검증은 `web-search` 계약이 결정합니다", content)
+        self.assertIn("원문 검증은 `web-search` 계약을 따릅니다", content)
         self.assertIn("사용자 제공 자료만 재구성하거나 외부 사실이 없는 창작형 덱", content)
-        self.assertIn("목적에 맞는 5~8개 화면 SPA", content)
         self.assertIn("--deck-spec", content)
-        self.assertNotIn("고정 8개 화면 SPA", content)
         self.assertNotIn("research agent·`/fleet`에 위임하지 않습니다", content)
         self.assertNotIn("매번 실시간 공식 자료 조사", content)
 

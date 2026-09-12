@@ -1,6 +1,6 @@
 # GitHub Copilot Augment Kit
 
-GitHub Copilot을 특정 모델에 종속되지 않는 **고성능 엔지니어링 에이전트**로 확장하는 경량 커스터마이징 킷입니다. 단일 지침 파일과 온디맨드 스킬, 재사용 가능한 생성 엔진으로 사고·소통·안전·코딩·Git·팩트체크·웹 조사·고객 데모·PPTX 제작 워크플로를 제공하며, 모든 결과는 결론과 다음 행동이 먼저 보이는 **Straightforward** 형식을 우선합니다.
+GitHub Copilot을 특정 모델에 종속되지 않는 **고성능 엔지니어링 에이전트**로 확장하는 경량 커스터마이징 킷입니다. 단일 지침 파일과 온디맨드 스킬로 사고·소통·안전·코딩·Git·팩트체크·웹 조사·PPTX 제작 워크플로를 제공하며, 모든 결과는 결론과 다음 행동이 먼저 보이는 **Straightforward** 형식을 우선합니다.
 
 이 리포의 `.github/` 폴더를 프로젝트에 두면 GitHub Copilot(VS Code Chat의 Agent mode·터미널 CLI)이
 지침과 스킬을 자동으로 읽습니다. `.vscode/mcp.json`까지 적용하면 VS Code Agent mode에서도
@@ -16,7 +16,7 @@ Microsoft Learn MCP를 사용할 수 있습니다.
 
 - **무엇**: GitHub Copilot에 입힐 수 있는 단일 지침 + 전문 스킬 모음입니다.
 - **왜**: 기반 모델이 바뀌어도 Straightforward한 결과와 일관된 품질·안전·전문 워크플로를 유지하도록 Copilot의 실행 방식을 보강합니다.
-- **어떻게**: `.github/`를 두면 지침·스킬이 자동 로드되고, 생성 스킬은 실시간 조사·스토리라인 같은 의미 계층과 Golden Runtime·통합 QA Runner 같은 검증 엔진을 조합해 반복 구현 시간을 줄입니다.
+- **어떻게**: `.github/`를 두면 지침·스킬이 자동 로드되고, 조사·스토리라인·PPTX 제작에 통합 QA Runner를 연결해 반복 작업을 줄입니다.
 
 ---
 
@@ -25,7 +25,7 @@ Microsoft Learn MCP를 사용할 수 있습니다.
 | 블록 | 위치 | 동작 방식 | 내용 |
 |------|------|----------|------|
 | **Instructions** | `.github/copilot-instructions.md` | 매 대화 **자동 로드** | Straightforward 결과 · 페르소나 · 사고 · 소통 · 안전 · 코딩 · Git · MS/GitHub 가치 · 팩트체크 · 출처 |
-| **Skills** | `.github/skills/` | 관련 질문 시 **자동 활성화** 또는 `/skill-name` | 결론 우선 실시간 검색 · 고객·산업별 AI/App Platform 데모 · 적응형 PPTX 생성 |
+| **Skills** | `.github/skills/` | 관련 질문 시 **자동 활성화** 또는 `/skill-name` | 결론 우선 실시간 검색 · 적응형 PPTX 생성 |
 | **MCP (사전 번들)** | `.github/mcp.json` · `.vscode/mcp.json` | clone 후 신뢰/Start 승인 시 활성화 | Microsoft Learn MCP — 공식 문서·코드 샘플 검색 (Azure·사내 MCP는 선택 연결) |
 
 > 상시 적용 원칙은 **단일 파일로 통합**해 중복을 줄이고, 상세 워크플로는 관련 작업에서만 스킬로 불러옵니다.
@@ -130,15 +130,6 @@ npm install -g @github/copilot
     │   ├── scripts/                     # Fact Ledger schema·semantic validator
     │   ├── examples/                    # Fact Ledger JSON 예제
     │   └── tests/                       # 검색·수집 정책 계약 테스트
-    ├── ai-platform-demo/                # 고객·산업별 AI·App Platform 데모(단일 HTML) 생성기
-    │   ├── SKILL.md                     # 실시간 리서치→메뉴·데이터 매핑→Overlay 합성→검증
-    │   ├── runtime/                     # 검증된 SPA shell·CSS·JavaScript Golden Runtime
-    │   ├── packs/                       # 디자인·고객 사실을 고정하지 않는 산업별 기본 구조
-    │   ├── schema/                      # 고객별 demo-spec JSON Schema
-    │   ├── scripts/                     # Overlay Composer·Spec Renderer·브라우저 검증기
-    │   ├── tests/                       # Composition·design 고정 검사 회귀 테스트
-    │   ├── examples/                    # 전체 Spec·compact Customer Overlay 구조 예제
-    │   └── reference/                   # soft-dark 기본 디자인·화면 archetype·Runtime·검증 절차
     └── adaptive-presentation/           # 주제·청중별 PPTX 생성기(조사·스토리라인 중심)
         ├── SKILL.md                     # 조사→Deck Spec→자유 제작→revision-bound 검증
         ├── schema/                      # Deck Spec·template·finding 예외·시각 검토 계약
@@ -172,97 +163,7 @@ npm install -g @github/copilot
 | 스킬 | 트리거 예시 | 기능 |
 |------|-----------|------|
 | **web-search** | "최신 버전 알려줘", "고객·산업 기초자료 수집해줘" | 전용 검색 도구·공식 문서 검색으로 원문을 검증하고 Markdown/JSON Fact Ledger로 구조화해 downstream 스킬에 전달 |
-| **ai-platform-demo** | "○○ 고객 AI 데모", "AKS/ACA App Platform 데모", "CI/CD 임원 데모" | 실시간 조사 + focus별 스토리라인 + 유연한 route Overlay → 5~8화면 soft-dark 단일 HTML SaaS 데모 생성·전체 QA |
 | **adaptive-presentation** | "병원 경영진 대상 의료 AI 전략 PPT 20장", "기술 발표자료 만들어줘", "제품 소개 슬라이드" | 결론·다음 행동 우선 스토리라인 + 필요한 외부 조사 + python-pptx 자유 제작 + 통합 QA Runner → 편집 가능한 PPTX |
-
----
-
-## AI · App Platform 데모 스킬 (`ai-platform-demo`)
-
-고객사 임원 보고·영업용 **"실제로 동작하는" AI·App Platform 운영 데모를 단일 HTML 하나**로
-생성합니다. AI 중심, App Platform·CI/CD 중심, 균형형 focus를 지원하며 슬라이드가 아니라 임원이 직접
-클릭·질문·조작하는 SaaS 앱입니다.
-
-**무엇을 만드나** — 사이드바 + 실시간 대시보드 + 도메인/App Platform 운영 콘솔 + GitHub 기반
-개발·배포 + AI 에이전트 채팅 + 통합 거버넌스 중 **목적에 맞는 5~8개 화면 SPA**. 고객 업무
-3~5개와 플랫폼 화면 2~3개를 선택하고 4~6개 핵심 시연 장면으로 동선을 압축합니다. 첫 화면에서 고객 결과·KPI·primary action이 보이고, 실시간
-KPI·스트리밍 차트·움직이는 객체·토스트·멀티에이전트 협업까지 동작합니다.
-
-**사용법** — 자연어로 고객과 산업을 알려주고, 필요하면 AI 중심 또는 App Platform·CI/CD 중심 focus를
-지정하면 됩니다.
-
-```
-> 현대제철 대상으로 철강 제조 AI 운영 플랫폼 데모 만들어줘. 청중은 CDO·생산본부장.
-> OO사 대상으로 GitHub Actions와 AKS/ACA 운영을 강조한 App Platform 임원 데모 만들어줘.
-```
-
-스킬이 자동 로드되어 ① **매 요청 실시간** 고객·산업 리서치 → ② Storyline·메뉴/데이터 매핑(5~8개
-route, 4~6개 guided journey) →
-③ compact `customer-overlay.json` 작성 → ④ Industry Pack과 합성해 Spec·HTML 생성 → ⑤ Puppeteer 전체 QA까지
-수행합니다. **디자인은 GitHub Primer Dark Dimmed 계열 soft-dark를 기본값**으로 사용하고 고객별
-`brand`·`accent` token만 안전하게 바꿀 수 있습니다.
-
-검색 backend와 원문 검증은 `web-search` 계약이 결정합니다. 범용 web search, CLI의 `/research` 또는
-Research agent, 공식 문서 검색을 가용성과 질문 범위에 맞게 사용하고, 메인 에이전트가 결과를 하나의
-Fact Ledger로 병합해 Storyline·Overlay·최종 HTML까지 일관되게 연결합니다.
-
-```text
-실시간 Fact Ledger + Storyline + route·메뉴·데이터(soft-dark 기본 디자인)
-  → Customer Overlay + Industry Pack
-  → validated demo-spec.json
-  → Golden Runtime (shell.tmpl + runtime.css + runtime.js)
-  → 고객별 단일 HTML
-  → 선택된 5~8개 화면·핵심 인터랙션 브라우저 QA
-```
-
-**Golden Runtime은 검증된 동작 엔진**입니다. 라우터, timer/listener 정리, 실시간 차트, 시뮬레이터,
-에이전트 채팅, HTML escaping, 안정적인 QA ID를 재사용합니다. layout·type·motion은 Runtime이 유지하고
-고객별 route 구성·KPI·공식·에이전트·서사와 선택적 brand/accent를 Spec에서 결정합니다.
-
-**Industry Pack은 산업 terminology·KPI 공식·Agent/Platform 역할의 출발점**만 제공하며 고객명·Storyline을
-포함할 수 없습니다. Composer는 Customer Overlay가 허용되지 않은 design key를 정의하거나
-Fact Ledger가 오래됐거나 canonical Fact source가 2개 미만이거나 핵심 고객 path가 빠지면 실패합니다.
-따라서 같은 산업이라도 고객별
-운영 flow·KPI·에이전트·climax가 달라지고 soft-dark 기본값 위에 brand/accent를 선택 적용할 수 있습니다.
-
-```bash
-python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
-  --base .github/skills/ai-platform-demo/examples/precision-manufacturing.example.json \
-  --pack .github/skills/ai-platform-demo/packs/renewable-energy-holdings.pack.json \
-  --customer <session>/<app>-work/customer-overlay.json \
-  --fact-ledger <session>/<app>-work/fact-ledger.json \
-  --output <session>/<app>-work/demo-spec.json \
-  --html-output <session>/<app>-work/<app>.html
-```
-
-적합한 Industry Pack이 없으면 전체 `demo-spec.json`을 직접 작성하는 기존 경로를 사용합니다. 속도를
-위해 고객과 맞지 않는 Pack을 사용하지 않으며 최종 QA는 노출된 모든 화면에 적용합니다.
-
-| 입력 | 예시 |
-|------|------|
-| 고객명 / 산업 | "삼표산업 / 레미콘·골재·시멘트" |
-| 청중(임원) | "CIO, 재무팀장, CI팀장" |
-| 데모 focus | 균형형 / AI 중심 / App Platform·CI/CD 중심 |
-| 강조 서비스 | Microsoft Foundry · Microsoft Agent Framework · GitHub Copilot · GitHub Platform · AKS · Azure Container Apps |
-
-> 산출물은 **단일 `.html`**(인라인 CSS/JS, 오프라인 동작). 모든 화면에 `● DEMO DATA` 배지로 시연 데이터임을 명시합니다.
-
-### 개인/팀에 설치
-
-```bash
-# 팀 공유 — 같은 이름의 스킬이 없을 때
-mkdir -p /path/to/my-project/.github/skills
-cp -R github-copilot-augment-kit/.github/skills/ai-platform-demo \
-  /path/to/my-project/.github/skills/
-
-# 개인 — 같은 이름의 스킬이 없을 때, 모든 프로젝트에서 사용
-mkdir -p ~/.copilot/skills
-cp -R .github/skills/ai-platform-demo ~/.copilot/skills/
-```
-
-같은 이름의 스킬이 이미 있으면 덮어쓰지 말고 내용을 비교해 병합하세요.
-
-확인: CLI에서 `/skills list` · `/skills info ai-platform-demo` · `/env`.
 
 ---
 
@@ -346,24 +247,24 @@ cp -R .github/skills/adaptive-presentation ~/.copilot/skills/
 
 ---
 
-## 생성 시간을 줄이는 공통 실행 구조
+## PPT 제작 시간을 줄이는 실행 구조
 
-두 생성 스킬은 기본적으로 **FULL-OPTIMIZED** 정책을 사용합니다. 조사·스토리라인·제작·전체 QA를
+`adaptive-presentation`은 기본적으로 **FULL-OPTIMIZED** 정책을 사용합니다. 조사·스토리라인·제작·전체 QA를
 생략하는 대신, 안전한 병렬화·캐시·중간 산출물 재사용과 결함 일괄 수정으로 중복 작업과 wall-clock
 time을 줄입니다.
 
-| 최적화 | `ai-platform-demo` | `adaptive-presentation` |
-|---|---|---|
-| **생성 메커니즘 재사용** | Golden Runtime의 SPA lifecycle·interaction·QA hook 재사용 | 고정 생성 엔진 대신 python-pptx로 직접 제작하고 조사·검증·렌더 스크립트만 재사용 |
-| **요청별 변경 surface 축소** | 매번 실시간 조사 후 Industry Pack에는 없는 고객 사실·메뉴·데이터(핵심 route)만 Customer Overlay에 작성 | 외부 조사가 필요하면 Fact Ledger를 만들고, 스토리라인을 먼저 확정한 뒤 슬라이드는 주제에 맞게 자유 제작 |
-| **안전한 병렬 실행** | 메인 에이전트가 공식 조사 도구를 병렬 호출하고 최종 Spec·HTML도 직접 소유 | 동일 PPTX의 감사·렌더를 읽기 전용 병렬 실행. 파일별 위임을 요청받으면 공통 근거를 공유하고 덱마다 단일 담당자가 제작·QA, 메인이 전달 |
-| **도구 캐시** | 저장소 밖 공용 Puppeteer·Chromium 캐시를 재사용 | 저장소 밖 Python·렌더링 도구·폰트 탐색 캐시를 재사용 |
-| **중간 산출물 재사용** | 한 browser/page 세션에서 선택된 5~8개 route와 핵심 인터랙션을 연속 검증 | PPTX SHA-256이 같은 리비전에서만 중간 PDF를 상세 렌더에 재사용 |
-| **수정 루프 단축** | 결함을 모아 일괄 수정 → 영향 route 확인 → 최종 전체 QA | 결함을 모아 일괄 수정 → 위험 슬라이드 확인 → 변경 시에만 최종 전체 render |
-| **측정** | 단계별 시간·cache hit·repair cycle을 세션 `metrics.json`에 기록 | 단계별 시간·PDF reuse·cache hit·repair cycle을 세션 `metrics.json`에 기록 |
+| 최적화 | `adaptive-presentation` |
+|---|---|
+| **생성 메커니즘 재사용** | 고정 생성 엔진 대신 python-pptx로 직접 제작하고 조사·검증·렌더 스크립트만 재사용 |
+| **요청별 변경 surface 축소** | 외부 조사가 필요하면 Fact Ledger를 만들고, 스토리라인을 먼저 확정한 뒤 슬라이드는 주제에 맞게 자유 제작 |
+| **안전한 병렬 실행** | 동일 PPTX의 감사·렌더를 읽기 전용 병렬 실행. 파일별 위임을 요청받으면 공통 근거를 공유하고 덱마다 단일 담당자가 제작·QA, 메인이 전달 |
+| **도구 캐시** | 저장소 밖 Python·렌더링 도구·폰트 탐색 캐시를 재사용 |
+| **중간 산출물 재사용** | PPTX SHA-256이 같은 리비전에서만 중간 PDF를 상세 렌더에 재사용 |
+| **수정 루프 단축** | 결함을 모아 일괄 수정 → 위험 슬라이드 확인 → 변경 시에만 최종 전체 render |
+| **측정** | 단계별 시간·PDF reuse·cache hit·repair cycle을 세션 `metrics.json`에 기록 |
 
 공용 캐시에는 고객 데이터·시크릿·생성 결과를 넣지 않으며, 검증 스크립트와 QA 파일은 세션 작업
-폴더에 격리합니다. 최종 산출물 폴더에는 사용자가 요청한 `.html` 또는 `.pptx`만 남깁니다.
+폴더에 격리합니다. 최종 산출물 폴더에는 사용자가 요청한 최종 파일만 남깁니다.
 여기서 `<session>`은 클라이언트가 제공하는 세션 artifact 경로를 뜻합니다. 그런 경로가 없는
 VS Code 환경에서는 저장소와 최종 출력 폴더 밖의 OS 임시 디렉터리를 사용합니다.
 
