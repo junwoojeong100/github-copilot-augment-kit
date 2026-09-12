@@ -23,8 +23,8 @@
 
 ```text
 <session>/<deck>-work/
-  fact-ledger.md
-  fact-ledger.json                # deck spec의 machine-readable handoff
+  fact-ledger.json                # 검증된 근거 정본
+  fact-ledger.md                  # JSON에서 자동 생성한 읽기용 뷰
   deck-spec.json
   storyline.md
   template-profile.json          # 템플릿이 있을 때만
@@ -52,7 +52,9 @@
 
 필요하지 않은 축을 장수 채우기 목적으로 추가하지 않는다. 각 축에서는 `web-search`의 공통 Fact
 Ledger 계약으로 근거를 수집하고 슬라이드 매핑은 storyline과 deck spec에 기록한다.
-메인 에이전트가 결과를 하나의 Fact Ledger로 합친 후에만 스토리라인을 시작한다. `web-search`의 충분성·완료 기준을 만족하면 탐색을 종료한다.
+메인 에이전트가 결과를 하나의 Fact Ledger JSON으로 합치고 `web-search` 검증기의 `--markdown-output`으로
+읽기용 뷰를 만든 뒤 스토리라인을 시작한다. 두 형식을 따로 수정하지 않는다.
+`web-search`의 충분성·완료 기준을 만족하면 탐색을 종료한다.
 이전 Fact Ledger와 canonical URL은
 검색 출발점으로만 쓰고, 발표에 들어가는 외부 사실은 매 요청 시점의 공식 원문으로 다시 검증한다.
 같은 요청에서 이미 검증한 주장·조건·원문은 여러 덱이 공유하며 파일별로 같은 조사를 반복하지 않는다.
@@ -100,7 +102,7 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 
 ## 6. QA 최적화
 
-1. `verify_deck.py --deck-spec`으로 구조 감사와 전체 렌더를 읽기 전용 병렬 실행한다.
+1. `verify_deck.py --deck-spec --reuse-render`로 최초 구조 감사와 전체 렌더를 읽기 전용 병렬 실행한다.
 2. Runner가 최초 전체 렌더의 PDF를 세션 QA 폴더에 유지한다(`render_pptx.py`를 직접 실행할 때는
    `--keep-pdf` 사용).
 3. audit risk score로 선택된 슬라이드를 같은 PDF로 자동 상세 렌더하고 contact sheet와 함께 확인한다.
@@ -109,7 +111,8 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 5. PPTX를 재생성하고 새 PDF로 변환한다. 국소·비구조 수정이면 `--slides`로 변경 슬라이드만 이미지화해
    확인하고 전체 contact sheet는 다시 만들지 않는다.
 6. 최종 revision의 contact sheet와 위험 슬라이드를 확인하고 deck SHA-256에 묶인 visual-review
-   evidence를 만든 뒤 verifier를 다시 실행한다.
+   evidence를 만든 뒤 같은 `--out`·`--reuse-render`로 verifier를 다시 실행한다. 일치하는 전체 렌더만
+   재사용하고 계약·시각 검토 판단은 다시 검사한다. 상세 조건은 [렌더 재사용](./verification.md#render-reuse)을 따른다.
 
 `--reuse-pdf`는 PPTX와 PDF SHA-256이 manifest와 모두 일치할 때만 동작한다. 어느 파일이든 변경되면
 실패하도록 설계되어 오래되거나 부분 생성된 PDF로 검수하는 품질 저하를 막는다.

@@ -17,6 +17,8 @@ ADAPTIVE_VERIFICATION = ADAPTIVE_SKILL.parent / "reference" / "verification.md"
 ADAPTIVE_DECK_SPEC = ADAPTIVE_SKILL.parent / "reference" / "deck-spec.md"
 ADAPTIVE_PRODUCTION = ADAPTIVE_SKILL.parent / "reference" / "pptx-production.md"
 ADAPTIVE_REFINEMENT = ADAPTIVE_SKILL.parent / "reference" / "refinement.md"
+ADAPTIVE_EDITORIAL = ADAPTIVE_SKILL.parent / "reference" / "editorial-business-style.md"
+ADAPTIVE_BLUEPRINTS = ADAPTIVE_SKILL.parent / "reference" / "slide-blueprints.md"
 CUSTOMER_EVIDENCE = SKILL.parent / "reference" / "customer-evidence.md"
 ADAPTIVE_DECK_SCHEMA = ADAPTIVE_SKILL.parent / "schema" / "deck-spec.schema.json"
 ADAPTIVE_EXCEPTION_SCHEMA = (
@@ -289,12 +291,57 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         )
         for term in ("7:1", "4.5:1", "18~23pt", "15pt"):
             with self.subTest(term=term):
-                self.assertIn(term, skill)
-                self.assertIn(term, guide)
+                self.assertIn(term, ADAPTIVE_PRODUCTION.read_text(encoding="utf-8"))
+        for content in (skill, guide):
+            self.assertIn("pptx-production.md#typography", content)
+            self.assertIn("pptx-production.md#contrast", content)
         self.assertIn("미측정 조합", guide)
         self.assertIn("canonical runner의 자동 검사 범위가 아니다", verification)
         self.assertIn("키워드 일치만으로 의미 보존을 판정하지 않음", verification)
         self.assertIn("실제 발표 시간 보장 아님", verification)
+
+    def test_detailed_style_rules_are_centralized_without_changing_contracts(self):
+        production = ADAPTIVE_PRODUCTION.read_text(encoding="utf-8")
+        self.assertIn("상세 편집 기준의 정본", production)
+        self.assertIn("Apple SD Gothic Neo · 27pt · Bold", production)
+        self.assertIn("120~600자·4~6문장", production)
+        schema = json.loads(ADAPTIVE_DECK_SCHEMA.read_text(encoding="utf-8"))
+        default = schema["properties"]["fontPolicy"]["properties"]["leadingMessage"]["default"]
+        self.assertEqual(default, {
+            "fontFamily": "Apple SD Gothic Neo", "sizePt": 27, "bold": True,
+        })
+        for path in (
+            ADAPTIVE_SKILL, ADAPTIVE_REFINEMENT, ADAPTIVE_EDITORIAL,
+            ADAPTIVE_BLUEPRINTS, ADAPTIVE_DECK_SPEC, ADAPTIVE_VERIFICATION, README,
+        ):
+            content = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertIn("pptx-production.md#typography", content)
+                for repeated_rule in ("18~23pt", "4.5:1", "120~600자"):
+                    self.assertNotIn(repeated_rule, content)
+
+    def test_ledger_json_is_the_source_of_the_generated_markdown_view(self):
+        for path in (SKILL, ADAPTIVE_SKILL, ADAPTIVE_FULL_OPTIMIZED, README):
+            content = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertIn("정본", content)
+                self.assertIn("--markdown-output", content)
+        self.assertIn("두 파일을 독립적으로 수정하지 않는다", self.skill)
+
+    def test_render_reuse_preserves_fresh_qa_and_exposes_cache_failures(self):
+        verification = ADAPTIVE_VERIFICATION.read_text(encoding="utf-8")
+        self.assertIn("과거 PASS를 현재 판단으로 재사용하지 않는다", verification)
+        self.assertIn("renderCacheSha256", verification)
+        schema = json.loads(ADAPTIVE_VISUAL_SCHEMA.read_text(encoding="utf-8"))
+        self.assertEqual(
+            schema["properties"]["renderCacheSha256"]["pattern"], "^[0-9a-f]{64}$",
+        )
+        self.assertNotIn("renderCacheSha256", schema["required"])
+        self.assertIn("해시 불일치는", verification)
+        self.assertIn("옵션 없는 기존 CLI는 항상 새로 렌더한다", verification)
+        for path in (ADAPTIVE_SKILL, ADAPTIVE_PRODUCTION, ADAPTIVE_FULL_OPTIMIZED, README):
+            with self.subTest(path=path.name):
+                self.assertIn("--reuse-render", path.read_text(encoding="utf-8"))
 
     def test_source_dates_remain_in_evidence_not_default_footers(self):
         for path in (
@@ -325,13 +372,26 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
                 self.assertIn(term, content)
 
     def test_refinement_and_customer_guides_are_reachable(self):
-        for path in (SKILL, ADAPTIVE_SKILL, ADAPTIVE_REFINEMENT, CUSTOMER_EVIDENCE):
+        for path in (
+            SKILL, ADAPTIVE_SKILL, ADAPTIVE_REFINEMENT, CUSTOMER_EVIDENCE,
+            ADAPTIVE_PRODUCTION, ADAPTIVE_EDITORIAL, ADAPTIVE_BLUEPRINTS,
+            ADAPTIVE_DECK_SPEC, ADAPTIVE_VERIFICATION, ADAPTIVE_FULL_OPTIMIZED, README,
+        ):
             content = path.read_text(encoding="utf-8")
             for target in re.findall(r"\[[^\]]+\]\(([^)\s]+)\)", content):
-                if target.startswith(("https://", "http://", "#")):
+                if target.startswith(("https://", "http://")):
                     continue
                 with self.subTest(path=path.name, target=target):
-                    self.assertTrue((path.parent / target.split("#", 1)[0]).is_file())
+                    filename, _, fragment = target.partition("#")
+                    destination = path.parent / filename if filename else path
+                    self.assertTrue(destination.is_file())
+                    if fragment and destination.suffix == ".md":
+                        text = destination.read_text(encoding="utf-8")
+                        anchors = set(re.findall(r'<a id="([^"]+)">', text))
+                        for heading in re.findall(r"^#{1,6} (.+)$", text, re.MULTILINE):
+                            slug = re.sub(r"[^\w\s-]", "", heading.lower()).replace(" ", "-")
+                            anchors.add(slug)
+                        self.assertIn(fragment, anchors)
         self.assertIn("reference/customer-evidence.md", self.skill)
 
     def test_readme_matches_current_search_and_research_contracts(self):

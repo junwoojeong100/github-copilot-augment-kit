@@ -75,9 +75,14 @@ HTTP 성공이나 URL 존재만으로 원문 확인을 판정하지 않는다. �
 - 상충하는 주장은 각각 보존하고, 접근 실패·페이월·신뢰 미달 자료는 `excludedSources`에 이유를 남긴다.
 - `Confidence`는 `High`(1차 원문 직접 근거), `Medium`(신뢰할 수 있는 2차·간접 근거),
   `Low`(단일 비1차·미해결 충돌)다. Low는 핵심 결론의 확정 근거로 쓰지 않는다.
-- 재현 가능한 수집물은 `fact-ledger.md`로 보존한다. machine-readable handoff는
-  [`schema/fact-ledger.schema.json`](./schema/fact-ledger.schema.json)과
-  [`scripts/validate_fact_ledger.py`](./scripts/validate_fact_ledger.py)로 검증한다.
+- `fact-ledger.json`을 정본으로 작성하고 [`공통 schema`](./schema/fact-ledger.schema.json)로 검증한다.
+  `fact-ledger.md`는 검증된 JSON에서 생성하는 읽기용 뷰이며 두 파일을 독립적으로 수정하지 않는다.
+  [`검증기`](./scripts/validate_fact_ledger.py)는 출처·판단 이유·가정·제외 자료를 보존해 출력한다.
+
+```bash
+python3 -B .github/skills/web-search/scripts/validate_fact_ledger.py <work>/fact-ledger.json \
+  --markdown-output <work>/fact-ledger.md
+```
 
 ## 완료 판정
 

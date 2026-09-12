@@ -20,6 +20,7 @@ import time
 from pathlib import Path
 from typing import Iterable, Sequence
 
+from tooling import font_directories as _font_directories
 from tooling import resolve_soffice
 
 FONT_PATTERNS = (
@@ -150,25 +151,6 @@ def select_font(
         if normalized in installed:
             return installed[normalized]
     return next(iter(installed.values()), None)
-
-
-def _font_directories() -> list[Path]:
-    if sys.platform == "win32":
-        directories = []
-        windir = os.environ.get("WINDIR")
-        local_app_data = os.environ.get("LOCALAPPDATA")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-        if local_app_data:
-            directories.append(Path(local_app_data) / "Microsoft" / "Windows" / "Fonts")
-        return directories
-    if sys.platform == "darwin":
-        return [
-            Path("/System/Library/Fonts"),
-            Path("/Library/Fonts"),
-            Path.home() / "Library" / "Fonts",
-        ]
-    return []
 
 
 def _font_family_from_filename(path: Path) -> str | None:

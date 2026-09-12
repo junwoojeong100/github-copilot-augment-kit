@@ -162,7 +162,7 @@ npm install -g @github/copilot
 
 | 스킬 | 트리거 예시 | 기능 |
 |------|-----------|------|
-| **web-search** | "최신 버전 알려줘", "고객·산업 기초자료 수집해줘" | 전용 검색 도구·공식 문서 검색으로 원문을 검증하고 Markdown/JSON Fact Ledger로 구조화해 downstream 스킬에 전달 |
+| **web-search** | "최신 버전 알려줘", "고객·산업 기초자료 수집해줘" | 공식 원문을 검증하고 JSON Fact Ledger를 정본으로 관리하며 Markdown 뷰를 자동 생성해 downstream 스킬에 전달 |
 | **adaptive-presentation** | "병원 경영진 대상 의료 AI 전략 PPT 20장", "기술 발표자료 만들어줘", "제품 소개 슬라이드" | 결론·다음 행동 우선 스토리라인 + 필요한 외부 조사 + python-pptx 자유 제작 + 통합 QA Runner → 편집 가능한 PPTX |
 
 ---
@@ -193,7 +193,9 @@ npm install -g @github/copilot
 **슬라이드는 고정 생성 엔진 없이 `python-pptx`로 직접 만듭니다.** 정보 관계(숫자·흐름·비교·계층·사례)에
 맞는 시각 형태를 슬라이드마다 자유롭게 선택하고, 같은 구조를 기계적으로 반복하지 않습니다. 템플릿이
 있으면 profile을 추출해 원본 master와 theme을 보존하고, 없으면 환경에서 확인한 언어별 설치 폰트를
-선택합니다. 본문·도식 대비 7:1 목표·4.5:1 하한, 주요 본문 18~23pt 권장·15pt 하한을 적용하고,
+선택합니다. [타이포그래피](.github/skills/adaptive-presentation/reference/pptx-production.md#typography)·
+[대비](.github/skills/adaptive-presentation/reference/pptx-production.md#contrast)·
+[발표 노트](.github/skills/adaptive-presentation/reference/pptx-production.md#speaker-notes)의 상세 기준은 제작 가이드에서 관리합니다.
 출처 footer는 발행자·문서명·원문 링크로 표시합니다. 내부 Fact ID와 원본 확인 날짜는 화면에서 기본
 생략하되 근거 기록과 해석에 필요한 날짜·버전은 보존합니다. 아이디어가 필요하면 `reference/slide-blueprints.md`의 관계형 패턴을
 선택적으로 참고하되 그대로 복제하지 않습니다.
@@ -207,6 +209,14 @@ npm install -g @github/copilot
 출발점으로만 사용하며, 기능 상태·가격·규제·고객 성과는 발표 요청마다 현재 공식 원문으로 다시
 확인합니다. 사용자 제공 자료만 재구성하거나 외부 사실이 없는 창작형 덱에는 웹 조사를 강제하지
 않습니다.
+
+복합 조사에서는 검증된 `fact-ledger.json`이 근거의 정본이며, 읽기용 Markdown을 별도로 다시 작성하지 않습니다.
+
+```bash
+python3 -B .github/skills/web-search/scripts/validate_fact_ledger.py \
+  <session>/<deck>-work/fact-ledger.json \
+  --markdown-output <session>/<deck>-work/fact-ledger.md
+```
 
 재생성 Python 스크립트와 QA 파일은 세션 작업 폴더에 격리하며 저장소와 최종 출력 폴더에는 사용자가
 요청한 최종 파일 외 중간 자산을 남기지 않습니다. 중간 PDF는 manifest의 PPTX·PDF SHA-256이 모두
@@ -227,13 +237,17 @@ npm install -g @github/copilot
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
   deck.pptx --out <session>/<deck>-work \
-  --deck-spec <session>/<deck>-work/deck-spec.json
+  --deck-spec <session>/<deck>-work/deck-spec.json --reuse-render
 ```
 
 Runner는 구조 감사와 전체 렌더를 병렬 실행하고 그룹 자식·표 셀을 semantic frame으로 매핑합니다.
 chart·SmartArt·unmapped text·overflow는 성공으로 숨기지 않고 finding ID를 발급합니다. 확대 검토한
 의도적 예외만 ID와 이유를 manifest에 남기며, 최종 contact sheet 검토는 현재 PPTX SHA-256과 연결된
 `visual-review.json`으로 증명합니다. QA Runner는 비어 있지 않은 일반 출력 디렉터리를 덮어쓰지 않습니다.
+
+`--reuse-render`는 같은 입력·렌더 환경·옵션과 검증된 산출물 해시가 일치할 때 전체 PDF·contact sheet를
+재사용합니다. 입력이 달라지면 새로 렌더하고, 손상된 캐시는 오류로 처리합니다. 구조·근거·언어·notes·
+시각 검토 판단은 매번 다시 검사합니다. 옵션 없는 기존 CLI 동작은 유지합니다.
 
 개인 설치(같은 이름의 스킬이 없을 때):
 
@@ -259,7 +273,7 @@ time을 줄입니다.
 | **요청별 변경 surface 축소** | 외부 조사가 필요하면 Fact Ledger를 만들고, 스토리라인을 먼저 확정한 뒤 슬라이드는 주제에 맞게 자유 제작 |
 | **안전한 병렬 실행** | 동일 PPTX의 감사·렌더를 읽기 전용 병렬 실행. 파일별 위임을 요청받으면 공통 근거를 공유하고 덱마다 단일 담당자가 제작·QA, 메인이 전달 |
 | **도구 캐시** | 저장소 밖 Python·렌더링 도구·폰트 탐색 캐시를 재사용 |
-| **중간 산출물 재사용** | PPTX SHA-256이 같은 리비전에서만 중간 PDF를 상세 렌더에 재사용 |
+| **중간 산출물 재사용** | `--reuse-render`로 입력·환경·옵션·산출물 해시가 일치하는 전체 렌더 재사용; QA 판단은 항상 새로 검사 |
 | **수정 루프 단축** | 결함을 모아 일괄 수정 → 위험 슬라이드 확인 → 변경 시에만 최종 전체 render |
 | **측정** | 단계별 시간·PDF reuse·cache hit·repair cycle을 세션 `metrics.json`에 기록 |
 

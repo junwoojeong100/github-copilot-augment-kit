@@ -7,7 +7,7 @@
 
 ## Editorial business mode
 
-- 표지·구분 제목은 30~42pt, 한국어 본문 리딩 메시지는 27pt Bold를 사용하고 긴 제목은 전용 높이를 예약한다.
+- 제목은 [역할별 타이포그래피](./pptx-production.md#typography)를 적용하고 긴 제목은 전용 높이를 예약한다.
 - 2~4열 editorial column, native table/chart, metric-led page, process band, architecture split,
   decision tree, roadmap처럼 공통 축이 분명한 구조를 우선한다.
 - column은 card gap보다 hairline rule과 정렬로 구분할 수 있다.

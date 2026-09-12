@@ -11,6 +11,11 @@
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
     },
+    "renderCacheSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Required by --reuse-render when visual review is required; binds approval to the inspected render cache and environment."
+    },
     "reviewer": {"type": "string", "minLength": 1},
     "reviewedSlides": {
       "oneOf": [

@@ -17,12 +17,13 @@ import deck_spec
 import inspect_template
 import language_policy
 import qa_exceptions
+import render_cache
 import render_pptx
 import rendered_overlap
 import speaker_notes
 import toolcheck
 import visual_review
-from tooling import path_is_within, paths_collide
+from tooling import path_is_within, paths_collide, write_json_atomic
 
 
 def select_risk_slides(report: dict, count: int) -> list[int]:
@@ -755,16 +756,29 @@ def verify(args: argparse.Namespace) -> dict:
                     f"Verification input must be outside managed QA directory "
                     f"{candidate}: {input_path}"
                 )
-    qa_dir, detail_dir = prepare_output_dirs(out)
+    render_args = render_namespace(deck, out / "qa")
+    cache_signature = None
+    cached_render = None
+    cache_reason = "disabled"
+    reuse_render = getattr(args, "reuse_render", False)
+    if reuse_render:
+        cache_signature = render_cache.signature(render_args)
+        cached_render, cache_reason = render_cache.load(render_args, cache_signature)
+    qa_dir, detail_dir = prepare_output_dirs(
+        out, preserve_qa=cached_render is not None,
+    )
     audit_path = qa_dir / "audit.json"
-
+    audit_path.unlink(missing_ok=True)
     audit_args = audit_namespace(args, audit_path)
-    render_args = render_namespace(deck, qa_dir)
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        audit_future = executor.submit(audit_pptx.audit, audit_args)
-        render_future = executor.submit(render_pptx.render, render_args)
-        audit_report, audit_failures = audit_future.result()
-        render_manifest = render_future.result()
+    if cached_render is not None:
+        audit_report, audit_failures = audit_pptx.audit(audit_args)
+        render_manifest = cached_render
+    else:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            audit_future = executor.submit(audit_pptx.audit, audit_args)
+            render_future = executor.submit(render_pptx.render, render_args)
+            audit_report, audit_failures = audit_future.result()
+            render_manifest = render_future.result()
 
     with zipfile.ZipFile(deck) as archive:
         corrupt_member = archive.testzip()
@@ -965,6 +979,17 @@ def verify(args: argparse.Namespace) -> dict:
         )
 
     automated_passed = not audit_failures and corrupt_member is None
+    cache_binding = None
+    if cache_signature is not None:
+        if render_cache.signature(render_args) != cache_signature:
+            raise RuntimeError("PPTX or render environment changed during verification")
+        if cached_render is None:
+            render_cache.store(render_args, cache_signature, render_manifest)
+        else:
+            confirmed, _ = render_cache.load(render_args, cache_signature)
+            if confirmed is None:
+                raise RuntimeError("Render cache changed during verification")
+        cache_binding = render_pptx.sha256_file(qa_dir / render_cache.CACHE_NAME)
     visual_review_result = None
     visual_review_failure = None
     if args.require_visual_review:
@@ -978,6 +1003,7 @@ def verify(args: argparse.Namespace) -> dict:
                     args.visual_review,
                     deck,
                     slide_count=render_manifest["total_slides"],
+                    render_cache_sha256=cache_binding,
                 )
             except (
                 FileNotFoundError,
@@ -993,6 +1019,12 @@ def verify(args: argparse.Namespace) -> dict:
         "audit_failures": audit_failures,
         "audit": audit_report,
         "full_render": render_manifest,
+        "render_cache": {
+            "enabled": reuse_render,
+            "reused": cached_render is not None,
+            "reason": cache_reason,
+            "sha256": cache_binding,
+        },
         "risk_slides": selected,
         "detail_render": detail_manifest,
         "zip_integrity": zip_integrity,
@@ -1016,15 +1048,14 @@ def verify(args: argparse.Namespace) -> dict:
         ),
         "visual_review_failure": visual_review_failure,
     }
-    report_path.write_text(
-        json.dumps(result, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    write_json_atomic(report_path, result)
     result["report"] = str(report_path)
     return result
 
 
-def prepare_output_dirs(out: Path) -> tuple[Path, Path]:
+def prepare_output_dirs(
+    out: Path, *, preserve_qa: bool = False,
+) -> tuple[Path, Path]:
     qa_dir = out / "qa"
     detail_dir = out / "qa-detail"
     for path in (qa_dir, detail_dir):
@@ -1037,7 +1068,8 @@ def prepare_output_dirs(out: Path) -> tuple[Path, Path]:
                 raise RuntimeError(
                     f"Refusing to replace non-empty unowned QA directory: {path}"
                 )
-            shutil.rmtree(path)
+            if not (preserve_qa and path == qa_dir):
+                shutil.rmtree(path)
         path.mkdir(parents=True, exist_ok=True)
     return qa_dir, detail_dir
 
@@ -1049,6 +1081,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("deck", type=Path)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--deck-spec", type=Path)
+    parser.add_argument(
+        "--reuse-render",
+        action="store_true",
+        help=(
+            "Record/reuse a complete render of a static, self-contained deck when "
+            "PPTX, renderer/font environment, "
+            "options, and artifact hashes match. Changed inputs are rendered afresh; "
+            "QA decisions are always recomputed."
+        ),
+    )
     parser.add_argument("--expected-slides", type=audit_pptx.positive_int)
     parser.add_argument("--risk-count", type=render_pptx.positive_int, default=3)
     parser.add_argument("--risk-slides")
@@ -1131,6 +1173,9 @@ def main() -> int:
         f"risk={','.join(map(str, result['risk_slides'])) or 'none'}"
     )
     print(f"Report: {result['report']}")
+    if result["render_cache"]["enabled"]:
+        cache = result["render_cache"]
+        print(f"Render cache {'HIT' if cache['reused'] else 'MISS'}: {cache['reason']}")
     return 0 if result["passed"] else 1
 
 

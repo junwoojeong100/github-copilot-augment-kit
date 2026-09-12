@@ -45,8 +45,9 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
 - 외부 사실·최신 정보·가격·규제·제품 상태·고객 성과를 사용하는 경우 `web-search` 스킬을 호출한다.
   검색 backend와 원문 검증 방법은 `web-search`가 결정한다.
 - 사용자 제공 자료만 재구성하거나 외부 사실이 없는 창작형 덱은 불필요한 웹 조사를 강제하지 않는다.
-- 복합 조사는 공통 Fact Ledger 계약의 `fact-ledger.md`·`fact-ledger.json`으로 검증한다.
-  Ledger를 확장하지 않고 슬라이드 매핑은 storyline과 deck spec에 기록한다.
+- 복합 조사는 공통 Fact Ledger 계약의 `fact-ledger.json`을 정본으로 검증하고, `fact-ledger.md`는
+  `web-search` 검증기의 `--markdown-output`으로 생성한다. Ledger를 확장하지 않고
+  슬라이드 매핑은 storyline과 deck spec에 기록한다.
 - 공개 사례·협력 발표·검토 후보를 구분하고, 수치의 분모·기간·초기 결과 같은 조건을 함께 표시한다.
   상충·Preview·가정·시연 데이터도 표시하며, 필요한 근거가 모이면 검색을 종료한다.
 
@@ -67,19 +68,16 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
 - 첫 본문에서 결론·가치·다음 행동을 보여준다. 한 장은 질문 하나·결론 하나·핵심 근거 2~4개를 맡는다.
 - 제목+불릿 대신 전후 비교·흐름·책임 경계·표·차트·타임라인으로 관계를 보여준다.
   핵심 도형·차트·텍스트는 편집 가능한 native visual로 만들고 같은 카드 구조를 기계적으로 반복하지 않는다.
-- 본문·도식의 대비는 **7:1 목표·4.5:1 하한**, 주요 본문은 **18~23pt 권장·15pt 하한**이다.
-  작은 글씨로 과밀을 숨기지 않으며, 고정 팔레트 대신 의미별 색을 일관되게 사용한다.
-- `scripts/toolcheck.py`로 폰트를 확인한다. 한국어 기본은 모든 visible run에 `Apple SD Gothic Neo`,
-  본문 리딩 메시지는 `27pt · Bold`다. `fontPolicy.requireAllTextFont=true`와 `leadingMessage`에 기록한다.
-  명시적 브랜드·템플릿 override도 같은 계약에 기록한다. fallback은 격리된 렌더에만 허용한다.
+- [타이포그래피](./reference/pptx-production.md#typography)·[대비](./reference/pptx-production.md#contrast)의
+  상세 기준은 제작 가이드 한 곳에서 관리한다. 작은 글씨로 과밀을 숨기지 않고 의미별 색을 일관되게 쓴다.
+- `scripts/toolcheck.py`로 폰트를 확인하고 [글꼴 계약](./reference/pptx-production.md#fonts)을
+  `fontPolicy`에 기록한다. 임의의 slide별 스타일 변경이나 전달 PPTX의 fallback 혼용은 허용하지 않는다.
 - 한국어 설명을 우선하고 공식 서비스·기능·API·SDK·component 이름은 영문으로 유지한다.
   새 핵심 technical term은 장당 3~5개로 제한하고 `쉬운 결론 → 공식명 → 한글 역할 → 고객 의미`로 읽히게 한다.
 - `languagePolicy`의 `targetLatinRatio=0.40`, `maxLatinRatio=0.55`, `maxSlideLatinRatio=0.75`를 유지한다.
   `protectedTerms`는 실제 공식명·정착된 기술 용어만 중립 처리하며, 비율을 맞추려고 설명 문장을 등록하지 않는다.
-- 한국어 전 장의 notes는 기존 내용을 비우고 현재 storyline·visual·근거로 재생성한다. 기본 `core-only`는
-  `핵심 메시지:`로 시작하는 120~600자·4~6문장이다. 약 60초 분량의 쉬운 구어체로 관계와 고객 의미를 설명한다.
-  `질문:`·`전환:`은 넣지 않으며, 사용자가 진행 cue를 요청한 경우에만 `guided-flow`를 쓴다.
-  notes에 출처·Fact ID·URL을 넣지 않는다. 상세 작성법은 제작 가이드를 따른다.
+- 한국어 전 장의 notes는 새 덱에서 재생성하고 [발표 노트 계약](./reference/pptx-production.md#speaker-notes)을
+  따른다. 기본 `core-only`와 명시적으로 요청된 `guided-flow`를 구분하고 쉬운 구어체로 관계와 고객 의미를 설명한다.
 - footer는 발행자·문서명과 원문 링크로 표시하고 내부 Fact ID는 노출하지 않는다.
   원본 확인 날짜는 기본적으로 화면에서 생략하되 Fact Ledger의 `accessed`에는 보존한다.
   수치 기준일·발행 연도·버전·시행일처럼 의미를 바꾸는 날짜와 조건은 삭제하지 않는다.
@@ -90,13 +88,16 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py <deck>.pptx --out <work> \
-  --deck-spec <work>/deck-spec.json
+  --deck-spec <work>/deck-spec.json --reuse-render
 ```
 
 - [`scripts/verify_deck.py`](./scripts/verify_deck.py)와 [`검증 가이드`](./reference/verification.md)로
   동일 PPTX의 구조 감사·전체 렌더를 실행한다. 전체 contact sheet는 한 장씩 보고 위험 장만 확대한다.
 - 미지원 chart·SmartArt·unmapped text도 finding ID별로 검토한다. 결함을 일괄 수정하고 다시 렌더한다.
   의도적 예외만 이유를 기록하며, 최종 SHA-256에 묶인 `visual-review.json`으로 verifier를 재실행한다.
+  재사용 모드의 증거는 현재 `qa/render-cache.json`의 SHA-256을 `renderCacheSha256`으로 연결해 환경 변경 시 무효화한다.
+- `--reuse-render`는 입력·환경·옵션·산출물 해시가 같은 전체 렌더만 재사용한다. QA 판단은 매번 다시 검사하며,
+  변경된 입력은 새로 렌더한다. 손상된 캐시는 오류로 처리하고 옵션 없는 실행으로 새 검증을 수행한다.
 - `claimIds`에서 출처 대상이 도출되며 footer 발행자·상태·언어·폰트·notes를 검증한다.
   대비 측정·의미 보존·발표 시간은 별도 편집 검토로 확인하고 자동 PASS와 혼동하지 않는다.
 

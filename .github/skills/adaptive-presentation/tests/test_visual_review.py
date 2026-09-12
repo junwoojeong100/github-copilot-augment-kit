@@ -77,6 +77,37 @@ class VisualReviewTests(unittest.TestCase):
                 notes="Reviewed every slide through the contact sheet.",
             )
 
+    def test_render_bound_review_rejects_missing_stale_and_malformed_bindings(self):
+        expected = "a" * 64
+        for value in ({}, {"renderCacheSha256": "b" * 64}, {"renderCacheSha256": "invalid"}):
+            with self.subTest(value=value):
+                with self.assertRaises(VisualReviewError):
+                    load_visual_review(
+                        self.write_review(**value), self.deck, slide_count=1,
+                        render_cache_sha256=expected,
+                    )
+        load_visual_review(
+            self.write_review(renderCacheSha256=expected), self.deck, slide_count=1,
+            render_cache_sha256=expected,
+        )
+
+    def test_writer_binds_review_to_the_requested_render_cache(self):
+        cache = self.work / "render-cache.json"
+        cache.write_text('{"synthetic": "render fixture"}', encoding="utf-8")
+        evidence = write_visual_review(
+            self.deck, self.work / "render-bound-review.json",
+            reviewer="Test", notes="Synthetic render-bound review fixture.",
+            render_cache=cache,
+        )
+        load_visual_review(
+            evidence, self.deck, slide_count=1, render_cache_sha256=sha256_file(cache),
+        )
+        cache.write_text('{"synthetic": "changed render"}', encoding="utf-8")
+        with self.assertRaisesRegex(VisualReviewError, "render cache"):
+            load_visual_review(
+                evidence, self.deck, slide_count=1, render_cache_sha256=sha256_file(cache),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
