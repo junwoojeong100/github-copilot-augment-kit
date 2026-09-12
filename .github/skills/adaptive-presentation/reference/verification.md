@@ -26,6 +26,10 @@ chart·SmartArt처럼 자동 text mapping을 지원하지 않는 객체는 성�
 
 ## 1. 구조 감사
 
+대비 측정·원본의 의미 보존·수치 조건의 정확성·발표 시간 합계는 현재 canonical runner의 자동 검사
+범위가 아니다. [`refinement.md`](./refinement.md)의 검토 기록과 함께 확인하며,
+`automated_passed=true`만으로 이 항목까지 통과했다고 주장하지 않는다.
+
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py deck.pptx
 ```
@@ -140,6 +144,8 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 - source와 page number가 겹치는가?
 - 한글 조사와 영문 혼용이 이상하게 줄바꿈되는가?
 - 대비가 충분한가?
+- 수치 바로 옆의 분모·기간·초기 내부 결과·미확인 표시가 충분히 크고 읽히는가?
+- 원본 확인 날짜를 생략했어도 발행 연도·수치 기준일·제품 버전 등 필요한 맥락과 원문 링크는 남아 있는가?
 - 정렬이 흔들리지 않는가?
 
 ## 5. 합격 임계치
@@ -152,10 +158,13 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 | Content title size | `unexpected_title_size_inconsistencies` 0 |
 | Leading message style | 한국어 기본 `Apple SD Gothic Neo · 27pt · Bold`; deck spec과 family·size·weight 일치 |
 | Whole-deck font | 한국어 visible text run 전체가 `Apple SD Gothic Neo`를 명시; fallback은 PDF 렌더 대체만 허용 |
-| Primary body | 원칙적으로 16pt+, 최소 15pt |
+| Primary body | 18~23pt 권장, 최소 15pt |
 | Automated body floor | canonical QA에서 likely body 15pt 미만 실패; compact label/secondary annotation은 별도 보고 |
 | Source/footer | 8~9.5pt 허용 |
-| Editorial hierarchy | title 30~42pt, primary body 15~19pt, secondary 13~15pt, label 11~13pt |
+| Editorial hierarchy | 표지 30~42pt·본문 제목 27pt Bold, 주요 본문 18~23pt, 표·도식 내용 15~17pt, 짧은 보조 label 11~13pt |
+| Text contrast (별도 측정) | 본문·도식·중요 조건 7:1 목표·4.5:1 하한; 사용자 지정 임계치는 그대로 적용, 미측정 조합 제외 |
+| Content preservation (별도 검토) | 원본 항목별 대응과 정정 이유, 수치 조건의 가시성; 키워드 일치만으로 의미 보존을 판정하지 않음 |
+| Presentation timing (별도 검토) | 요청 시간이 있으면 장별 계획 합계와 일치; 실제 발표 시간 보장 아님 |
 | Density after reduction | 여백이 생긴 장만 근거·KPI·owner·예외 조건을 1~2개 보강하고, 고밀도 장은 유지 |
 | Native visual | 본문 장에 편집 가능한 visual structure 1개 이상; 표지·section divider·단순 마무리 제외 |
 | Repetition | 같은 layout이 의도 없이 3장 연속되지 않음 |
@@ -202,6 +211,10 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 한글 copy가 없는 경우에만 실패한다.
 
 ## 7. 정리
+
+기존 덱 개선은 최종 위치에 복사한 PPTX의 SHA-256이 검토한 revision과 일치하고, 명시적 덮어쓰기
+대상 외 원본·참고 덱의 해시가 유지되는지 확인한다. 여러 덱은 각 파일이 통과한 뒤에만 전체 완료를 알린다.
+정리는 작업이 만든 것으로 확인한 경로만 대상으로 하며, 다른 작업의 폴더나 기존 파일은 삭제하지 않는다.
 
 ```bash
 WORK_DIR="<session>/<deck>-work" python3 -B -c \

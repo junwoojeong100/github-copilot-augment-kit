@@ -193,9 +193,9 @@ prs.save(OUT)
 
 - 표지·section divider 제목 30~42pt
 - 한국어 본문 리딩 메시지 27pt Bold
-- 주요 본문 15~19pt
-- 보조 13~15pt
-- 표·도식 label 11~13pt
+- 주요 본문 18~23pt 권장, 조밀한 비교도 15pt 하한
+- 보조 주석 13~15pt; 주요 조건을 주석으로 숨기지 않음
+- 표·도식 내용 15~17pt, 짧은 보조 label만 11~13pt
 - 출처 8~9.5pt
 
 표지·section divider를 제외한 본문 슬라이드 title role은 `fontPolicy.leadingMessage`를 사용한다. 한국어
@@ -232,6 +232,7 @@ Appendix로 구분한다.
   English로 유지하고, 바로 아래 또는 옆에 쉬운 한국어로 역할을 설명한다.
 - 제목은 고객이 이해할 변화나 질문을 말한다. visual node·card heading에는 정확한 English term을 쓰고,
   body에는 “무엇을 하는가 / 왜 필요한가 / 어떤 결과가 생기는가”를 한국어로 적는다.
+- 새 핵심 technical term은 한 장에 3~5개를 기본으로 하고 첫 등장에 한 줄 역할 설명을 붙인다.
 - architecture 흐름은 `English component → 쉬운 역할 → business outcome`으로 읽히게 한다.
 - capitalization을 공식 문서와 일치시킨다. 예: `Microsoft Foundry`, `Hosted Agents`,
   `Foundry IQ`, `Toolboxes`, `Code Review`, `Browser Tools`, `Control Plane`.
@@ -280,8 +281,9 @@ Knowledge와 action을 분리하면 근거의 정확성과 실행 통제를 각�
   `핵심 메시지`에 압축한다.
 - notes에는 출처 블록, Fact ID, URL을 넣지 않는다. machine traceability는 Fact Ledger와
   deck spec의 `claimIds`로 유지한다.
-- 화면 footer는 `출처: Publisher · Document title (YYYY-MM-DD 확인)`처럼 사람이 읽을 수 있게 쓰고,
-  `[F-001]` 같은 내부 Fact ID와 긴 URL은 넣지 않는다.
+- 화면 footer는 `출처: Publisher · Document title`과 원문 hyperlink로 표시한다.
+  원본 확인 날짜는 Fact Ledger의 `accessed`에 남기고 화면에서는 기본 생략한다.
+  `[F-001]` 같은 내부 Fact ID와 긴 URL은 넣지 않으며, 수치 기준일·발행 연도·버전은 필요한 곳에 유지한다.
 - 한국어 기준 장당 약 60초, 전체 120~600자·4~6문장을 기본으로 한다.
 
 ## 6. 한글 폰트
@@ -303,6 +305,8 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 
 탐지 결과를 `deck-spec.json`의 `fontPolicy.selected`에 기록하고 생성 스크립트의 모든 run에 사용한다.
 폰트를 PPTX에 임베드할 수 있다고 가정하지 않으며 verifier에서 PDF 렌더 폰트와 다시 대조한다.
+렌더 전용 fallback이 필요하면 격리된 렌더 profile에만 적용하고 사용한 글꼴을 기록한다.
+전달 PPTX의 typeface나 사용자 전역 앱 설정을 바꾸는 방법으로 렌더 문제를 숨기지 않는다.
 
 ## 7. 색과 대비
 
@@ -316,7 +320,10 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 - 카드·단계·팀마다 서로 다른 accent를 배정하지 않는다. 구분은 우선 위치·여백·크기·선 굵기·타이포
   계층으로 만들고, 색은 선택·강조·흐름에만 사용한다.
 - 같은 의미와 상태는 덱 전체에서 같은 색을 사용한다.
-- 본문과 배경 대비 최소 4.5:1
+- 본문·도식·중요 조건의 전경/배경 대비는 7:1을 목표로 하고 4.5:1 미만은 수정한다.
+  사용자 지정 임계치는 그대로 적용하며, 큰 글자라는 이유로 낮은 대비를 허용하지 않는다.
+- 실제 전경·배경의 상대 휘도로 `(Lmax + 0.05) / (Lmin + 0.05)`를 계산하고 색 조합별 결과를
+  세션 검토 기록에 남긴다. 투명도·이미지·gradient 배경은 별도로 확인하며 미측정 값을 PASS로 간주하지 않는다.
 - 제목은 크더라도 낮은 대비 회색으로 두지 않는다
 - 색만으로 상태를 전달하지 않고 GA/PREVIEW/위험 텍스트를 병기
 - 상태색이 꼭 필요하면 해당 슬라이드의 국소 예외로 제한하고, 구조 색상 체계를 rainbow palette로
@@ -348,6 +355,8 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 - 공통 비교 축을 왼쪽에 고정
 - 숫자 정렬과 단위 통일
 - 긴 문장을 셀에 넣지 않는다
+- 행 높이는 실제 줄 수와 cell padding을 수용해야 한다. 두 줄이 간신히 맞는 표는 렌더에서 늘어날 수
+  있으므로 높이·여백을 확보하고, 공식명은 명칭 경계에서 줄바꿈한다.
 - 표가 핵심 메시지를 숨기면 비교 카드·dot plot·decision tree로 전환
 
 ## 10. 차트
@@ -375,10 +384,14 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 주장 슬라이드의 footer에 직접 표시한다.
 
 ```text
-Source: Organization · Document title (accessed YYYY-MM-DD)
+Source: Organization · Document title
 ```
 
 - 긴 URL은 제목에 hyperlink를 걸거나 짧은 경로로 표시
+- 원본 확인 날짜는 화면에서 기본 생략하고 Fact Ledger의 `accessed`에 보존한다.
+  사용자가 요구한 확인일과 해석에 필요한 발행 연도·측정 기간·가격 기준일·버전·시행일은 유지한다.
+- 수치의 분모·기간·업무 범위·초기 내부 결과 같은 조건은 해당 수치 가까이에 표시한다.
+  확인된 사례와 협력 발표·미확인 후보·제안용 구성은 구분하며 상세 근거는 `web-search` 계약을 따른다.
 - 여러 출처는 2개를 넘기지 않도록 핵심 근거를 선택
 - 생성형 AI로 만든 그림이나 DEMO DATA는 명시
 

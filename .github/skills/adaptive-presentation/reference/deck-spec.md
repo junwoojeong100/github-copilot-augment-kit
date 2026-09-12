@@ -142,16 +142,19 @@
 - GA/Preview, 적용 범위, 예외는 slide visual·footer·`stateLabels`에 명확히 표시한다. 발표 결론을
   바꾸는 조건만 `핵심 메시지`에 압축하고 notes에 별도 상세 블록을 만들지 않는다.
 - Fact ID와 출처는 speaker notes가 아니라 machine contract와 Fact Ledger에만 기록한다. 슬라이드에
-  보이는 footer에는 Fact ID를 제거하고 `출처: Publisher · Document title (YYYY-MM-DD 확인)`처럼
-  사람이 읽을 수 있게 표시한다.
+  보이는 footer에는 Fact ID를 제거하고 `출처: Publisher · Document title`과 원문 hyperlink를 표시한다.
+  원본 확인 날짜는 화면에서 기본 생략하고 Fact Ledger의 `accessed`에 보존한다.
+  발행 연도·수치 기준일·버전·시행일처럼 의미를 바꾸는 날짜는 삭제하지 않는다.
 - 외부 출처가 없는 표지·진단·실행 장은 `내부 프레임 · 고객별 검증 필요`, `ASSUMPTION`,
   `Recommendation`처럼 성격과 검증 조건을 적는다.
 
 `slides`는 `request.slideCount`와 정확히 일치하고 1부터 연속 번호를 사용한다. `claimIds`는 공통
-Fact Ledger JSON의 `Fact` ID만 참조한다. Inference는 근거 Fact ID를 연결하고 Assumption은
+Fact Ledger JSON의 `Accepted`인 `Fact` ID만 참조한다. Inference는 근거 Fact ID를 연결하고 Assumption은
 `stateLabels`로 표시한다. `claimIds`는 machine contract와 Fact Ledger에만 남기며 speaker notes에는
 넣지 않는다. 해당 슬라이드 footer에는 `출처: Publisher · Document title`처럼 발행자와 문서명을
 표시한다. Preview·가정·시연 수치는 `stateLabels`에 기록하고 실제 슬라이드에도 같은 텍스트를 보여준다.
+내용 보존표·장별 발표 시간 합계·대비 측정은 세션의 별도 검토 기록이다. 이를 기록하기 위해
+schema에 없는 필드를 추가하거나 canonical verifier가 자동 검증한다고 가정하지 않는다.
 
 ## 템플릿
 

@@ -32,6 +32,8 @@ GitHub Copilot CLI와 VS Code Copilot Chat/Agent의 검색 capability를 사용�
 검색 결과·snippet·AI 요약은 URL 발견용이며 근거가 아니다. `web_fetch` 같은 조회 도구로 canonical
 원문을 확인한다. JS challenge·CAPTCHA·403·429는 우회·반복하지 않고 동급 출처로 전환한다.
 공식 URL도 capability도 없으면 사용자에게 출발 URL이 필요함을 알리고 최신 사실을 만들지 않는다.
+HTTP 성공이나 URL 존재만으로 원문 확인을 판정하지 않는다. 빈 본문·사이트 footer만 반환되면
+공식 원문의 일반 브라우저 렌더를 확인할 수 있지만, 접근 제한 우회에는 사용하지 않는다.
 
 ## 안전
 
@@ -51,6 +53,14 @@ GitHub Copilot CLI와 VS Code Copilot Chat/Agent의 검색 capability를 사용�
 
 가격은 지역·통화·기준일, 제품 상태는 제품·버전·지역·GA/Preview·확인 시각, 법·정책은 관할·시행일,
 시장 수치는 기간·단위·표본·방법론을 `Scope/status`에 기록한다.
+
+### 고객 사례·성과 수치
+
+- 공개 사례·초기 내부 결과·협력 발표·공급자 참조·미확인 후보를 구분한다. 공식 발표가 있다는 사실은
+  특정 제품의 운영 도입이나 확정 성과를 증명하지 않는다.
+- 성과는 분모·기간·표본·업무 범위·측정 주체와 함께 확인한다. 보고된 상관관계를 인과 효과로 확대하지 않는다.
+- 미확인 원본 수치는 `Unresolved`로 남기고 확정 제목·차트·ROI 계산에 쓰지 않는다.
+  기록 방식과 원문 확인 한계는 [`고객 근거 가이드`](./reference/customer-evidence.md)를 따른다.
 
 ## Fact Ledger 계약
 

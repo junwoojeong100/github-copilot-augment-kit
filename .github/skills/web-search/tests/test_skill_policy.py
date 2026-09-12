@@ -16,6 +16,9 @@ ADAPTIVE_FULL_OPTIMIZED = (
 )
 ADAPTIVE_VERIFICATION = ADAPTIVE_SKILL.parent / "reference" / "verification.md"
 ADAPTIVE_DECK_SPEC = ADAPTIVE_SKILL.parent / "reference" / "deck-spec.md"
+ADAPTIVE_PRODUCTION = ADAPTIVE_SKILL.parent / "reference" / "pptx-production.md"
+ADAPTIVE_REFINEMENT = ADAPTIVE_SKILL.parent / "reference" / "refinement.md"
+CUSTOMER_EVIDENCE = SKILL.parent / "reference" / "customer-evidence.md"
 ADAPTIVE_DECK_SCHEMA = ADAPTIVE_SKILL.parent / "schema" / "deck-spec.schema.json"
 ADAPTIVE_EXCEPTION_SCHEMA = (
     ADAPTIVE_SKILL.parent / "schema" / "qa-exceptions.schema.json"
@@ -69,6 +72,44 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
     def test_search_results_require_canonical_source_verification(self):
         self.assertIn("검색 결과·snippet·AI 요약은 URL 발견용이며 근거가 아니다", self.skill)
         self.assertIn("canonical", self.skill)
+
+    def test_empty_page_shell_is_not_verified_evidence(self):
+        content = CUSTOMER_EVIDENCE.read_text(encoding="utf-8")
+        self.assertIn("HTTP 성공이나 URL 존재만으로 원문 확인을 판정하지 않는다", self.skill)
+        self.assertIn("접근 제한 우회에는 사용하지 않는다", self.skill)
+        self.assertIn("KPI 패널·표", content)
+        self.assertIn("locator", content)
+        self.assertIn("JS challenge·CAPTCHA·403·429는 우회·반복하지 않는다", content)
+        self.assertIn("축별 두 가지 retrieval 전략", content)
+
+    def test_customer_evidence_keeps_adoption_and_metric_scope(self):
+        content = CUSTOMER_EVIDENCE.read_text(encoding="utf-8")
+        for term in (
+            "공개 고객 사례", "초기 내부 결과", "협력·계획·출시 발표",
+            "공급자·모델 catalog", "제안용 구성·매트릭스",
+            "분모·단위·기간·지역·표본·비교 기준·측정 주체·업무 범위",
+            "특정 제품 하나가 성과를 만들었다고 단정하지 않는다",
+            "검증된 출처 건수는 검증된 제품 운영 도입 건수가 아니다",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, content)
+
+    def test_customer_evidence_uses_existing_ledger_fields(self):
+        content = CUSTOMER_EVIDENCE.read_text(encoding="utf-8")
+        schema = json.loads(FACT_LEDGER_SCHEMA.read_text(encoding="utf-8"))
+        fields = schema["$defs"]["ledgerEntry"]["properties"]
+        for field in (
+            "scopeOrStatus", "evidence", "decisionRationale",
+            "assumptionOwner", "validationNeeded", "publishedOrUpdated", "accessed",
+        ):
+            with self.subTest(field=field):
+                self.assertIn(f"`{field}`", content)
+                self.assertIn(field, fields)
+        self.assertNotIn("`caveats`", content)
+        self.assertNotIn("`scope`", content)
+        self.assertIn("`Unresolved`", content)
+        self.assertIn("확인 불가", content)
+        self.assertIn("확정 성과 제목·차트·ROI 계산의 근거가 아니며", content)
 
     def test_untrusted_web_content_cannot_direct_agent_actions(self):
         self.assertIn("untrusted data", self.skill)
@@ -220,7 +261,7 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertIn("client가 제공한 artifact 디렉터리", content)
         self.assertIn("scripts/verify_deck.py", content)
         self.assertIn("--deck-spec", content)
-        self.assertIn("[Fact ID]", content)
+        self.assertIn("내부 Fact ID는 노출하지 않는다", content)
         self.assertIn("finding ID", verification)
         self.assertIn("visual-review.json", verification)
 
@@ -240,6 +281,74 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertIn("claimIds", deck_contract)
         self.assertIn("template-profile.json", deck_contract)
         self.assertIn("findingId", deck_contract)
+
+    def test_existing_deck_refinement_preserves_meaning_and_originals(self):
+        content = ADAPTIVE_REFINEMENT.read_text(encoding="utf-8")
+        skill = ADAPTIVE_SKILL.read_text(encoding="utf-8")
+        self.assertIn("reference/refinement.md", skill)
+        for term in (
+            "내용 원본", "디자인 참고", "source-inventory.json",
+            "content-coverage.json", "원본 항목", "의미 단위의 보존",
+            "기존 파일을 덮어쓰지 않고", "SHA-256",
+            "발표 시간", "명시적 덮어쓰기 대상 외",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, content)
+        self.assertIn("모든 덱의 완료 상태를 구분한다", content)
+        self.assertIn("작업 소유 임시 PDF·QA 이미지 경로만 정리한다", content)
+
+    def test_readability_targets_do_not_imply_automated_coverage(self):
+        skill = ADAPTIVE_SKILL.read_text(encoding="utf-8")
+        guide = ADAPTIVE_REFINEMENT.read_text(encoding="utf-8")
+        verification = " ".join(
+            ADAPTIVE_VERIFICATION.read_text(encoding="utf-8").split()
+        )
+        for term in ("7:1", "4.5:1", "18~23pt", "15pt"):
+            with self.subTest(term=term):
+                self.assertIn(term, skill)
+                self.assertIn(term, guide)
+        self.assertIn("미측정 조합", guide)
+        self.assertIn("canonical runner의 자동 검사 범위가 아니다", verification)
+        self.assertIn("키워드 일치만으로 의미 보존을 판정하지 않음", verification)
+        self.assertIn("실제 발표 시간 보장 아님", verification)
+
+    def test_source_dates_remain_in_evidence_not_default_footers(self):
+        for path in (
+            ADAPTIVE_SKILL, ADAPTIVE_PRODUCTION, ADAPTIVE_DECK_SPEC,
+            ADAPTIVE_REFINEMENT, CUSTOMER_EVIDENCE,
+        ):
+            content = path.read_text(encoding="utf-8")
+            with self.subTest(path=path.name):
+                self.assertIn("원본 확인 날짜", content)
+                self.assertIn("발행 연도", content)
+                self.assertNotIn("(accessed YYYY-MM-DD)", content)
+                self.assertNotIn("(YYYY-MM-DD 확인)", content)
+        self.assertIn("`accessed`", ADAPTIVE_PRODUCTION.read_text(encoding="utf-8"))
+
+    def test_parallel_decks_have_requested_exclusive_ownership(self):
+        content = " ".join(
+            ADAPTIVE_FULL_OPTIMIZED.read_text(encoding="utf-8").split()
+        )
+        for term in (
+            "사용자가 파일별 subagent를 요청한 경우에만",
+            "공통 근거와 helper는 읽기 전용으로 공유",
+            "담당자는 자기 덱의 계획·spec·생성 스크립트·QA만 수정",
+            "최종 출력 폴더 복사와 전체 완료 선언은 메인 에이전트만",
+            "한 파일의 PASS를 다른 파일에 재사용하지 않는다",
+            "담당자의 계획을 덮어쓰지 않는다",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, content)
+
+    def test_refinement_and_customer_guides_are_reachable(self):
+        for path in (SKILL, ADAPTIVE_SKILL, ADAPTIVE_REFINEMENT, CUSTOMER_EVIDENCE):
+            content = path.read_text(encoding="utf-8")
+            for target in re.findall(r"\[[^\]]+\]\(([^)\s]+)\)", content):
+                if target.startswith(("https://", "http://", "#")):
+                    continue
+                with self.subTest(path=path.name, target=target):
+                    self.assertTrue((path.parent / target.split("#", 1)[0]).is_file())
+        self.assertIn("reference/customer-evidence.md", self.skill)
 
     def test_readme_matches_current_search_and_research_contracts(self):
         content = README.read_text(encoding="utf-8")

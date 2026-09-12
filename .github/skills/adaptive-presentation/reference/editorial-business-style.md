@@ -26,15 +26,17 @@
 - 브랜드가 없는 Microsoft/GitHub/Azure 임원 자료는 white canvas + near-black ink + Microsoft/Azure
   primary + optional blue-teal secondary가 안전하다.
 - 색보다 위치·크기·굵기·여백으로 계층을 먼저 만든다.
+- 본문·도식·중요 조건은 대비 7:1을 목표로 하고 4.5:1 미만은 수정한다. 밝은 강조 배경에 흰 글자를
+  관성적으로 쓰지 않으며, 색만으로 상태를 구분하지 않는다. 실제 색 조합 측정과 렌더 확인을 함께 한다.
 
 ## 4. 타이포그래피
 
 - 한국어 덱의 모든 visible text: `Apple SD Gothic Neo`. 표지·본문·표·도식·footer에서 다른 글꼴을 섞지 않는다.
 - 한국어 본문 리딩 메시지: `Apple SD Gothic Neo · 27pt · Bold`. 모든 본문 장에서 같은 family·size·weight를 쓴다.
 - 표지·section divider title: 30~42pt, 강한 weight. 긴 제목은 2줄을 위한 전용 높이를 확보하거나 문구를 줄인다.
-- Primary body: 15~19pt.
-- Secondary body: 13~15pt.
-- Table/diagram label: 11~13pt.
+- Primary body: 18~23pt 권장, 조밀한 비교도 15pt 하한.
+- Secondary annotation: 13~15pt. 중요한 조건을 작은 주석으로 숨기지 않는다.
+- Table/diagram content: 15~17pt. 11~13pt는 짧은 보조 label에만 사용한다.
 - Source/footer: 8~9.5pt.
 - 한 슬라이드 안에서 title/body/caption의 크기 차이가 분명해야 한다.
 - 전체 축소 요청은 역할별로 0.5~2pt 일괄 적용한다. 축소 후 생긴 여백은 근거·KPI·owner·예외 조건을
@@ -63,5 +65,6 @@ process, hierarchy 같은 **편집 가능한 native visual**이 있어야 한다
 - 제목 밑 장식선·pill·rounded card·shadow가 내용보다 더 눈에 띄는가?
 - dominant/support/accent의 우선순위가 보이는가?
 - 표와 차트가 PowerPoint native 객체이거나 편집 가능한 도형인가?
+- 내용 원본의 사례·수치·조건이 유지되고, 결론에 영향을 주는 제한이 수치 옆에서 읽히는가?
 - 제목·본문·label의 위계가 thumbnail에서도 즉시 구분되는가?
 - source/footer가 작지만 실제 렌더에서 읽히는가?

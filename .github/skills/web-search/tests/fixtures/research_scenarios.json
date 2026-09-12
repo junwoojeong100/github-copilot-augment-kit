@@ -54,5 +54,34 @@
       "`Inference`는 근거 Fact/Inference ID인 `basisIds`",
       "`Assumption`은 `assumptionOwner`와 `validationNeeded`"
     ]
+  },
+  {
+    "name": "successful-http-with-empty-page-shell",
+    "expected_policy": [
+      "HTTP 성공이나 URL 존재만으로 원문 확인을 판정하지 않는다",
+      "빈 본문·사이트 footer만 반환되면",
+      "접근 제한 우회에는 사용하지 않는다"
+    ]
+  },
+  {
+    "name": "announcement-is-not-production-adoption",
+    "expected_policy": [
+      "공개 사례·초기 내부 결과·협력 발표·공급자 참조·미확인 후보",
+      "특정 제품의 운영 도입이나 확정 성과를 증명하지 않는다"
+    ]
+  },
+  {
+    "name": "customer-metric-needs-denominator-and-scope",
+    "expected_policy": [
+      "분모·기간·표본·업무 범위·측정 주체",
+      "보고된 상관관계를 인과 효과로 확대하지 않는다"
+    ]
+  },
+  {
+    "name": "unverified-original-metric-is-not-a-confirmed-result",
+    "expected_policy": [
+      "미확인 원본 수치는 `Unresolved`",
+      "확정 제목·차트·ROI 계산에 쓰지 않는다"
+    ]
   }
 ]
