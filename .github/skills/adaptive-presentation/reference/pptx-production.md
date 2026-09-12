@@ -4,6 +4,10 @@
 주제에 맞는 시각 형태를 자유롭게 구성하되, 결론이 가장 짧은 경로로 읽히는 Straightforward 구조와
 아래 품질·위생 기준을 지킨다.
 
+글꼴·타이포그래피·대비·발표 노트의 **상세 편집 기준의 정본**은 이 문서다. 다른 가이드는 아래 절을
+참조하며 수치를 따로 유지하지 않는다. machine contract의 필드·정규화·검사는 기존 schema와 validator를
+따른다. 명시적인 브랜드·템플릿 override도 deck spec에 기록하고 같은 검사를 적용한다.
+
 ## 1. 도구
 
 1. Python 환경에서 `python-pptx`를 기본으로 사용한다.
@@ -13,9 +17,7 @@
 4. 도구 탐색·의존성 준비는 `scripts/toolcheck.py`(soffice·PyMuPDF·Pillow·python-pptx·한글 폰트 1회
    탐지·캐시)와
    `reference/full-optimized.md`의 캐시 규칙을 따른다.
-5. 한국어 기본 글꼴은 `Apple SD Gothic Neo`다. 표지·본문·표·도식·footer를 포함한 모든 visible text
-   run에 같은 글꼴을 명시한다. 표지·section divider를 제외한 본문 리딩 메시지는
-   `Apple SD Gothic Neo · 27pt · Bold`로 만들고 deck spec의 `fontPolicy`와 일치시킨다.
+5. [글꼴](#fonts)과 [타이포그래피](#typography)를 먼저 확정하고 deck spec의 `fontPolicy`와 일치시킨다.
 
 ## 2. 파일 구조
 
@@ -23,8 +25,8 @@
 <output>/<deck>.pptx                 # 사용자에게 보이는 기본 산출물
 
 <session>/<deck>-work/               # SKILL.md의 portable 세션 artifact 디렉터리 아래
-  fact-ledger.md
-  fact-ledger.json                    # deck spec의 machine-readable handoff
+  fact-ledger.json                    # 검증된 근거 정본
+  fact-ledger.md                      # web-search 검증기로 생성하는 읽기용 뷰
   deck-spec.json
   storyline.md
   template-profile.json                  # 템플릿이 있을 때만
@@ -175,13 +177,14 @@ prs.save(OUT)
   위에 놓는 텍스트도 컨테이너 안에 완전히 들어가야 한다.
 - 연결선과 화살표는 텍스트 상자 아래를 통과시키지 않는다. 공간이 부족하면 선을 우회시키거나 내용을 줄인다.
 
+<a id="typography"></a>
+
 ## 5. 텍스트
 
 - `word_wrap=True`, `auto_size=NONE`
 - 텍스트 프레임 margin을 명시
 - 모든 run에 font name/size/color를 직접 적용
-- 한국어 덱은 모든 visible run의 Latin·East Asian·complex-script typeface를
-  `Apple SD Gothic Neo`로 동일하게 지정
+- 모든 visible run의 Latin·East Asian·complex-script typeface는 [글꼴 계약](#fonts)을 따른다.
 - 한글과 영문 혼용 렌더를 실제 PDF에서 확인
 - 줄 간격과 paragraph spacing을 명시
 - 텍스트가 들어가는 도형은 PowerPoint/LibreOffice의 폰트 메트릭 차이를 고려해 가로·세로 8~12%의
@@ -193,9 +196,9 @@ prs.save(OUT)
 
 - 표지·section divider 제목 30~42pt
 - 한국어 본문 리딩 메시지 27pt Bold
-- 주요 본문 15~19pt
-- 보조 13~15pt
-- 표·도식 label 11~13pt
+- 주요 본문 18~23pt 권장, 조밀한 비교도 15pt 하한
+- 보조 주석 13~15pt; 주요 조건을 주석으로 숨기지 않음
+- 표·도식 내용 15~17pt, 짧은 보조 label만 11~13pt
 - 출처 8~9.5pt
 
 표지·section divider를 제외한 본문 슬라이드 title role은 `fontPolicy.leadingMessage`를 사용한다. 한국어
@@ -203,8 +206,8 @@ repository 기본은 `Apple SD Gothic Neo · 27pt · Bold`다. 같은 title
 row가 슬라이드마다 31/32/34pt로 달라지면 위계가 흔들린다. 긴 제목은 문구 단축, title frame 폭·높이,
 명시적 줄바꿈으로 해결하고 해당 슬라이드만 축소하지 않는다. 정말 다른 위계인 슬라이드만 예외로 기록한다.
 
-긴 제목은 2줄 전용 높이를 확보하거나 문구를 줄인다. 28~29pt는 의미를 훼손하지 않고 줄일 수 없을 때만
-허용한다. 컨테이너 오버플로는
+긴 제목은 2줄 전용 높이를 확보하거나 문구를 줄인다. 리딩 메시지 계약 대상이 아닌 표지·구분 제목에
+한해, 의미를 훼손하지 않고 줄일 수 없을 때 28~29pt를 허용한다. 컨테이너 오버플로는
 문구 단축·도형 높이/폭·명시적 줄바꿈을 먼저 조정한다. 사용자가 글자 축소를 요청했거나 소폭 축소로
 해결되는 경우에는 역할별 기준을 먼저 0.5~2pt 일관되게 낮춘다. 그래도 남는 문제 frame만 0.5pt 단위로
 줄이되, 주요 본문 15pt·보조 13pt 아래로 내리지 않는다.
@@ -232,6 +235,7 @@ Appendix로 구분한다.
   English로 유지하고, 바로 아래 또는 옆에 쉬운 한국어로 역할을 설명한다.
 - 제목은 고객이 이해할 변화나 질문을 말한다. visual node·card heading에는 정확한 English term을 쓰고,
   body에는 “무엇을 하는가 / 왜 필요한가 / 어떤 결과가 생기는가”를 한국어로 적는다.
+- 새 핵심 technical term은 한 장에 3~5개를 기본으로 하고 첫 등장에 한 줄 역할 설명을 붙인다.
 - architecture 흐름은 `English component → 쉬운 역할 → business outcome`으로 읽히게 한다.
 - capitalization을 공식 문서와 일치시킨다. 예: `Microsoft Foundry`, `Hosted Agents`,
   `Foundry IQ`, `Toolboxes`, `Code Review`, `Browser Tools`, `Control Plane`.
@@ -243,7 +247,8 @@ Appendix로 구분한다.
 ### Speaker notes
 
 모든 본문·표지·마무리 장에 notes를 작성한다.
-기존 notes가 있으면 문구를 재사용하거나 덧붙이지 말고 전체를 삭제한 뒤 새로 작성한다.
+기존 notes가 있으면 내용을 먼저 파악하고, 생성할 새 덱에서만 비운 뒤 현재 storyline·visual·근거로
+다시 작성한다. 내용 원본을 덮어쓰거나 notes 문구를 그대로 이어 붙이지 않는다.
 
 ```text
 핵심 메시지: 슬라이드의 결론을 한 문장으로 말합니다.
@@ -280,13 +285,20 @@ Knowledge와 action을 분리하면 근거의 정확성과 실행 통제를 각�
   `핵심 메시지`에 압축한다.
 - notes에는 출처 블록, Fact ID, URL을 넣지 않는다. machine traceability는 Fact Ledger와
   deck spec의 `claimIds`로 유지한다.
-- 화면 footer는 `출처: Publisher · Document title (YYYY-MM-DD 확인)`처럼 사람이 읽을 수 있게 쓰고,
-  `[F-001]` 같은 내부 Fact ID와 긴 URL은 넣지 않는다.
+- 화면 footer는 `출처: Publisher · Document title`과 원문 hyperlink로 표시한다.
+  원본 확인 날짜는 Fact Ledger의 `accessed`에 남기고 화면에서는 기본 생략한다.
+  `[F-001]` 같은 내부 Fact ID와 긴 URL은 넣지 않으며, 수치 기준일·발행 연도·버전은 필요한 곳에 유지한다.
 - 한국어 기준 장당 약 60초, 전체 120~600자·4~6문장을 기본으로 한다.
+
+<a id="fonts"></a>
 
 ## 6. 한글 폰트
 
-실행 환경에서 폰트를 검색하고 언어·템플릿에 맞는 실제 설치 폰트를 선택한다.
+한국어 기본 글꼴은 `Apple SD Gothic Neo`다. 표지·본문·표·도식·footer의 모든 visible run에 같은
+Latin·East Asian·complex-script typeface를 명시하고 `fontPolicy.requireAllTextFont=true`로 기록한다.
+본문 리딩 메시지는 [타이포그래피](#typography)의 family·size·weight를 `fontPolicy.leadingMessage`에
+기록한다. 명시적 브랜드·템플릿 override는 같은 계약의 `selected`와 `leadingMessage`를 함께 바꾼다.
+실행 환경에서 설치 여부를 확인하되 임의의 slide별 글꼴 변경은 허용하지 않는다.
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
@@ -295,7 +307,7 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 (fc-list 2>/dev/null || true) | grep -Ei 'Noto Sans|Apple SD Gothic|Malgun|Aptos|Segoe'
 ```
 
-예시 후보:
+설치·렌더 환경별 확인 후보(전달 PPTX의 기본 글꼴을 임의로 바꾸는 허가가 아님):
 
 - macOS: Apple SD Gothic Neo
 - Windows: Malgun Gothic
@@ -303,6 +315,10 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 
 탐지 결과를 `deck-spec.json`의 `fontPolicy.selected`에 기록하고 생성 스크립트의 모든 run에 사용한다.
 폰트를 PPTX에 임베드할 수 있다고 가정하지 않으며 verifier에서 PDF 렌더 폰트와 다시 대조한다.
+렌더 전용 fallback이 필요하면 격리된 렌더 profile에만 적용하고 사용한 글꼴을 기록한다.
+전달 PPTX의 typeface나 사용자 전역 앱 설정을 바꾸는 방법으로 렌더 문제를 숨기지 않는다.
+
+<a id="contrast"></a>
 
 ## 7. 색과 대비
 
@@ -316,7 +332,10 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 - 카드·단계·팀마다 서로 다른 accent를 배정하지 않는다. 구분은 우선 위치·여백·크기·선 굵기·타이포
   계층으로 만들고, 색은 선택·강조·흐름에만 사용한다.
 - 같은 의미와 상태는 덱 전체에서 같은 색을 사용한다.
-- 본문과 배경 대비 최소 4.5:1
+- 본문·도식·중요 조건의 전경/배경 대비는 7:1을 목표로 하고 4.5:1 미만은 수정한다.
+  사용자 지정 임계치는 그대로 적용하며, 큰 글자라는 이유로 낮은 대비를 허용하지 않는다.
+- 실제 전경·배경의 상대 휘도로 `(Lmax + 0.05) / (Lmin + 0.05)`를 계산하고 색 조합별 결과를
+  세션 검토 기록에 남긴다. 투명도·이미지·gradient 배경은 별도로 확인하며 미측정 값을 PASS로 간주하지 않는다.
 - 제목은 크더라도 낮은 대비 회색으로 두지 않는다
 - 색만으로 상태를 전달하지 않고 GA/PREVIEW/위험 텍스트를 병기
 - 상태색이 꼭 필요하면 해당 슬라이드의 국소 예외로 제한하고, 구조 색상 체계를 rainbow palette로
@@ -348,6 +367,8 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 - 공통 비교 축을 왼쪽에 고정
 - 숫자 정렬과 단위 통일
 - 긴 문장을 셀에 넣지 않는다
+- 행 높이는 실제 줄 수와 cell padding을 수용해야 한다. 두 줄이 간신히 맞는 표는 렌더에서 늘어날 수
+  있으므로 높이·여백을 확보하고, 공식명은 명칭 경계에서 줄바꿈한다.
 - 표가 핵심 메시지를 숨기면 비교 카드·dot plot·decision tree로 전환
 
 ## 10. 차트
@@ -375,10 +396,14 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 주장 슬라이드의 footer에 직접 표시한다.
 
 ```text
-Source: Organization · Document title (accessed YYYY-MM-DD)
+Source: Organization · Document title
 ```
 
 - 긴 URL은 제목에 hyperlink를 걸거나 짧은 경로로 표시
+- 원본 확인 날짜는 화면에서 기본 생략하고 Fact Ledger의 `accessed`에 보존한다.
+  사용자가 요구한 확인일과 해석에 필요한 발행 연도·측정 기간·가격 기준일·버전·시행일은 유지한다.
+- 수치의 분모·기간·업무 범위·초기 내부 결과 같은 조건은 해당 수치 가까이에 표시한다.
+  확인된 사례와 협력 발표·미확인 후보·제안용 구성은 구분하며 상세 근거는 `web-search` 계약을 따른다.
 - 여러 출처는 2개를 넘기지 않도록 핵심 근거를 선택
 - 생성형 AI로 만든 그림이나 DEMO DATA는 명시
 
@@ -405,7 +430,7 @@ PPTX_OUT="<absolute-output>/<deck>.pptx" python3 -B <work-dir>/build_<deck>.py
 # canonical QA: 구조 감사, 전체 렌더, rendered overlap, 위험 슬라이드, ZIP 검사를 통합 실행
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
   <absolute-output>/<deck>.pptx --out <work-dir>/verify \
-  --deck-spec <work-dir>/deck-spec.json
+  --deck-spec <work-dir>/deck-spec.json --reuse-render
 
 # 추가 확대가 필요할 때만 canonical QA의 PDF를 재사용
 python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
@@ -416,7 +441,10 @@ unzip -t <absolute-output>/<deck>.pptx
 ```
 
 첫 실행 후 contact sheet와 위험 슬라이드를 확인하고 finding 단위 exception과
-`visual-review.json`을 작성한 뒤 `--visual-review`를 추가해 다시 실행한다.
+`visual-review.json`을 작성한 뒤 같은 `--out`·`--reuse-render`에 `--visual-review`를 추가해 다시 실행한다.
+증거 생성기의 `--render-cache <work-dir>/verify/qa/render-cache.json`으로 검토한 렌더 환경도 연결한다.
+전체 렌더는 검증된 입력·환경·산출물이 같을 때만 재사용하고, 구조·계약·시각 검토 판단은 다시 검사한다.
+캐시 범위와 오류 처리는 [검증 가이드](./verification.md#render-reuse)를 따른다.
 `--reuse-pdf`는 sibling manifest의 PPTX·PDF SHA-256과 현재 파일이 모두 일치할 때만 PDF를 재사용한다.
 PPTX를 수정하거나 PDF가 달라진 뒤에는 기존 PDF를 재사용하지 않는다. 새 PDF로 변환한 뒤 수정 영향에
 맞는 범위를 다시 렌더한다.

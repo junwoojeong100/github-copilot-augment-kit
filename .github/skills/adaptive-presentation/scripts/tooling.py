@@ -3,7 +3,11 @@
 
 from __future__ import annotations
 
+import json
+import os
 import shutil
+import sys
+import uuid
 from pathlib import Path
 
 
@@ -12,6 +16,36 @@ SOFFICE_CANDIDATES = (
     "/usr/local/bin/soffice",
     "/Applications/LibreOffice.app/Contents/MacOS/soffice",
 )
+
+
+def write_json_atomic(path: Path, value: object) -> None:
+    temporary = path.parent / f".{path.name}-{uuid.uuid4().hex}.tmp"
+    try:
+        temporary.write_text(
+            json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8",
+        )
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def font_directories() -> list[Path]:
+    if sys.platform == "win32":
+        directories = []
+        windir = os.environ.get("WINDIR")
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        if windir:
+            directories.append(Path(windir) / "Fonts")
+        if local_app_data:
+            directories.append(Path(local_app_data) / "Microsoft" / "Windows" / "Fonts")
+        return directories
+    if sys.platform == "darwin":
+        return [
+            Path("/System/Library/Fonts"),
+            Path("/Library/Fonts"),
+            Path.home() / "Library" / "Fonts",
+        ]
+    return []
 
 
 def resolve_soffice(explicit: Path | None = None) -> str | None:

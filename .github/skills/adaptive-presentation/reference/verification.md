@@ -7,12 +7,12 @@
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json
+  deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json --reuse-render
 ```
 
 Runner가 구조 감사와 전체 렌더를 읽기 전용으로 병렬 실행하고, risk score가 높은 슬라이드를 같은 PDF로
 상세 렌더한다. `verification-report.json`, `qa/contact-*.jpg`, `qa-detail/slide-*.jpg`를 확인한 뒤
-결함을 일괄 수정한다. deck spec의 strict 계약은 15pt 미만의 likely body 후보, 명시적 크기가 없는 run, title risk,
+결함을 일괄 수정한다. deck spec의 strict 계약은 `qa.minBodyPt` 미만의 likely body 후보, 명시적 크기가 없는 run, title risk,
 본문 title row의 font-size 불일치, 모든 visible run의 selected font 미선언·혼용,
 `fontPolicy.leadingMessage`의 family·size·weight 불일치,
 승인되지 않은 geometry overlap, 서로 다른 text frame에서 실제
@@ -24,7 +24,44 @@ chart·SmartArt처럼 자동 text mapping을 지원하지 않는 객체는 성�
 발급된 finding ID를 전체 화면으로 확인한 뒤 `qa-exceptions.json`에 정확한 ID와 검토 이유를 기록한다.
 슬라이드 전체 `--allow-*` 옵션은 기존 작업 호환용이며 새 덱에서는 사용하지 않는다.
 
+<a id="render-reuse"></a>
+
+### 동일 리비전의 렌더 재사용
+
+- 재사용은 정적인 자체 포함 덱에 적용한다. 자동 날짜·연결 데이터처럼 실행 시 값이 바뀌는 내용은
+  먼저 별도로 확인하며, 이런 동적 내용이 있으면 옵션 없이 새 렌더를 수행한다.
+- `--reuse-render`는 첫 실행의 전체 PDF·contact sheet를 `qa/render-cache.json`으로 기록한다.
+  같은 `--out`으로 재실행할 때 PPTX 경로·내용, 렌더 옵션, 환경 fingerprint, manifest·PDF·이미지 SHA-256을
+  모두 비교한다. 부분 렌더, 외부 경로, symlink·hardlink 산출물은 재사용하지 않는다.
+- 환경 fingerprint에는 LibreOffice 실행 파일·버전, Python·PyMuPDF·Pillow, 렌더 코드, 등록된 폰트와
+  Fontconfig/LibreOffice 설정 파일, 관련 환경 변수를 반영한다. 환경 변수 값은 캐시에 저장하지 않는다.
+  환경을 확인할 수 없거나 동적인 외부 렌더 설정을 추가한 경우에는 옵션 없이 새 렌더를 수행한다.
+- 입력·환경·옵션 변경은 이유가 표시된 cache MISS로 새로 렌더한다. 기록된 산출물의 손상·누락·해시 불일치는
+  오류이며 성공으로 숨기지 않는다. 복구하려면 `--reuse-render` 없이 새 검증을 실행한다.
+- 재사용하는 것은 전체 렌더뿐이다. 구조·ZIP·PDF text mapping·font·언어·notes·근거·예외·시각 검토는
+  매번 검사하며 위험 장은 보존된 PDF로 다시 렌더한다. 과거 PASS를 현재 판단으로 재사용하지 않는다.
+- 이 모드에서 시각 검토가 필수이면 증거의 `renderCacheSha256`도 현재 캐시와 일치해야 한다.
+  같은 PPTX라도 렌더 환경이 바뀌면 이전 승인은 무효다. 기존 옵션 없는 실행은 PPTX SHA 기반 증거와 호환된다.
+- `verification-report.json`의 `render_cache.enabled`·`reused`·`reason`과 CLI의 HIT/MISS를 확인한다.
+  옵션 없는 기존 CLI는 항상 새로 렌더한다. 환경 지문 확인 비용도 있으므로 모든 덱에서 시간 단축을 보장하지 않는다.
+
+최초 실행 후 전체 contact sheet를 실제로 검토하고 다음과 같이 최종 증거를 작성·검사한다.
+
+```bash
+python3 -B .github/skills/adaptive-presentation/scripts/visual_review.py create deck.pptx \
+  --out <work-dir>/visual-review.json --render-cache <work-dir>/qa/render-cache.json \
+  --reviewer Copilot --notes "전체 contact sheet와 위험 슬라이드를 검토했습니다."
+
+python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
+  deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json \
+  --reuse-render --visual-review <work-dir>/visual-review.json
+```
+
 ## 1. 구조 감사
+
+대비 측정·원본의 의미 보존·수치 조건의 정확성·발표 시간 합계는 현재 canonical runner의 자동 검사
+범위가 아니다. [`refinement.md`](./refinement.md)의 검토 기록과 함께 확인하며,
+`automated_passed=true`만으로 이 항목까지 통과했다고 주장하지 않는다.
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py deck.pptx
@@ -140,6 +177,8 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 - source와 page number가 겹치는가?
 - 한글 조사와 영문 혼용이 이상하게 줄바꿈되는가?
 - 대비가 충분한가?
+- 수치 바로 옆의 분모·기간·초기 내부 결과·미확인 표시가 충분히 크고 읽히는가?
+- 원본 확인 날짜를 생략했어도 발행 연도·수치 기준일·제품 버전 등 필요한 맥락과 원문 링크는 남아 있는가?
 - 정렬이 흔들리지 않는가?
 
 ## 5. 합격 임계치
@@ -150,12 +189,13 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 | Bounds | 의도하지 않은 out-of-bounds 0 |
 | Overlap | `unexpected_overlap_candidates` 0 + `unexpected_rendered_text_overlaps` 0 |
 | Content title size | `unexpected_title_size_inconsistencies` 0 |
-| Leading message style | 한국어 기본 `Apple SD Gothic Neo · 27pt · Bold`; deck spec과 family·size·weight 일치 |
-| Whole-deck font | 한국어 visible text run 전체가 `Apple SD Gothic Neo`를 명시; fallback은 PDF 렌더 대체만 허용 |
-| Primary body | 원칙적으로 16pt+, 최소 15pt |
-| Automated body floor | canonical QA에서 likely body 15pt 미만 실패; compact label/secondary annotation은 별도 보고 |
-| Source/footer | 8~9.5pt 허용 |
-| Editorial hierarchy | title 30~42pt, primary body 15~19pt, secondary 13~15pt, label 11~13pt |
+| Leading message style | `fontPolicy.leadingMessage`의 family·size·weight와 일치 |
+| Whole-deck font | [글꼴 계약](./pptx-production.md#fonts)과 `fontPolicy.selected` 일치; fallback은 렌더 대체만 허용 |
+| Automated body floor | `qa.minBodyPt` 미만 likely body는 실패; compact label/secondary annotation은 별도 보고 |
+| Editorial hierarchy | 본문·표·보조 label·출처의 역할별 [타이포그래피 기준](./pptx-production.md#typography) 적용 |
+| Text contrast (별도 측정) | [대비 기준](./pptx-production.md#contrast)과 사용자 지정 임계치 적용, 미측정 조합 제외 |
+| Content preservation (별도 검토) | 원본 항목별 대응과 정정 이유, 수치 조건의 가시성; 키워드 일치만으로 의미 보존을 판정하지 않음 |
+| Presentation timing (별도 검토) | 요청 시간이 있으면 장별 계획 합계와 일치; 실제 발표 시간 보장 아님 |
 | Density after reduction | 여백이 생긴 장만 근거·KPI·owner·예외 조건을 1~2개 보강하고, 고밀도 장은 유지 |
 | Native visual | 본문 장에 편집 가능한 visual structure 1개 이상; 표지·section divider·단순 마무리 제외 |
 | Repetition | 같은 layout이 의도 없이 3장 연속되지 않음 |
@@ -166,18 +206,19 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 | Preview/demo | 텍스트 라벨 존재 |
 | Korean language balance | 전체 영문 목표 약 40%, 최대 55%; 개별 장 최대 75%; `protectedTerms` 영문 유지 |
 | Technical explanation | protected term이 있는 장에 쉬운 한글 역할 설명 존재 |
-| Speaker notes | 전 장 재생성 + `핵심 메시지:`로 시작 + 약 60초·120~600자·4~6문장 + 질문·전환 없음 |
+| Speaker notes | [발표 노트 계약](./pptx-production.md#speaker-notes)과 `speakerNotesPolicy` 일치 |
 | Render | 전체 compact overview 생성 + 위험 슬라이드 선택 렌더 |
 | Integrity | `unzip -t` 오류 0 |
 | Contract | deck spec의 장수·canvas·font·Fact Ledger ID와 일치 |
 | Unsupported text | chart·SmartArt finding마다 확대 검토 이유 존재 |
 | Visual evidence | 최종 PPTX SHA-256과 일치하는 전체 slide review manifest |
+| Reused render evidence | 시각 검토가 필수이면 `renderCacheSha256`도 현재 캐시와 일치 |
 
 ## 6. 수정 루프 (시간 최소화)
 
 1. 결함을 슬라이드 번호와 유형으로 기록한다.
 2. 원인을 구분한다: content density / geometry / typography / contrast / narrative.
-3. 오버플로 수정은 내용·레이아웃을 우선하되, 전체 축소 요청은 역할별 0.5~2pt 일괄 조정한다.
+3. 오버플로 수정은 내용·레이아웃을 우선하되, 전체 축소 요청은 [타이포그래피](./pptx-production.md#typography)의 역할별 기준을 따른다.
 4. 모든 결함을 모아 세션 작업 폴더의 `build_<deck>.py`를 **한 번에** 수정한다.
 5. PPTX를 재생성하고 새 PPTX에서 PDF를 다시 변환한다.
 6. verifier를 다시 실행해 자동 결함이 0인지 확인한다. 의도적 예외는 확대 검토 후 finding ID와 이유를
@@ -192,8 +233,8 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 않으므로, 목표치를 맞추기 위한 장식적 영어 추가는 금지한다.
 
 기본 `core-only`의 `speaker_notes` report는 슬라이드별 전체 문자·문장 수, 핵심 메시지의 위치·길이·
-문장 수, 금지 섹션과 출처 reference 존재 여부를 기록한다. notes 누락, 120자 미만, 600자 초과,
-`핵심 메시지:`가 첫 섹션이 아님, 핵심 메시지 4문장 미만 또는 6문장 초과, `질문:`·`전환:` 포함,
+문장 수, 금지 섹션과 출처 reference 존재 여부를 기록한다. notes 누락, `speakerNotesPolicy`의 길이·문장 수
+범위 위반, `핵심 메시지:`가 첫 섹션이 아님, `질문:`·`전환:` 포함,
 `출처:`·Fact ID·URL 포함은 strict verification을 실패시키고 risk slide 후보에 포함한다.
 `guided-flow` mode는 기존 질문 위치·길이·물음표와 전환 길이·문장 수 계약을 별도로 검사한다.
 
@@ -202,6 +243,10 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 한글 copy가 없는 경우에만 실패한다.
 
 ## 7. 정리
+
+기존 덱 개선은 최종 위치에 복사한 PPTX의 SHA-256이 검토한 revision과 일치하고, 명시적 덮어쓰기
+대상 외 원본·참고 덱의 해시가 유지되는지 확인한다. 여러 덱은 각 파일이 통과한 뒤에만 전체 완료를 알린다.
+정리는 작업이 만든 것으로 확인한 경로만 대상으로 하며, 다른 작업의 폴더나 기존 파일은 삭제하지 않는다.
 
 ```bash
 WORK_DIR="<session>/<deck>-work" python3 -B -c \

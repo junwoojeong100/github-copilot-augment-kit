@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,6 +32,7 @@ def load_visual_review(
     deck: Path,
     *,
     slide_count: int,
+    render_cache_sha256: str | None = None,
 ) -> VisualReview:
     resolved = path.expanduser().resolve()
     if not resolved.is_file():
@@ -45,7 +47,10 @@ def load_visual_review(
         raise VisualReviewError("Visual-review schemaVersion must be 1")
     unknown = sorted(
         set(value)
-        - {"schemaVersion", "deckSha256", "reviewer", "reviewedSlides", "notes"}
+        - {
+            "schemaVersion", "deckSha256", "reviewer", "reviewedSlides", "notes",
+            "renderCacheSha256",
+        }
     )
     if unknown:
         raise VisualReviewError(
@@ -54,6 +59,16 @@ def load_visual_review(
     if value.get("deckSha256") != sha256_file(deck):
         raise VisualReviewError(
             "Visual-review evidence does not match the current PPTX revision"
+        )
+    if "renderCacheSha256" in value and (
+        not isinstance(value["renderCacheSha256"], str)
+        or not re.fullmatch(r"[0-9a-f]{64}", value["renderCacheSha256"])
+    ):
+        raise VisualReviewError("Visual-review renderCacheSha256 must be a SHA-256 digest")
+    if render_cache_sha256 is not None and value.get("renderCacheSha256") != render_cache_sha256:
+        raise VisualReviewError(
+            "Visual-review evidence does not match the current render cache. "
+            "Inspect the current previews and create evidence with --render-cache."
         )
     reviewer = value.get("reviewer")
     notes = value.get("notes")
@@ -98,6 +113,7 @@ def write_visual_review(
     *,
     reviewer: str,
     notes: str,
+    render_cache: Path | None = None,
 ) -> Path:
     resolved_deck = deck.expanduser().resolve()
     if not resolved_deck.is_file():
@@ -109,7 +125,6 @@ def write_visual_review(
         )
     if len(reviewer.strip()) < 1 or len(notes.strip()) < 12:
         raise VisualReviewError("Reviewer and meaningful review notes are required")
-    resolved_output.parent.mkdir(parents=True, exist_ok=True)
     value = {
         "schemaVersion": 1,
         "deckSha256": sha256_file(resolved_deck),
@@ -117,6 +132,9 @@ def write_visual_review(
         "reviewedSlides": "all",
         "notes": notes.strip(),
     }
+    if render_cache is not None:
+        value["renderCacheSha256"] = sha256_file(render_cache.expanduser().resolve())
+    resolved_output.parent.mkdir(parents=True, exist_ok=True)
     resolved_output.write_text(
         json.dumps(value, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -134,9 +152,14 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--out", type=Path, required=True)
     create.add_argument("--reviewer", required=True)
     create.add_argument("--notes", required=True)
+    create.add_argument(
+        "--render-cache", type=Path,
+        help="Bind the review to the inspected verifier qa/render-cache.json.",
+    )
     validate = subparsers.add_parser("validate")
     validate.add_argument("deck", type=Path)
     validate.add_argument("evidence", type=Path)
+    validate.add_argument("--render-cache", type=Path)
     return parser
 
 
@@ -148,6 +171,7 @@ def main() -> int:
             args.out,
             reviewer=args.reviewer,
             notes=args.notes,
+            render_cache=args.render_cache,
         )
         print(output)
         return 0
@@ -156,6 +180,10 @@ def main() -> int:
         args.evidence,
         args.deck.expanduser().resolve(),
         slide_count=slide_count,
+        render_cache_sha256=(
+            sha256_file(args.render_cache.expanduser().resolve())
+            if args.render_cache is not None else None
+        ),
     )
     print(
         f"Visual review PASS | reviewer={review.reviewer} | "

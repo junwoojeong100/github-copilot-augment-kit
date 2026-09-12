@@ -95,9 +95,9 @@
 }
 ```
 
-한국어 덱의 repository 기본은 `Apple SD Gothic Neo`이며, 표지·section divider를 제외한 본문
-리딩 메시지는 `27pt · Bold`다. `leadingMessage`를 생략하면 validator가 `selected · 27pt · Bold`로
-정규화한다. 브랜드·템플릿 때문에 다른 스타일을 써야 하면 `fontFamily`는 `selected` 또는
+기본 편집 기준은 [글꼴](./pptx-production.md#fonts)과 [타이포그래피](./pptx-production.md#typography)를
+따른다. `leadingMessage`를 생략하면 validator의 기본 크기·굵기와 `selected`로 정규화한다.
+브랜드·템플릿 때문에 다른 스타일을 써야 하면 `fontFamily`는 `selected` 또는
 `fallbacks` 중 하나로 명시하고, verifier가 실제 본문 title row의 family·size·weight를 검사한다.
 `requireAllTextFont=true`이면 PPTX의 모든 visible text run은 `selected`를 명시해야 한다.
 이때 `leadingMessage.fontFamily`도 반드시 `selected`와 같아야 한다. 브랜드·템플릿 override는
@@ -119,17 +119,17 @@
   확대 화면을 검토한 뒤에만 사용한다.
 
 한국어 spec에서 `speakerNotesPolicy`를 생략하면 위 기본값이 적용된다.
+길이·문장 수와 작성 방식의 상세 기준은 [발표 노트 계약](./pptx-production.md#speaker-notes)을 따른다.
 
 - `mode`: 기본은 `core-only`다. 사용자가 workshop 진행 질문과 장표 전환 cue를 명시적으로 요청한
   경우에만 `guided-flow`를 사용한다.
 - `requiredSections`: 각 섹션은 `섹션명:` 형태로 notes에 직접 표시한다.
 - `authoringMode`: 기존 notes 문구를 이어 붙이지 않고 비운 뒤 현재 storyline·visual·근거에서 재작성한다.
-- `coreSection`: 발표자가 그대로 말할 핵심 메시지 약 5문장을 담는 섹션명. 현재 visual의 핵심 요소
-  2~4개가 어떻게 연결되어 결론, 작동 방식, 고객 의미와 판단 또는 행동을 만드는지 설명한다.
-- `targetSeconds`: 한 장의 핵심을 전달하는 목표 시간. 한국어 기본은 약 60초다.
+- `coreSection`: 발표자가 말할 핵심 메시지의 섹션명. visual의 관계·작동 방식·고객 의미를 담는다.
+- `targetSeconds`: 한 장의 핵심을 전달하는 목표 시간.
 - `minCharacters`, `maxCharacters`: cue가 지나치게 빈약하거나 상세 원고로 길어지는 것을 방지한다.
 - `minCoreCharacters`, `maxCoreCharacters`: 핵심 메시지 블록의 길이를 제한한다.
-- `minCoreSentences`, `maxCoreSentences`: 기본 4~6문장으로 제한해 약 5문장 분량을 유지한다.
+- `minCoreSentences`, `maxCoreSentences`: 핵심 메시지의 최소·최대 문장 수를 제한한다.
 - `minTotalSentences`, `maxTotalSentences`: notes 전체 문장 수도 같은 범위로 검증한다.
 - `forbiddenSections`: `core-only`에서 허용하지 않는 `질문`, `전환` 같은 섹션명이다.
 - `requireCoreFirst`: notes가 `핵심 메시지:`로 시작하도록 한다.
@@ -142,16 +142,19 @@
 - GA/Preview, 적용 범위, 예외는 slide visual·footer·`stateLabels`에 명확히 표시한다. 발표 결론을
   바꾸는 조건만 `핵심 메시지`에 압축하고 notes에 별도 상세 블록을 만들지 않는다.
 - Fact ID와 출처는 speaker notes가 아니라 machine contract와 Fact Ledger에만 기록한다. 슬라이드에
-  보이는 footer에는 Fact ID를 제거하고 `출처: Publisher · Document title (YYYY-MM-DD 확인)`처럼
-  사람이 읽을 수 있게 표시한다.
+  보이는 footer에는 Fact ID를 제거하고 `출처: Publisher · Document title`과 원문 hyperlink를 표시한다.
+  원본 확인 날짜는 화면에서 기본 생략하고 Fact Ledger의 `accessed`에 보존한다.
+  발행 연도·수치 기준일·버전·시행일처럼 의미를 바꾸는 날짜는 삭제하지 않는다.
 - 외부 출처가 없는 표지·진단·실행 장은 `내부 프레임 · 고객별 검증 필요`, `ASSUMPTION`,
   `Recommendation`처럼 성격과 검증 조건을 적는다.
 
 `slides`는 `request.slideCount`와 정확히 일치하고 1부터 연속 번호를 사용한다. `claimIds`는 공통
-Fact Ledger JSON의 `Fact` ID만 참조한다. Inference는 근거 Fact ID를 연결하고 Assumption은
+Fact Ledger JSON의 `Accepted`인 `Fact` ID만 참조한다. Inference는 근거 Fact ID를 연결하고 Assumption은
 `stateLabels`로 표시한다. `claimIds`는 machine contract와 Fact Ledger에만 남기며 speaker notes에는
 넣지 않는다. 해당 슬라이드 footer에는 `출처: Publisher · Document title`처럼 발행자와 문서명을
 표시한다. Preview·가정·시연 수치는 `stateLabels`에 기록하고 실제 슬라이드에도 같은 텍스트를 보여준다.
+내용 보존표·장별 발표 시간 합계·대비 측정은 세션의 별도 검토 기록이다. 이를 기록하기 위해
+schema에 없는 필드를 추가하거나 canonical verifier가 자동 검증한다고 가정하지 않는다.
 
 ## 템플릿
 
@@ -173,11 +176,13 @@ deck의 canvas와 theme fingerprint가 profile과 일치하는지 확인한다.
 슬라이드 전체를 허용하는 예외는 레거시 호환용이며 새 작업에서는 사용하지 않는다.
 
 contact sheet와 위험 슬라이드를 모두 확인한 뒤 최종 deck SHA-256에 묶인 evidence를 생성한다.
+`--reuse-render`로 검증했다면 현재 캐시의 SHA-256인 `renderCacheSha256`도 포함한다.
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/visual_review.py create deck.pptx \
-  --out <work>/visual-review.json --reviewer Copilot \
+  --out <work>/visual-review.json --render-cache <work>/qa/render-cache.json --reviewer Copilot \
   --notes "전체 contact sheet와 위험 슬라이드의 잘림·대비·정렬을 확인했습니다."
 ```
 
-PPTX가 바뀌면 이 증거는 무효가 되므로 새 revision을 다시 렌더하고 검토한다.
+PPTX나 연결된 렌더 환경이 바뀌면 이 증거는 무효가 되므로 새 revision을 다시 렌더하고 검토한다.
+재사용 옵션을 사용하지 않는 기존 워크플로에서는 `--render-cache`를 생략할 수 있다.

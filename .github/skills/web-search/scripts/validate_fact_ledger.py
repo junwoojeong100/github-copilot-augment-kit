@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-"""Validate and normalize the shared Web Search Fact Ledger contract."""
+"""Validate the shared Fact Ledger and optionally generate its Markdown view."""
 from __future__ import annotations
 
 import argparse
 import copy
 import datetime as dt
+import html
 import ipaddress
 import json
 import re
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import quote, urlparse, urlunparse
 
 
 ENTRY_KEYS = {
@@ -402,12 +404,122 @@ def load_ledger(path: str | Path, *, now: dt.datetime | None = None) -> dict[str
     return validate_ledger(value, now=now)
 
 
+def _markdown_text(value: str) -> str:
+    escaped = html.escape(value, quote=True)
+    escaped = re.sub(r"([\\`*_\[\]~])", r"\\\1", escaped)
+    return (
+        escaped.replace("|", "&#124;")
+        .replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>")
+    )
+
+
+def _source_link(source: dict[str, Any]) -> str:
+    url = quote(source["url"], safe=":/?#[]@!$&'()*+,;=%-._~")
+    # Markdown decodes entities in link destinations as well as in text.
+    return f"[{_markdown_text(source['title'])}](<{html.escape(url, quote=False)}>)"
+
+
+def render_markdown(ledger: dict[str, Any]) -> str:
+    """Render a ledger already normalized by validate_ledger or load_ledger."""
+    lines = [
+        "# Fact Ledger",
+        "",
+        "Generated from validated JSON. Edit the JSON source and regenerate this view.",
+        "",
+        f"Schema version: {ledger['schemaVersion']}",
+        f"Checked at: {_markdown_text(ledger['checkedAt'])}",
+        "",
+        "| ID | Type | Claim | Evidence | Sources/Basis | Scope/status | Confidence | Status |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for entry in ledger["facts"]:
+        provenance = []
+        for source in entry.get("sources", []):
+            parts = [
+                _source_link(source),
+                _markdown_text(source["publisher"]),
+                f"published/updated: {_markdown_text(source['publishedOrUpdated'])}",
+                f"accessed: {_markdown_text(source['accessed'])}",
+            ]
+            if source.get("locator"):
+                parts.append(f"locator: {_markdown_text(source['locator'])}")
+            provenance.append("; ".join(parts))
+        if entry.get("basisIds"):
+            provenance.append(f"Basis: {_markdown_text(', '.join(entry['basisIds']))}")
+        for key, label in (
+            ("assumptionOwner", "Owner"),
+            ("validationNeeded", "Validation needed"),
+        ):
+            if entry.get(key):
+                provenance.append(f"{label}: {_markdown_text(entry[key])}")
+        status = _markdown_text(entry["status"])
+        if entry.get("decisionRationale"):
+            status += f"<br>Reason: {_markdown_text(entry['decisionRationale'])}"
+        cells = [
+            _markdown_text(entry["id"]),
+            _markdown_text(entry["type"]),
+            _markdown_text(entry["claim"]),
+            _markdown_text(entry["evidence"]),
+            "<br>".join(provenance),
+            _markdown_text(entry["scopeOrStatus"]),
+            _markdown_text(entry["confidence"]),
+            status,
+        ]
+        lines.append("| " + " | ".join(cells) + " |")
+    lines.extend(["", "## Excluded sources", ""])
+    excluded = ledger.get("excludedSources", [])
+    if excluded:
+        lines.extend(["| Source | Reason | Accessed |", "|---|---|---|"])
+        for source in excluded:
+            lines.append(
+                f"| {_source_link(source)} | {_markdown_text(source['reason'])} | "
+                f"{_markdown_text(source['accessed'])} |"
+            )
+    else:
+        lines.append("None.")
+    return "\n".join(lines) + "\n"
+
+
+def write_markdown(output: Path, content: str, *, source: Path) -> None:
+    destination = output.expanduser()
+    original = source.expanduser().resolve()
+    if (
+        destination.is_symlink()
+        or destination.resolve() == original
+        or (destination.exists() and destination.samefile(original))
+    ):
+        raise LedgerValidationError("Markdown output must not be a symlink or alias the JSON source")
+    if destination.exists() and not destination.is_file():
+        raise LedgerValidationError("Markdown output must be a regular file")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=destination.parent,
+            prefix=f".{destination.name}.", suffix=".tmp", delete=False,
+        ) as stream:
+            temporary = Path(stream.name)
+            stream.write(content)
+        temporary.replace(destination)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("ledger", type=Path)
+    parser.add_argument(
+        "--markdown-output", type=Path,
+        help="Generate a Markdown view from validated JSON without modifying the source.",
+    )
     args = parser.parse_args(argv)
     try:
         normalized = load_ledger(args.ledger)
+        if args.markdown_output is not None:
+            write_markdown(
+                args.markdown_output, render_markdown(normalized), source=args.ledger,
+            )
     except (OSError, LedgerValidationError) as error:
         print(f"Fact Ledger INVALID: {error}", file=sys.stderr)
         return 1
@@ -416,6 +528,8 @@ def main(argv: list[str] | None = None) -> int:
         f"entries={len(normalized['facts'])} | "
         f"excluded={len(normalized.get('excludedSources', []))}"
     )
+    if args.markdown_output is not None:
+        print(f"Markdown: {args.markdown_output.expanduser().resolve()}")
     return 0
 
 
