@@ -220,13 +220,14 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 2. 원인을 구분한다: content density / geometry / typography / contrast / narrative.
 3. 오버플로 수정은 내용·레이아웃을 우선하되, 전체 축소 요청은 [타이포그래피](./pptx-production.md#typography)의 역할별 기준을 따른다.
 4. 모든 결함을 모아 세션 작업 폴더의 `build_<deck>.py`를 **한 번에** 수정한다.
-5. PPTX를 재생성하고 새 PPTX에서 PDF를 다시 변환한다.
-6. verifier를 다시 실행해 자동 결함이 0인지 확인한다. 의도적 예외는 확대 검토 후 finding ID와 이유를
-   manifest에 남긴다.
-7. **국소(단일·소수 슬라이드, 비구조) 수정이면 `--slides`로 변경 슬라이드만 이미지화해 확인하고 전체
-   contact sheet는 다시 만들지 않는다.**
-8. 최종 revision의 전체 contact sheet를 확인하고 SHA-256에 묶인 `visual-review.json`으로 완료를
-   증명한다. PPTX가 바뀌면 기존 evidence는 사용할 수 없다.
+5. PPTX를 재생성한다.
+6. 국소(단일·소수 슬라이드, 비구조) 수정의 중간 확인이 필요하면 새 PPTX에서 PDF를 변환하고
+   `--slides`로 변경 슬라이드만 이미지화한다.
+   이 부분 렌더는 최종 전체 QA나 시각 검토 증거를 대체하지 않는다.
+7. `verify_deck.py --deck-spec --reuse-render`로 최종 revision의 전체 contact sheet와 자동 검사 결과를
+   확보한다. 자동 결함은 수정하고 의도적 예외는 확대 검토 후 finding ID와 이유를 manifest에 남긴다.
+8. 전체 contact sheet와 위험 장을 확인하고 SHA-256에 묶인 `visual-review.json`을 만든 뒤 verifier를
+   재실행해 통과를 확인한다. PPTX가 바뀌면 기존 evidence는 사용할 수 없다.
 
 한국어 덱의 verifier report에는 `language_balance`가 포함된다. 비율 초과 장은 risk slide 후보가 되며,
 `protectedTerms`가 사라지면 번역 또는 누락으로 간주해 실패한다. 영문 비율이 낮다는 이유로 실패하지

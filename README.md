@@ -8,7 +8,7 @@ Microsoft Learn MCP를 사용할 수 있습니다.
 
 > **Augment**는 GitHub Copilot의 역량을 지침·스킬·MCP로 보강한다는 뜻입니다. 특정 모델명은 저장소 정체성에 포함하지 않으며, `/model` 또는 모델 선택기에서 현재 작업에 가장 적합한 모델로 언제든 교체할 수 있습니다.
 >
-> **현재 검증 기준(2026-07-15)**: 이 버전의 지침·스킬·예제 워크플로는 **GPT-5.6 Sol**로 최종 end-to-end 테스트와 품질 검증을 수행했습니다. GPT-5.6 Sol은 고정 런타임 의존성이 아닙니다. 더 적합한 최신 모델이 제공되면 계속 재검증·업데이트하되, 지침·Skills·MCP 워크플로가 특정 모델에 종속되지 않는 설계 원칙을 유지합니다.
+> **GPT-6 Astra 대응**: 완료 조건 중심 실행, 필요한 참조만 읽기, 독립 도구 호출의 병렬화, 검증 실패의 명시적 처리를 강화했습니다. 모델의 내부 특성이나 특정 reasoning 설정에 의존하지 않습니다. 기존 GPT-5.6 Sol 검증 기록(2026-07-15)은 과거 이력이며, GPT-6 Astra의 실제 품질·속도 향상을 입증하는 비교 평가는 아닙니다.
 
 ---
 
@@ -99,7 +99,7 @@ npm install -g @github/copilot
 | `copilot-instructions.md` | ✅ 자동 적용 | ✅ 자동 적용 |
 | `skills/` | ✅ 자동 활성화 · `/skill-name` | ✅ 자동 활성화 · `/skill-name` |
 | Microsoft Learn MCP | `.vscode/mcp.json`에서 Start | `.github/mcp.json`을 신뢰 후 자동 로드 |
-| 범용 최신 웹 검색 | 공식 도메인 검색 → Copilot web search → broad Research | 공식 도메인 검색 → 내장 web search → broad Research |
+| 범용 최신 웹 검색 | 공식 도메인 검색 → Copilot web search(Research는 요청·지시 시) | 공식 도메인 검색 → 내장 web search(Research는 요청·지시 시) |
 
 ---
 
@@ -150,7 +150,9 @@ npm install -g @github/copilot
 
 | 섹션 | 핵심 |
 |------|------|
-| 페르소나 & 사고 | 지적 겸손, 단계적 추론, 불확실성 표기 |
+| 페르소나 & 사고 | 지적 겸손, 위험·복잡도에 비례한 판단, 불확실성 표기 |
+| 실행 계약 | 산출물·제약·완료 조건 확정 → 현재 상태 확인 → 최소 변경 → 요청한 동작 직접 검증 |
+| 도구·컨텍스트 | 현재 도구 schema 확인, 단계별 참조 로딩, 독립 호출 병렬화, 요청·지시된 경우에만 위임 |
 | 커뮤니케이션 | Straightforward 결과, 결론 우선(BLUF), 적응적 소통, 한국어 존댓말+영문 병기 |
 | 안전 & 윤리 | 해로운 콘텐츠 거부, PII/시크릿 보호 |
 | 코딩 | 가독성·보안(OWASP) 우선, 언어별 베스트 프랙티스 |
@@ -165,6 +167,10 @@ npm install -g @github/copilot
 | **web-search** | "최신 버전 알려줘", "고객·산업 기초자료 수집해줘" | 공식 원문을 검증하고 JSON Fact Ledger를 정본으로 관리하며 Markdown 뷰를 자동 생성해 downstream 스킬에 전달 |
 | **adaptive-presentation** | "병원 경영진 대상 의료 AI 전략 PPT 20장", "기술 발표자료 만들어줘", "제품 소개 슬라이드" | 결론·다음 행동 우선 스토리라인 + 필요한 외부 조사 + python-pptx 자유 제작 + 통합 QA Runner → 편집 가능한 PPTX |
 
+`web-search`는 단순 사실 확인에 파일을 만들지 않고, 비교·다중 주장·고위험 판단·후속 산출물에만
+Research Brief와 Fact Ledger를 적용합니다. 같은 요청의 동일 조건에서 확인한 원문은 공유하되,
+JSON 검증 통과를 사실성의 증명으로 취급하지 않습니다.
+
 ---
 
 ## 적응형 PPT 스킬 (`adaptive-presentation`)
@@ -178,9 +184,10 @@ npm install -g @github/copilot
 슬라이드에서 결론·가치·다음 행동이 보이고, 이후 장은 그 결론에 필요한 근거만 쌓는 Straightforward
 구성을 최우선으로 합니다.
 
-진행 순서: ① 필요한 공식 자료 조사·Fact Ledger → ② Deck Spec과 Storyline 설계 →
-③ 템플릿 profile·설치 폰트를 반영한 `python-pptx` 제작 → ④ capability-aware QA와 revision-bound
-시각 검토 순입니다.
+진행 순서: ① 신규/개선·조사 필요 여부 판단과 도구·폰트 사전 점검 → ② 필요한 공식 자료 조사·Fact Ledger →
+③ Deck Spec 검증과 Storyline 확정 → ④ 템플릿 profile·설치 폰트를 반영한 `python-pptx` 제작 →
+⑤ capability-aware QA와 revision-bound 시각 검토 순입니다. 도구·권한 때문에 검증하지 못한 결과는
+완료본이 아니라 초안으로 구분합니다.
 
 ```text
 필요한 경우 Fact Ledger
@@ -275,12 +282,22 @@ time을 줄입니다.
 | **도구 캐시** | 저장소 밖 Python·렌더링 도구·폰트 탐색 캐시를 재사용 |
 | **중간 산출물 재사용** | `--reuse-render`로 입력·환경·옵션·산출물 해시가 일치하는 전체 렌더 재사용; QA 판단은 항상 새로 검사 |
 | **수정 루프 단축** | 결함을 모아 일괄 수정 → 위험 슬라이드 확인 → 변경 시에만 최종 전체 render |
-| **측정** | 단계별 시간·PDF reuse·cache hit·repair cycle을 세션 `metrics.json`에 기록 |
+| **측정(선택)** | 성능 비교를 요청받거나 병목을 분석할 때만 단계별 시간·PDF reuse·cache hit·repair cycle을 세션 `metrics.json`에 기록 |
 
 공용 캐시에는 고객 데이터·시크릿·생성 결과를 넣지 않으며, 검증 스크립트와 QA 파일은 세션 작업
 폴더에 격리합니다. 최종 산출물 폴더에는 사용자가 요청한 최종 파일만 남깁니다.
 여기서 `<session>`은 클라이언트가 제공하는 세션 artifact 경로를 뜻합니다. 그런 경로가 없는
 VS Code 환경에서는 저장소와 최종 출력 폴더 밖의 OS 임시 디렉터리를 사용합니다.
+
+### 지침·스킬 변경 검증
+
+```bash
+python3 -B -m unittest discover -s .github/skills/web-search/tests -p 'test_skill_policy.py' -q
+```
+
+정책 테스트는 지침의 경계·길이·트리거·참조 링크와 기존 machine contract의 유지 여부를 검사합니다.
+모델 성능이나 실제 웹 조사·PPTX 품질을 평가하는 테스트는 아닙니다. 그런 개선은 같은 입력·환경·완료
+조건으로 별도 비교해야 하며, 테스트 통과만으로 더 빠르거나 정확해졌다고 주장하지 않습니다.
 
 ---
 
@@ -291,9 +308,9 @@ MCP(Model Context Protocol) 서버는 Copilot에 **구조화된 외부 도구 �
 번들**하며, clone 후 폴더 신뢰 또는 서버 Start를 승인하면 활성화됩니다. 연결 설정만 저장하고 문서 내용은
 저장소에 복제하지 않습니다.
 
-범용 최신 웹 검색은 MCP가 아니라 GitHub Copilot CLI의 `/research`·Research agent 또는 VS Code Copilot의
-web search capability를 사용합니다. 이 킷의 `web-search` 스킬은 검색 전략·검증·Fact Ledger 계약을 맡고
-검색 backend 자체는 제공하지 않습니다.
+범용 최신 웹 검색은 클라이언트가 제공하는 web search capability를 우선 사용하며, 요청·지시된 독립
+조사 축에만 `/research`·Research agent를 사용합니다. 이 킷의 `web-search` 스킬은 검색 전략·검증·
+Fact Ledger 계약을 맡고 검색 backend 자체는 제공하지 않습니다.
 
 ### 번들된 서버
 
