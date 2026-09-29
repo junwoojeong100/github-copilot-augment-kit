@@ -42,10 +42,47 @@
     ]
   },
   {
-    "name": "bounded-xhigh-research",
+    "name": "bounded-evidence-research",
     "expected_policy": [
       "기본 source budget은 주장당 canonical 원문 1개",
-      "축별 두 가지 retrieval 전략"
+      "축별 두 가지 retrieval 전략",
+      "필요한 근거가 모이면 두 전략을 모두 실행하지 않고 종료한다"
+    ]
+  },
+  {
+    "name": "simple-fact-check-needs-no-artifacts",
+    "expected_policy": [
+      "단순 사실 확인은 파일 없이",
+      "비교·다중 주장·고위험 판단·후속 산출물은 복합 조사"
+    ]
+  },
+  {
+    "name": "research-delegation-requires-request-or-instruction",
+    "expected_policy": [
+      "위임이 요청·지시된 경우",
+      "여러 독립 조사 축을 병렬 수집할 때만"
+    ]
+  },
+  {
+    "name": "same-request-evidence-reuse-is-scoped",
+    "expected_policy": [
+      "확인한 원문은 범위·버전·시점이 같은 주장과 후속 스킬에 공유",
+      "새 주장이나 조건 변경은 해당 구간을 다시 확인"
+    ]
+  },
+  {
+    "name": "schema-validity-is-not-factual-support",
+    "expected_policy": [
+      "원문이 주장을 직접 지지하는지 대조",
+      "형식·참조 무결성의 확인이지 사실성의 증명이 아니다",
+      "원문 대조를 대체하지 않는다"
+    ]
+  },
+  {
+    "name": "missing-critical-evidence-limits-the-conclusion",
+    "expected_policy": [
+      "핵심 근거가 미확보이면 결론 범위를 줄이거나 판단을 보류",
+      "검색 실패를 부재의 증거로 단정하지 않는다"
     ]
   },
   {

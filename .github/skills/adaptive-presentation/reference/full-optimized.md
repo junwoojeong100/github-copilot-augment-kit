@@ -12,8 +12,8 @@
   여러 덱에서 공유하는 Fact Ledger·스타일 helper는 메인 에이전트가 관리한다.
 - 조사 backend 선택과 원문 검증은 `web-search` 계약을 따른다. 이 가이드에서 특정 backend를 추가로
   금지하거나 강제하지 않는다.
-- 수정 후에는 항상 새 PPTX에서 PDF를 다시 변환한다. 국소·비구조 수정은 변경 슬라이드만 이미지로
-  렌더하고, 다수 슬라이드나 구조 변경은 전체 contact sheet까지 다시 생성한다.
+- 수정 후에는 항상 새 PPTX에서 PDF를 다시 변환한다. 중간 확인은 변경 슬라이드만 이미지로 렌더할 수
+  있지만, 완료 전에는 최종 revision의 전체 contact sheet와 위험 장을 확인한다.
 - 저장소와 최종 출력 폴더에는 사용자가 요청한 PPTX/PDF만 남긴다.
 
 ## 2. 세션 작업 계약
@@ -70,7 +70,7 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 ```
 
 - 캐시는 저장소 밖에 둔다.
-- `scripts/toolcheck.py`로 Python·`soffice`·PyMuPDF·Pillow·python-pptx·폰트를 탐지해
+- [`SKILL.md`](../SKILL.md)의 strict 사전 점검으로 Python·`soffice`·PyMuPDF·Pillow·python-pptx·폰트를 탐지해
   `toolchain.json`/`fonts.txt`에 캐시한다. cache hit에서는 interpreter·PATH·필수 import와 실행 파일을
   빠르게 재확인하고 비용이 큰 폰트 목록 탐색만 생략한다.
 - 의존성 설치는 import 실패 또는 도구 부재가 확인될 때만 수행하고 검증된 캐시 환경을 재사용한다.
@@ -108,10 +108,11 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 3. audit risk score로 선택된 슬라이드를 같은 PDF로 자동 상세 렌더하고 contact sheet와 함께 확인한다.
 4. 모든 결함을 `defects.md`에 모은 뒤 생성 스크립트를 한 번에 수정한다. chart·SmartArt처럼 자동
    매핑이 불가능한 finding은 확대 검토 후 finding ID와 이유를 exception manifest에 기록한다.
-5. PPTX를 재생성하고 새 PDF로 변환한다. 국소·비구조 수정이면 `--slides`로 변경 슬라이드만 이미지화해
-   확인하고 전체 contact sheet는 다시 만들지 않는다.
-6. 최종 revision의 contact sheet와 위험 슬라이드를 확인하고 deck SHA-256에 묶인 visual-review
-   evidence를 만든 뒤 같은 `--out`·`--reuse-render`로 verifier를 다시 실행한다. 일치하는 전체 렌더만
+5. PPTX를 재생성한다. 국소·비구조 수정의 중간 확인이 필요할 때만 새 PPTX에서 PDF를 변환하고
+   `--slides`로 변경 슬라이드만 이미지화한다. 이 부분 렌더는 최종 전체 QA나 시각 검토 증거를 대체하지 않는다.
+6. `verify_deck.py --deck-spec --reuse-render`로 최종 revision의 전체 contact sheet를 확보하고 위험
+   슬라이드까지 확인한다. deck SHA-256에 묶인 visual-review evidence를 만든 뒤 같은
+   `--out`·`--reuse-render`로 verifier를 다시 실행한다. 일치하는 전체 렌더만
    재사용하고 계약·시각 검토 판단은 다시 검사한다. 상세 조건은 [렌더 재사용](./verification.md#render-reuse)을 따른다.
 
 `--reuse-pdf`는 PPTX와 PDF SHA-256이 manifest와 모두 일치할 때만 동작한다. 어느 파일이든 변경되면
