@@ -1171,7 +1171,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = build_parser().parse_args()
-    result = verify(args)
+    try:
+        result = verify(args)
+    except deck_spec.DeckSpecError as error:
+        print(f"verify_deck.py: {error}", file=sys.stderr)
+        return 2
     print(
         f"Verification {'PASS' if result['passed'] else 'FAIL'} | "
         f"slides={result['audit']['slides']} | "

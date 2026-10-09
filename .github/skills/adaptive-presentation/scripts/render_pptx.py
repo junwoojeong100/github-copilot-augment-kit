@@ -13,7 +13,10 @@ import sys
 import uuid
 from pathlib import Path
 
-import fitz
+try:
+    import pymupdf as fitz  # PyMuPDF >= 1.24.3; the legacy `fitz` module name is deprecated
+except ImportError:
+    import fitz
 from PIL import Image, ImageDraw
 
 from tooling import resolve_soffice

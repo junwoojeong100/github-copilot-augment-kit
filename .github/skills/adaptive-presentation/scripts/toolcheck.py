@@ -4,7 +4,8 @@
 soffice(LibreOffice), PyMuPDF(fitz), Pillow, python-pptx, 그리고 폰트 인벤토리를 한 번 탐지해
 ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/{toolchain.json,fonts.txt}에
 캐시한다. 캐시 hit에서도 실행 환경과 필수 도구는 빠르게 재확인하고, 비용이 큰 폰트 목록 탐색만
-건너뛴다(--refresh로 강제 갱신).
+건너뛴다(--refresh로 강제 갱신). 필수 항목이 없으면 `missing required:` 다음 `hint:` 줄에
+플랫폼별 설치 명령(Python 패키지는 현재 인터프리터의 pip)을 안내한다.
 """
 from __future__ import annotations
 
@@ -13,6 +14,7 @@ import json
 import math
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -66,6 +68,14 @@ FONT_FILE_FAMILIES = (
 FONT_EXTENSIONS = {".otf", ".ttf", ".ttc", ".otc"}
 CACHE_VERSION = 3
 MODULES = ("fitz", "PIL", "pptx")
+# PyMuPDF >= 1.24.3 is imported as `pymupdf`; the legacy `fitz` name is deprecated
+MODULE_IMPORT_NAMES = {"fitz": ("pymupdf", "fitz")}
+REQUIREMENTS_FILE = Path(__file__).resolve().parents[1] / "requirements.txt"
+PIP_PACKAGES = {
+    "python-pptx": "python-pptx",
+    "PyMuPDF (fitz)": "PyMuPDF",
+    "Pillow (PIL)": "Pillow",
+}
 
 
 def cache_dir(override: str | None = None) -> Path:
@@ -85,16 +95,20 @@ def runtime_signature() -> dict:
     }
     warnings: list[str] = []
     for mod in MODULES:
-        try:
-            __import__(mod)
-            info[f"has_{mod}"] = True
-        except ImportError:
-            info[f"has_{mod}"] = False
-        except Exception as exc:
-            info[f"has_{mod}"] = False
-            warnings.append(
-                f"module probe failed for {mod}: {type(exc).__name__}: {exc}"
-            )
+        available = False
+        for name in MODULE_IMPORT_NAMES.get(mod, (mod,)):
+            try:
+                __import__(name)
+            except ImportError:
+                continue
+            except Exception as exc:
+                warnings.append(
+                    f"module probe failed for {name}: {type(exc).__name__}: {exc}"
+                )
+                continue
+            available = True
+            break
+        info[f"has_{mod}"] = available
     info["runtime_probe_warnings"] = warnings
     return info
 
@@ -324,6 +338,101 @@ def missing_required(info: dict, require_korean_font: bool = False) -> list[str]
     return missing
 
 
+def _shell_quote(value: str, platform: str) -> str:
+    if platform == "win32":
+        return f'"{value}"' if any(char.isspace() for char in value) else value
+    return shlex.quote(value)
+
+
+def _soffice_hint(platform: str) -> str:
+    if platform == "darwin":
+        return "soffice (LibreOffice): brew install --cask libreoffice"
+    if platform == "win32":
+        return (
+            "soffice (LibreOffice; afterwards add its program folder to PATH): "
+            "winget install TheDocumentFoundation.LibreOffice"
+        )
+    if platform.startswith("linux"):
+        return (
+            "soffice (LibreOffice, Debian/Ubuntu): "
+            "sudo apt-get install libreoffice-impress"
+        )
+    return "soffice: install LibreOffice and put soffice on PATH"
+
+
+def _pip_hint(
+    packages: Sequence[str],
+    platform: str,
+    python: str,
+    requirements: Path | None,
+) -> str:
+    target = (
+        f"-r {_shell_quote(str(requirements), platform)}"
+        if requirements is not None
+        else " ".join(packages)
+    )
+    return (
+        "Python packages (same interpreter): "
+        f"{_shell_quote(python, platform)} -m pip install {target}"
+    )
+
+
+def _venv_hint(platform: str) -> str:
+    python = "python" if platform == "win32" else "python3"
+    return (
+        "if pip reports externally-managed-environment, "
+        f"install in a virtual environment: {python} -m venv .venv"
+    )
+
+
+def _font_hint(platform: str) -> str:
+    refresh = "re-run with --refresh"
+    if platform == "darwin":
+        return (
+            "Korean font: Apple SD Gothic Neo ships with macOS; "
+            f"check the font probe warnings above, then {refresh}"
+        )
+    if platform == "win32":
+        return (
+            "Korean font: Malgun Gothic ships with Windows; "
+            f"check the font probe warnings above, then {refresh}"
+        )
+    if platform.startswith("linux"):
+        return (
+            f"Korean font (Debian/Ubuntu; afterwards {refresh}): "
+            "sudo apt-get install fonts-noto-cjk"
+        )
+    return (
+        "Korean font: install a Korean-capable font such as "
+        f"Noto Sans CJK KR, then {refresh}"
+    )
+
+
+def install_hints(
+    missing: Sequence[str],
+    platform: str | None = None,
+    python: str | None = None,
+    requirements: Path | None = None,
+) -> list[str]:
+    """Return copy-pasteable install hints for names from missing_required().
+
+    Python packages are installed with `python` (default: this interpreter),
+    from `requirements` when given, otherwise by listing the missing packages.
+    """
+    platform = platform or sys.platform
+    python = python or sys.executable or "python3"
+    hints: list[str] = []
+    if "soffice" in missing:
+        hints.append(_soffice_hint(platform))
+    packages = [pip for name, pip in PIP_PACKAGES.items() if name in missing]
+    if packages:
+        hints.append(_pip_hint(packages, platform, python, requirements))
+        hints.append(_venv_hint(platform))
+    if "Korean font" in missing:
+        hints.append(_font_hint(platform))
+    return hints
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description="Probe/cache soffice, PyMuPDF, Pillow, python-pptx, and fonts."
@@ -379,6 +488,9 @@ def main() -> int:
     missing = missing_required(info, a.require_korean_font)
     if missing:
         print(f"  missing required: {', '.join(missing)}")
+        requirements = REQUIREMENTS_FILE if REQUIREMENTS_FILE.is_file() else None
+        for hint in install_hints(missing, requirements=requirements):
+            print(f"  hint: {hint}")
     return 1 if (a.strict and missing) else 0
 
 

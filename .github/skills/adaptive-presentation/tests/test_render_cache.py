@@ -13,7 +13,10 @@ from unittest.mock import Mock, patch
 SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-import fitz  # noqa: E402
+try:
+    import pymupdf as fitz
+except ImportError:
+    import fitz
 import render_cache  # noqa: E402
 import render_pptx  # noqa: E402
 import verify_deck  # noqa: E402

@@ -6,7 +6,10 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-import fitz
+try:
+    import pymupdf as fitz  # PyMuPDF >= 1.24.3; the legacy `fitz` module name is deprecated
+except ImportError:
+    import fitz
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 

@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
@@ -310,6 +311,59 @@ class DeckSpecTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(deck_spec.DeckSpecError, "claim"):
             deck_spec.load_deck_spec(self.write_spec(copy.deepcopy(BASE)))
+
+    def test_fact_ledger_needs_web_search_skill_with_actionable_message(self):
+        with patch.dict(sys.modules, {"validate_fact_ledger": None}):
+            with self.assertRaises(deck_spec.DeckSpecError) as caught:
+                deck_spec.load_deck_spec(self.write_spec(copy.deepcopy(BASE)))
+        message = str(caught.exception)
+        self.assertIn("`web-search` 스킬", message)
+        self.assertIn("두 스킬을 함께 설치하세요", message)
+        self.assertIsInstance(caught.exception.__cause__, ModuleNotFoundError)
+
+    def test_spec_without_fact_ledger_never_loads_the_validator(self):
+        value = copy.deepcopy(BASE)
+        value["factLedger"] = None
+        value["slides"][1]["claimIds"] = []
+        with patch.object(
+            deck_spec,
+            "load_fact_ledger_validator",
+            side_effect=AssertionError("validator must stay unloaded"),
+        ):
+            context = deck_spec.load_deck_spec(self.write_spec(value))
+        self.assertIsNone(context.fact_ledger)
+
+    def test_fact_ledger_validator_attribute_is_resolved_lazily(self):
+        validator = deck_spec.fact_ledger_validator
+        self.assertIs(validator, deck_spec.load_fact_ledger_validator())
+        self.assertTrue(callable(validator.canonical_public_url))
+        self.assertTrue(issubclass(validator.LedgerValidationError, ValueError))
+        with patch.dict(sys.modules, {"validate_fact_ledger": None}):
+            with self.assertRaisesRegex(deck_spec.DeckSpecError, "web-search"):
+                deck_spec.fact_ledger_validator
+        self.assertFalse(hasattr(deck_spec, "no_such_attribute"))
+
+    def test_unrelated_missing_modules_are_not_blamed_on_the_skill(self):
+        unrelated = ModuleNotFoundError("No module named 'lxml'", name="lxml")
+        with (
+            patch.dict(sys.modules),
+            patch.object(deck_spec.importlib, "import_module", side_effect=unrelated),
+        ):
+            sys.modules.pop("validate_fact_ledger", None)
+            with self.assertRaises(ModuleNotFoundError) as caught:
+                deck_spec.load_fact_ledger_validator()
+        self.assertIs(caught.exception, unrelated)
+
+    def test_search_path_is_not_extended_when_the_sibling_is_already_on_it(self):
+        scripts_dir = str(deck_spec.WEB_SEARCH_SCRIPTS)
+        with (
+            patch.object(sys, "path", [scripts_dir, *sys.path]),
+            patch.dict(sys.modules),
+        ):
+            sys.modules.pop("validate_fact_ledger", None)
+            before = list(sys.path)
+            deck_spec.load_fact_ledger_validator()
+            self.assertEqual(sys.path, before)
 
     def test_template_canvas_requires_matching_profile(self):
         profile = {
