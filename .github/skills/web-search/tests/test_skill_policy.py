@@ -17,6 +17,7 @@ CUSTOMER_EVIDENCE = SKILL.parent / "reference" / "customer-evidence.md"
 REPOSITORY_ROOT = SKILL.parents[3]
 COPILOT_INSTRUCTIONS = REPOSITORY_ROOT / ".github" / "copilot-instructions.md"
 README = REPOSITORY_ROOT / "README.md"
+SETUP_GUIDE = REPOSITORY_ROOT / "SETUP-GUIDE.md"
 CLI_MCP_CONFIG = REPOSITORY_ROOT / ".github" / "mcp.json"
 VSCODE_MCP_CONFIG = REPOSITORY_ROOT / ".vscode" / "mcp.json"
 FACT_LEDGER_SCHEMA = SKILL.parent / "schema" / "fact-ledger.schema.json"
@@ -262,7 +263,7 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertIn("두 파일을 독립적으로 수정하지 않는다", self.skill)
 
     def test_research_guides_and_catalog_links_are_reachable(self):
-        for path in (SKILL, CUSTOMER_EVIDENCE, README):
+        for path in (SKILL, CUSTOMER_EVIDENCE, README, SETUP_GUIDE):
             content = path.read_text(encoding="utf-8")
             for target in re.findall(r"\[[^\]]+\]\(([^)\s]+)\)", content):
                 if target.startswith(("https://", "http://")):
@@ -305,6 +306,20 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertEqual(set(cli_config["mcpServers"]), {"microsoft-learn"})
         self.assertEqual(set(vscode_config["servers"]), {"microsoft-learn"})
         self.assertNotIn("search MCP/API", self.skill)
+
+    def test_setup_guide_examples_match_bundled_config_and_stay_generic(self):
+        guide = SETUP_GUIDE.read_text(encoding="utf-8")
+        cli_config = json.loads(CLI_MCP_CONFIG.read_text(encoding="utf-8"))
+        examples = re.findall(r"```json\n(.*?)\n```", guide, re.DOTALL)
+        self.assertTrue(examples)
+        for example in examples:
+            self.assertEqual(
+                json.loads(example)["mcpServers"]["microsoft-learn"],
+                cli_config["mcpServers"]["microsoft-learn"],
+            )
+        for local_detail in ("/Users/", "/home/", "ghp_", "github_pat_"):
+            with self.subTest(local_detail=local_detail):
+                self.assertNotIn(local_detail, guide)
 
 
 if __name__ == "__main__":
