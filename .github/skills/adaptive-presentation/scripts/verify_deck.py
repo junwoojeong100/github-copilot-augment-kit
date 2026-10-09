@@ -23,6 +23,7 @@ import rendered_overlap
 import speaker_notes
 import toolcheck
 import visual_review
+from pptx_text import iter_slide_texts
 from tooling import path_is_within, paths_collide, write_json_atomic
 
 
@@ -522,10 +523,10 @@ def leading_message_style_failures(
     }
 
 
-def _claim_source_publishers(
+def _claim_sources(
     context: deck_spec.DeckSpecContext,
     claim_id: str,
-) -> list[str]:
+) -> list[dict]:
     if context.fact_ledger is None:
         return []
     fact = next(
@@ -540,69 +541,95 @@ def _claim_source_publishers(
         return []
     sources = fact.get("sources")
     if isinstance(sources, list):
-        publishers = [
-            str(source.get("publisher", "")).strip()
-            for source in sources
-            if isinstance(source, dict)
-        ]
-    else:
-        publishers = [str(fact.get("publisher", "")).strip()]
-    return list(dict.fromkeys(publisher for publisher in publishers if publisher))
+        return sources
+    source = fact.get("source")
+    if isinstance(source, dict):
+        return [{"publisher": fact.get("publisher", ""), **source}]
+    return []
 
 
 def source_footer_failures(
     audit_report: dict,
     context: deck_spec.DeckSpecContext,
 ) -> tuple[list[str], dict[str, list[str]]]:
-    """Require human-readable source publishers instead of internal Fact IDs."""
-    footers = audit_report.get("footer_source_texts_by_slide", {})
+    """Match each claim to a footer publisher, document title, and hyperlink."""
+    footers = audit_report.get("footer_source_citations_by_slide", {})
     missing: dict[str, list[str]] = {}
+    failures: list[str] = []
+
+    def normalized(text: str) -> str:
+        return " ".join(text.casefold().split())
+
+    def matches(source: dict, citation: dict, footer: str) -> bool:
+        publisher = normalized(source.get("publisher", ""))
+        title = normalized(source.get("title", ""))
+        url = source.get("url", "").strip()
+        if not publisher or not title or not url:
+            return False
+        if publisher not in footer or title not in footer:
+            return False
+        titled_links = [
+            link for link in citation["hyperlinks"] if title in link["text"]
+        ]
+        candidates = titled_links or (
+            citation["hyperlinks"]
+            if publisher in citation["text"]
+            and title in citation["text"]
+            and len({link["url"] for link in citation["hyperlinks"]}) == 1
+            else []
+        )
+        expected_url = deck_spec.fact_ledger_validator.canonical_public_url(
+            url, "Fact Ledger source URL"
+        )
+        return any(link["url"] == expected_url for link in candidates)
+
     for slide, claim_ids in context.claim_ids_by_slide.items():
-        footer = "\n".join(footers.get(str(slide), []))
-        normalized_footer = " ".join(footer.casefold().split())
+        citations = []
+        for citation in footers.get(str(slide), []):
+            links = []
+            for link in citation["hyperlinks"]:
+                try:
+                    url = deck_spec.fact_ledger_validator.canonical_public_url(
+                        link["url"], "Footer source hyperlink"
+                    )
+                except deck_spec.fact_ledger_validator.LedgerValidationError as error:
+                    failures.append(f"Invalid source hyperlink on slide {slide}: {error}")
+                else:
+                    links.append({"text": normalized(link["text"]), "url": url})
+            citations.append({
+                "text": normalized(citation["text"]),
+                "hyperlinks": links,
+            })
+        footer = " ".join(citation["text"] for citation in citations)
         absent: list[str] = []
         for claim_id in claim_ids:
-            publishers = _claim_source_publishers(context, claim_id)
+            sources = _claim_sources(context, claim_id)
             if not any(
-                " ".join(publisher.casefold().split()) in normalized_footer
-                for publisher in publishers
+                matches(source, citation, footer)
+                for source in sources
+                for citation in citations
             ):
-                rendered = " / ".join(publishers) or "source publisher"
+                rendered = " / ".join(
+                    f"{source.get('publisher', '')} · {source.get('title', '')} "
+                    f"<{source.get('url', '')}>"
+                    for source in sources
+                ) or "source publisher, document title and URL"
                 absent.append(f"{claim_id} ({rendered})")
         if absent:
             missing[str(slide)] = absent
-    failures = [
-        "Human-readable source publisher missing from footer on slide "
+    failures.extend(
+        "Source publisher, document title or matching original hyperlink missing on slide "
         f"{slide}: {', '.join(items)}"
         for slide, items in missing.items()
-    ]
+    )
     return failures, missing
 
 
 def internal_fact_id_visibility_failures(deck: Path) -> list[str]:
     """Reject machine-only Fact Ledger IDs from visible slide text."""
     from pptx import Presentation
-    from pptx.enum.shapes import MSO_SHAPE_TYPE
 
     pattern = re.compile(r"\[(?:F|I|A)-[A-Z0-9_-]+\]", re.IGNORECASE)
-
-    def visible_text(shape) -> list[str]:
-        if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
-            return [
-                text
-                for child in shape.shapes
-                for text in visible_text(child)
-            ]
-        if getattr(shape, "has_table", False):
-            return [
-                cell.text
-                for row in shape.table.rows
-                for cell in row.cells
-                if cell.text.strip()
-            ]
-        if getattr(shape, "has_text_frame", False) and shape.text.strip():
-            return [shape.text]
-        return []
 
     prs = Presentation(deck)
     failures: list[str] = []
@@ -610,8 +637,7 @@ def internal_fact_id_visibility_failures(deck: Path) -> list[str]:
         identifiers = sorted(
             {
                 match.group(0)
-                for shape in slide.shapes
-                for text in visible_text(shape)
+                for _, text in iter_slide_texts(slide)
                 for match in pattern.finditer(text)
             }
         )
@@ -628,25 +654,6 @@ def state_label_failures(
     context: deck_spec.DeckSpecContext,
 ) -> list[str]:
     from pptx import Presentation
-    from pptx.enum.shapes import MSO_SHAPE_TYPE
-
-    def visible_text(shape) -> list[str]:
-        if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
-            return [
-                text
-                for child in shape.shapes
-                for text in visible_text(child)
-            ]
-        if getattr(shape, "has_table", False):
-            return [
-                cell.text
-                for row in shape.table.rows
-                for cell in row.cells
-                if cell.text.strip()
-            ]
-        if getattr(shape, "has_text_frame", False) and shape.text.strip():
-            return [shape.text]
-        return []
 
     prs = Presentation(deck)
     state_pattern = re.compile(
@@ -661,9 +668,7 @@ def state_label_failures(
     failures: list[str] = []
     for slide_spec, slide in zip(context.spec["slides"], prs.slides):
         visible = "\n".join(
-            text
-            for shape in slide.shapes
-            for text in visible_text(shape)
+            text for _, text in iter_slide_texts(slide)
         )
         visible_labels = {
             match.group(1).upper()

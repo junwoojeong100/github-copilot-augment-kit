@@ -17,6 +17,7 @@ import fitz  # noqa: E402
 import render_cache  # noqa: E402
 import render_pptx  # noqa: E402
 import verify_deck  # noqa: E402
+import visual_review  # noqa: E402
 from pptx import Presentation  # noqa: E402
 from pptx.util import Inches, Pt  # noqa: E402
 
@@ -313,6 +314,49 @@ class RenderReuseVerificationTests(unittest.TestCase):
         self.assertFalse(second["render_cache"]["reused"])
         self.assertIn("render cache", second["visual_review_failure"])
         self.assertNotEqual(first["render_cache"]["sha256"], second["render_cache"]["sha256"])
+
+    def test_revision_specific_reviews_preserve_old_evidence_and_verify_the_new_revision(self):
+        verify_deck.verify(self.args)
+        cache = self.args.out / "qa" / render_cache.CACHE_NAME
+        first_evidence = self.root / "visual-review-r001.json"
+        visual_review.write_visual_review(
+            self.deck, first_evidence,
+            reviewer="Synthetic test fixture",
+            notes="Synthetic review of the first rendered revision.",
+            render_cache=cache,
+        )
+        original_evidence = first_evidence.read_bytes()
+        self.args.require_visual_review = True
+        self.args.visual_review = first_evidence
+        self.assertTrue(verify_deck.verify(self.args)["passed"])
+
+        self.prs.slides[0].notes_slide.notes_text_frame.text = "Revised speaker notes."
+        self.prs.save(self.deck)
+        stale = verify_deck.verify(self.args)
+        self.assertFalse(stale["passed"])
+        self.assertIn("current PPTX revision", stale["visual_review_failure"])
+        with self.assertRaises(FileExistsError):
+            visual_review.write_visual_review(
+                self.deck, first_evidence,
+                reviewer="Synthetic test fixture",
+                notes="Synthetic review of the revised rendered deck.",
+                render_cache=cache,
+            )
+
+        second_evidence = self.root / "visual-review-r002.json"
+        visual_review.write_visual_review(
+            self.deck, second_evidence,
+            reviewer="Synthetic test fixture",
+            notes="Synthetic review of the revised rendered deck.",
+            render_cache=cache,
+        )
+        self.args.visual_review = second_evidence
+        final = verify_deck.verify(self.args)
+        self.assertTrue(final["passed"], final["audit_failures"])
+        self.assertTrue(final["render_cache"]["reused"])
+        self.assertEqual(self.converter.call_count, 2)
+        self.assertEqual(first_evidence.read_bytes(), original_evidence)
+        self.assertNotEqual(first_evidence.read_bytes(), second_evidence.read_bytes())
 
     def test_stricter_qa_cannot_reuse_an_old_pass_decision(self):
         first = verify_deck.verify(self.args)

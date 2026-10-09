@@ -58,8 +58,9 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
 
 ### 2. 스토리라인
 
-- 코드 전에 [`reference/deck-spec.md`](./reference/deck-spec.md)의 `deck-spec.json`과 `storyline.md`에
-  장별 결론형 제목·한 문장 메시지·다음 행동·근거·시각 형태·앞뒤 연결·발표 cue를 확정한다.
+- 코드 전에 `storyline.md`에 장별 결론형 제목·한 문장 메시지·다음 행동·근거·시각 형태·앞뒤 연결·발표 cue를 확정한다.
+- [`reference/deck-spec.md`](./reference/deck-spec.md)의 `deck-spec.json`에는 요청·장별 제목/ID·폰트·QA 등 검증 입력만 기록한다.
+  정책 기본값은 생략하고 필요한 override만 명시한다.
 - `python3 -B .github/skills/adaptive-presentation/scripts/deck_spec.py <work>/deck-spec.json`을 통과한 뒤 생성 코드를 작성한다.
 - 제목만 읽어도 논리가 이어져야 한다. 반복 설명은 통합하되 원본의 의미·조건을 누락하지 않는다.
   장수가 고정이면 장식 대신 근거·사례·비교·실행 기준으로 채운다.
@@ -99,11 +100,13 @@ python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py <deck>.pp
 - [`scripts/verify_deck.py`](./scripts/verify_deck.py)와 [`검증 가이드`](./reference/verification.md)로
   동일 PPTX의 구조 감사·전체 렌더를 실행한다. 전체 contact sheet는 한 장씩 보고 위험 장만 확대한다.
 - 미지원 chart·SmartArt·unmapped text도 finding ID별로 검토한다. 결함을 일괄 수정하고 다시 렌더한다.
-  의도적 예외만 이유를 기록하며, 최종 SHA-256에 묶인 `visual-review.json`으로 verifier를 재실행한다.
+  의도적 예외만 이유를 기록하며, 최종 SHA-256에 묶인 `visual-review-rNNN.json`을 새 파일로 만든다.
+  기존 증거는 보존하고 현재 revision의 경로를 `--visual-review`로 지정해 verifier를 재실행한다.
   재사용 모드의 증거는 현재 `qa/render-cache.json`의 SHA-256을 `renderCacheSha256`으로 연결해 환경 변경 시 무효화한다.
 - `--reuse-render`는 입력·환경·옵션·산출물 해시가 같은 전체 렌더만 재사용한다. QA 판단은 매번 다시 검사하며,
   변경된 입력은 새로 렌더한다. 손상된 캐시는 오류로 처리하고 옵션 없는 실행으로 새 검증을 수행한다.
-- `claimIds`에서 출처 대상이 도출되며 footer 발행자·상태·언어·폰트·notes를 검증한다.
+- `claimIds`에서 출처 대상이 도출되며 footer의 발행자·문서명·원문 hyperlink를 Fact Ledger와 대조한다.
+  상태·언어·폰트·notes도 검증한다.
   대비 측정·의미 보존·발표 시간은 별도 편집 검토로 확인하고 자동 PASS와 혼동하지 않는다.
 
 ## 완료 조건

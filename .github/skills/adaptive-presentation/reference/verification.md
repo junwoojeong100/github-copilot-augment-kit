@@ -2,6 +2,7 @@
 
 생성 성공은 완료가 아니다. PPTX는 **구조 감사 + 전체 렌더 + 시각 확인**을 거친 뒤에야 완료다.
 목표는 **한 번의 전체 패스**로 결함을 찾아 일괄 수정하고, 변경이 있을 때만 다시 렌더하는 것이다.
+QA 실행 명령·렌더 캐시·revision별 시각 검토 증거의 상세 절차는 이 문서를 정본으로 따른다.
 
 기본 실행:
 
@@ -18,7 +19,11 @@ Runner가 구조 감사와 전체 렌더를 읽기 전용으로 병렬 실행하
 승인되지 않은 geometry overlap, 서로 다른 text frame에서 실제
 렌더된 글자의 충돌·overflow·허용치를 넘는 unmapped span을 실패 처리한다.
 Fact Ledger `claimIds`가 있는 슬라이드는 자동으로 출처 대상이 된다. Footer에는 Fact Ledger의
-발행자 또는 이해 가능한 문서명이 있어야 하며, `[F-001]` 같은 내부 ID가 보이는 텍스트에 포함되면 실패한다.
+각 claim의 `sources` 중 하나 이상의 발행자·문서명과 해당 원문 URL의 실제 PPTX hyperlink가 있어야 한다.
+문서명에 연결한 hyperlink의 대상도 해당 문서와 일치해야 한다.
+발행자와 문서명을 다른 줄·텍스트 상자에 배치해도 문서명의 hyperlink로 원문 연결을 확인한다.
+같은 발행자의 서로 다른 문서를 인용하면 각 claim의 원문 링크가 필요하다.
+`[F-001]` 같은 내부 ID가 보이는 텍스트에 포함되면 실패한다.
 
 chart·SmartArt처럼 자동 text mapping을 지원하지 않는 객체는 성공으로 가정하지 않는다. 첫 실행에서
 발급된 finding ID를 전체 화면으로 확인한 뒤 `qa-exceptions.json`에 정확한 ID와 검토 이유를 기록한다.
@@ -49,13 +54,42 @@ chart·SmartArt처럼 자동 text mapping을 지원하지 않는 객체는 성�
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/visual_review.py create deck.pptx \
-  --out <work-dir>/visual-review.json --render-cache <work-dir>/qa/render-cache.json \
+  --out <work-dir>/visual-review-r001.json --render-cache <work-dir>/qa/render-cache.json \
   --reviewer Copilot --notes "전체 contact sheet와 위험 슬라이드를 검토했습니다."
 
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
   deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json \
-  --reuse-render --visual-review <work-dir>/visual-review.json
+  --reuse-render --visual-review <work-dir>/visual-review-r001.json
 ```
+
+<a id="visual-review-revisions"></a>
+
+### 수정 revision의 시각 검토 증거
+
+증거 생성기는 기존 파일을 덮어쓰지 않는다. PPTX 또는 렌더 환경을 수정한 뒤에는 이전
+`visual-review-r001.json`을 보존하고 revision을 올린 새 파일(`visual-review-r002.json` 등)을 사용한다.
+증거는 Runner가 초기화하는 `qa/`·`qa-detail/` 밖에 둔다.
+
+먼저 이전 `--visual-review`를 생략하고 새 revision을 전체 렌더한다. 시각 증거가 필수인 덱은
+이 실행의 최종 PASS가 보류되는 것이 정상이다. 새 contact sheet와 위험 장을 실제로 검토한 뒤에만
+새 증거를 만들고, **그 새 경로**를 verifier에 전달한다.
+
+```bash
+python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
+  deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json --reuse-render
+
+# 위 실행의 전체 contact sheet와 위험 장을 검토한 뒤 실행
+python3 -B .github/skills/adaptive-presentation/scripts/visual_review.py create deck.pptx \
+  --out <work-dir>/visual-review-r002.json --render-cache <work-dir>/qa/render-cache.json \
+  --reviewer Copilot --notes "수정 revision의 전체 contact sheet와 위험 슬라이드를 검토했습니다."
+
+python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
+  deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json \
+  --reuse-render --visual-review <work-dir>/visual-review-r002.json
+```
+
+PPTX 또는 캐시 해시가 달라진 기존 증거를 수정·삭제하거나 새 revision의 승인으로 재사용하지 않는다.
+다음 수정에서는 같은 절차로 `r003` 등 사용하지 않은 파일명을 선택한다.
 
 ## 1. 구조 감사
 
@@ -202,7 +236,7 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 | Requested white canvas | 모든 slide background와 전체 화면 canvas 도형이 `#FFFFFF` |
 | Executive palette | 브랜드가 없으면 neutral + primary + optional secondary의 3~4개 색상 계열 |
 | 다양성 | 같은 구조를 기계적으로 반복하지 않음(정보 유형에 맞게 형태를 바꿈) |
-| Claims | 숫자·상태·고객 성과에 source |
+| Claims | claim별 footer 발행자·문서명·원문 hyperlink가 Fact Ledger와 일치 |
 | Preview/demo | 텍스트 라벨 존재 |
 | Korean language balance | 전체 영문 목표 약 40%, 최대 55%; 개별 장 최대 75%; `protectedTerms` 영문 유지 |
 | Technical explanation | protected term이 있는 장에 쉬운 한글 역할 설명 존재 |
@@ -226,12 +260,16 @@ full-slide 이미지는 최대 2~3개만 확인한다.
    이 부분 렌더는 최종 전체 QA나 시각 검토 증거를 대체하지 않는다.
 7. `verify_deck.py --deck-spec --reuse-render`로 최종 revision의 전체 contact sheet와 자동 검사 결과를
    확보한다. 자동 결함은 수정하고 의도적 예외는 확대 검토 후 finding ID와 이유를 manifest에 남긴다.
-8. 전체 contact sheet와 위험 장을 확인하고 SHA-256에 묶인 `visual-review.json`을 만든 뒤 verifier를
-   재실행해 통과를 확인한다. PPTX가 바뀌면 기존 evidence는 사용할 수 없다.
+8. 전체 contact sheet와 위험 장을 확인하고 SHA-256에 묶인 새 `visual-review-rNNN.json`을 만든다.
+   기존 evidence를 보존하고 새 경로를 `--visual-review`로 전달해 통과를 확인한다.
+   PPTX·렌더 환경이 바뀔 때마다 [revision별 증거 절차](#visual-review-revisions)를 반복한다.
 
 한국어 덱의 verifier report에는 `language_balance`가 포함된다. 비율 초과 장은 risk slide 후보가 되며,
 `protectedTerms`가 사라지면 번역 또는 누락으로 간주해 실패한다. 영문 비율이 낮다는 이유로 실패하지
 않으므로, 목표치를 맞추기 위한 장식적 영어 추가는 금지한다.
+Native chart의 제목·축 제목·표시된 범례·범주·data label도 언어 검사에 포함한다.
+숨긴 축 label이나 표시하지 않는 series명은 포함하지 않는다. 이 텍스트 분석은 chart의 렌더 mapping이나
+시각 검토를 대체하지 않으므로 `unsupported_text_objects`의 finding별 검토는 그대로 수행한다.
 
 기본 `core-only`의 `speaker_notes` report는 슬라이드별 전체 문자·문장 수, 핵심 메시지의 위치·길이·
 문장 수, 금지 섹션과 출처 reference 존재 여부를 기록한다. notes 누락, `speakerNotesPolicy`의 길이·문장 수

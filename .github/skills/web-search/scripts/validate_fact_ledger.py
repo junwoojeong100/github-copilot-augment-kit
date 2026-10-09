@@ -133,7 +133,9 @@ def canonical_public_url(value: str, path: str) -> str:
     )
     rendered_host = f"[{normalized_host}]" if ":" in normalized_host else normalized_host
     netloc = rendered_host if port is None or default_port else f"{rendered_host}:{port}"
-    return urlunparse((scheme, netloc, parsed.path or "/", "", parsed.query, ""))
+    return urlunparse(
+        (scheme, netloc, parsed.path or "/", parsed.params, parsed.query, "")
+    )
 
 
 def validate_source(

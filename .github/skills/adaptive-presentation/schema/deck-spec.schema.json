@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/junwoojeong100/github-copilot-augment-kit/main/.github/skills/adaptive-presentation/schema/deck-spec.schema.json",
   "title": "Adaptive Presentation Deck Specification",
+  "description": "Authoring input structure. deck_spec.py applies defaults and validates semantic and reference constraints.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -56,19 +57,8 @@
     },
     "languagePolicy": {
       "type": ["object", "null"],
+      "description": "Optional overrides. Missing fields use the Korean defaults validated by deck_spec.py.",
       "additionalProperties": false,
-      "required": [
-        "mode",
-        "targetLatinRatio",
-        "maxLatinRatio",
-        "maxSlideLatinRatio",
-        "minAnalyzedCharacters",
-        "preserveOfficialTerms",
-        "requireKoreanExplanationForProtectedTerms",
-        "minHangulCharactersPerTechnicalSlide",
-        "protectedTerms",
-        "allowHighLatinSlides"
-      ],
       "properties": {
         "mode": {"const": "korean-first-technical-english"},
         "targetLatinRatio": {"type": "number", "minimum": 0, "maximum": 1},
@@ -95,21 +85,8 @@
     },
     "speakerNotesPolicy": {
       "type": ["object", "null"],
+      "description": "Optional overrides. deck_spec.py infers an omitted mode, applies its defaults, and validates mode-specific fields, sections and limits.",
       "additionalProperties": false,
-      "required": [
-        "required",
-        "authoringMode",
-        "requiredSections",
-        "coreSection",
-        "targetSeconds",
-        "minCharacters",
-        "maxCharacters",
-        "minCoreCharacters",
-        "maxCoreCharacters",
-        "maxCoreSentences",
-        "maxTotalSentences",
-        "forbidSourceReferences"
-      ],
       "properties": {
         "mode": {"enum": ["core-only", "guided-flow"]},
         "required": {"type": "boolean"},
@@ -147,64 +124,7 @@
         "requireQuestionFirst": {"type": "boolean"},
         "requireQuestionMark": {"type": "boolean"},
         "forbidSourceReferences": {"type": "boolean"}
-      },
-      "allOf": [
-        {
-          "if": {
-            "properties": {"mode": {"const": "core-only"}},
-            "required": ["mode"]
-          },
-          "then": {
-            "required": [
-              "mode",
-              "minCoreSentences",
-              "minTotalSentences",
-              "forbiddenSections",
-              "requireCoreFirst"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {"mode": {"const": "guided-flow"}},
-            "required": ["mode"]
-          },
-          "then": {
-            "required": [
-              "mode",
-              "questionSection",
-              "transitionSection",
-              "minQuestionCharacters",
-              "maxQuestionCharacters",
-              "maxQuestionSentences",
-              "minCoreSentences",
-              "maxTransitionCharacters",
-              "maxTransitionSentences",
-              "minTotalSentences",
-              "requireQuestionFirst",
-              "requireQuestionMark"
-            ]
-          }
-        },
-        {
-          "if": {
-            "not": {"required": ["mode"]}
-          },
-          "then": {
-            "required": [
-              "questionSection",
-              "transitionSection",
-              "minQuestionCharacters",
-              "maxQuestionCharacters",
-              "maxQuestionSentences",
-              "maxTransitionCharacters",
-              "maxTransitionSentences",
-              "requireQuestionFirst",
-              "requireQuestionMark"
-            ]
-          }
-        }
-      ]
+      }
     },
     "fontPolicy": {
       "type": "object",

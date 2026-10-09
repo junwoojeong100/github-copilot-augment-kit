@@ -72,6 +72,36 @@ class FactLedgerTests(unittest.TestCase):
         )
         self.assertNotIn("source", normalized["facts"][0])
 
+    def test_url_normalization_preserves_path_parameters(self):
+        ledger = copy.deepcopy(self.example)
+        ledger["facts"][0]["sources"][0]["url"] = (
+            "HTTPS://EXAMPLE.COM:443/report;version=2026?lang=en"
+        )
+
+        normalized = validator.validate_ledger(ledger, now=NOW)
+
+        self.assertEqual(
+            normalized["facts"][0]["sources"][0]["url"],
+            "https://example.com/report;version=2026?lang=en",
+        )
+
+    def test_different_path_parameter_versions_are_distinct_sources(self):
+        ledger = copy.deepcopy(self.example)
+        sources = ledger["facts"][0]["sources"]
+        sources[0]["url"] = "https://example.com/report;version=2025?lang=en"
+        sources.append(copy.deepcopy(sources[0]))
+        sources[1]["url"] = "https://example.com/report;version=2026?lang=en"
+
+        normalized = validator.validate_ledger(ledger, now=NOW)
+
+        self.assertEqual(
+            [source["url"] for source in normalized["facts"][0]["sources"]],
+            [
+                "https://example.com/report;version=2025?lang=en",
+                "https://example.com/report;version=2026?lang=en",
+            ],
+        )
+
     def test_duplicate_ids_and_missing_basis_are_rejected(self):
         duplicate = copy.deepcopy(self.example)
         duplicate["facts"][1]["id"] = "F-001"

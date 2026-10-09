@@ -12,11 +12,14 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import render_pptx  # noqa: E402
+import audit_pptx  # noqa: E402
 import language_policy  # noqa: E402
 import speaker_notes  # noqa: E402
 import toolcheck  # noqa: E402
 import tooling  # noqa: E402
 from pptx import Presentation  # noqa: E402
+from pptx.chart.data import ChartData  # noqa: E402
+from pptx.enum.chart import XL_CHART_TYPE, XL_TICK_LABEL_POSITION  # noqa: E402
 from pptx.util import Inches, Pt  # noqa: E402
 from verify_deck import (  # noqa: E402
     all_text_font_failures,
@@ -262,43 +265,136 @@ class VerifyDeckTests(unittest.TestCase):
             ["fontFamily", "sizePt", "bold"],
         )
 
-    def test_source_footer_uses_human_readable_publishers(self):
+    def _source_footer_report(
+        self,
+        citations: list[list[tuple[str, str | None]]],
+        *,
+        shape_link: str | None = None,
+    ) -> dict:
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        for citation in citations:
+            shape = slide.shapes.add_textbox(
+                Inches(0.5), Inches(6.95), Inches(9), Inches(0.2)
+            )
+            paragraph = shape.text_frame.paragraphs[0]
+            for text, url in citation:
+                for index, line in enumerate(text.split("\n")):
+                    if index:
+                        paragraph = shape.text_frame.add_paragraph()
+                    run = paragraph.add_run()
+                    run.text = line
+                    run.font.size = Pt(8)
+                    if url is not None:
+                        run.hyperlink.address = url
+            if shape_link is not None:
+                shape.click_action.hyperlink.address = shape_link
+        deck = self.work_dir / "source-footers.pptx"
+        prs.save(deck)
+        args = build_parser().parse_args([str(deck), "--out", str(self.work_dir)])
+        resolve_contract(args)
+        return audit_pptx.audit(audit_namespace(args, self.work_dir / "audit.json"))[0]
+
+    def test_source_footer_requires_publisher_title_and_original_hyperlink(self):
         class Context:
-            claim_ids_by_slide = {2: ["F-001", "F-002"]}
+            claim_ids_by_slide = {1: ["F-001"]}
             fact_ledger = {
                 "facts": [
                     {
                         "id": "F-001",
-                        "sources": [{"publisher": "Microsoft"}],
-                    },
-                    {
-                        "id": "F-002",
-                        "sources": [{"publisher": "GitHub"}],
+                        "sources": [{
+                            "publisher": "Example Publisher",
+                            "title": "Report 2026",
+                            "url": "https://example.com/report;version=2026?lang=en",
+                        }],
                     },
                 ]
             }
 
+        for text, url in (
+            ("Source: Example Publisher", None),
+            ("Source: Example Publisher · Report 2026", None),
+            ("Source: Example Publisher", "https://example.com/report;version=2026?lang=en"),
+            ("Source: Report 2026", "https://example.com/report;version=2026?lang=en"),
+            ("Source: Example Publisher · Report 2026", "https://example.com/report?lang=en"),
+            ("Source: Example Publisher · Report 2026", "https://example.com/other"),
+        ):
+            with self.subTest(text=text, url=url):
+                failures, gaps = source_footer_failures(
+                    self._source_footer_report([[(text, url)]]), Context()
+                )
+                self.assertTrue(failures)
+                self.assertIn("F-001", gaps["1"][0])
+
+        canonical_url = "HTTPS://EXAMPLE.COM:443/report;version=2026?lang=en"
+        for citations, shape_link in (
+            ([[("Source: Example Publisher · Report 2026", canonical_url)]], None),
+            ([[
+                ("Source: Example Publisher\n", None),
+                ("Report 2026", canonical_url),
+            ]], None),
+            ([
+                [("Source: Example Publisher", None)],
+                [("Report 2026", canonical_url)],
+            ], None),
+            ([[("Source: Example Publisher · Report 2026", None)]], canonical_url),
+        ):
+            with self.subTest(citations=citations, shape_link=shape_link):
+                failures, gaps = source_footer_failures(
+                    self._source_footer_report(citations, shape_link=shape_link),
+                    Context(),
+                )
+                self.assertEqual((failures, gaps), ([], {}))
+
+    def test_same_publisher_claims_require_their_own_source_links(self):
+        class Context:
+            claim_ids_by_slide = {1: ["F-001", "F-002"]}
+            fact_ledger = {
+                "facts": [
+                    {
+                        "id": f"F-00{number}",
+                        "sources": [{
+                            "publisher": "Example Publisher",
+                            "title": f"Report {year}",
+                            "url": f"https://example.com/report;version={year}",
+                        }],
+                    }
+                    for number, year in enumerate((2025, 2026), 1)
+                ]
+            }
+
+        first = [
+            ("Source: Example Publisher · ", None),
+            ("Report 2025", "https://example.com/report;version=2025"),
+        ]
+        second = [
+            ("Source: Example Publisher · ", None),
+            ("Report ", "https://example.com/report;version=2026"),
+            ("2026", "https://example.com/report;version=2026"),
+        ]
         failures, gaps = source_footer_failures(
-            {
-                "footer_source_texts_by_slide": {
-                    "2": ["출처: Microsoft Learn · 공식 제품 문서"]
-                }
-            },
-            Context(),
+            self._source_footer_report([first]), Context()
         )
-        self.assertEqual(gaps, {"2": ["F-002 (GitHub)"]})
-        self.assertIn("GitHub", failures[0])
+        self.assertEqual(len(gaps["1"]), 1)
+        self.assertIn("F-002", gaps["1"][0])
+        self.assertTrue(failures)
 
         failures, gaps = source_footer_failures(
-            {
-                "footer_source_texts_by_slide": {
-                    "2": ["출처: Microsoft Learn · GitHub Docs"]
-                }
-            },
-            Context(),
+            self._source_footer_report([first, second]), Context()
         )
-        self.assertEqual(failures, [])
-        self.assertEqual(gaps, {})
+        self.assertEqual((failures, gaps), ([], {}))
+
+        swapped = [
+            ("Source: Example Publisher · ", None),
+            ("Report 2025", "https://example.com/report;version=2026"),
+            (" · ", None),
+            ("Report 2026", "https://example.com/report;version=2025"),
+        ]
+        failures, gaps = source_footer_failures(
+            self._source_footer_report([swapped]), Context()
+        )
+        self.assertEqual(len(gaps["1"]), 2)
+        self.assertTrue(failures)
 
     def test_internal_fact_ids_are_not_visible(self):
         prs = Presentation()
@@ -415,6 +511,113 @@ class VerifyDeckTests(unittest.TestCase):
             [item["slide"] for item in report["unexplainedTechnicalSlides"]],
             [1],
         )
+
+    def _language_chart(self, chart_type=XL_CHART_TYPE.COLUMN_CLUSTERED):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.shapes.add_textbox(
+            Inches(0.5), Inches(0.4), Inches(9), Inches(0.8)
+        ).text = "공식 서비스의 역할과 고객에게 제공하는 가치를 한글로 설명합니다"
+        data = ChartData()
+        data.categories = ["Azure AI Search"]
+        data.add_series("Microsoft Foundry", (1,))
+        chart = slide.shapes.add_chart(
+            chart_type, Inches(0.5), Inches(1.5), Inches(8), Inches(4), data
+        ).chart
+        return prs, chart
+
+    def test_language_balance_reads_native_chart_title_axis_and_labels(self):
+        prs, chart = self._language_chart()
+        chart.has_title = True
+        chart.chart_title.text_frame.text = "GitHub Copilot"
+        chart.has_legend = True
+        chart.category_axis.has_title = True
+        chart.category_axis.axis_title.text_frame.text = "Microsoft Agent Framework"
+        deck = self.work_dir / "chart-language.pptx"
+        prs.save(deck)
+        policy = {
+            **language_policy.DEFAULT_KOREAN_POLICY,
+            "protectedTerms": [
+                "GitHub Copilot", "Microsoft Agent Framework",
+                "Microsoft Foundry", "Azure AI Search",
+            ],
+        }
+
+        report = language_policy.analyze_deck(deck, policy, footer_top_in=6.9)
+
+        self.assertEqual(report["missingProtectedTerms"], [])
+        self.assertEqual(report["slides"][0]["protectedTerms"], policy["protectedTerms"])
+        self.assertEqual(report["unexplainedTechnicalSlides"], [])
+
+    def test_chart_hidden_cached_labels_do_not_count_as_visible_terms(self):
+        prs, chart = self._language_chart()
+        chart.has_legend = False
+        chart.category_axis.tick_label_position = XL_TICK_LABEL_POSITION.NONE
+        deck = self.work_dir / "hidden-chart-labels.pptx"
+        prs.save(deck)
+        policy = {
+            **language_policy.DEFAULT_KOREAN_POLICY,
+            "protectedTerms": ["Microsoft Foundry", "Azure AI Search"],
+        }
+
+        report = language_policy.analyze_deck(deck, policy, footer_top_in=6.9)
+
+        self.assertEqual(report["missingProtectedTerms"], policy["protectedTerms"])
+
+    def test_state_and_fact_id_checks_read_visible_native_chart_text(self):
+        prs, chart = self._language_chart()
+        chart.has_title = True
+        chart.chart_title.text_frame.text = "PREVIEW"
+        deck = self.work_dir / "chart-visible-contract.pptx"
+        prs.save(deck)
+
+        class Context:
+            spec = {"slides": [{"number": 1, "stateLabels": ["PREVIEW"]}]}
+
+        self.assertEqual(state_label_failures(deck, Context()), [])
+        chart.chart_title.text_frame.text = "[F-001]"
+        prs.save(deck)
+        self.assertEqual(len(internal_fact_id_visibility_failures(deck)), 1)
+
+    def test_state_and_fact_id_checks_ignore_hidden_chart_cache_text(self):
+        prs, chart = self._language_chart()
+        data = ChartData()
+        data.categories = ["[F-001]"]
+        data.add_series("PREVIEW", (1,))
+        chart.replace_data(data)
+        chart.has_legend = False
+        chart.category_axis.tick_label_position = XL_TICK_LABEL_POSITION.NONE
+        deck = self.work_dir / "chart-hidden-contract.pptx"
+        prs.save(deck)
+
+        class Context:
+            spec = {"slides": [{"number": 1, "stateLabels": ["PREVIEW"]}]}
+
+        self.assertEqual(internal_fact_id_visibility_failures(deck), [])
+        self.assertTrue(state_label_failures(deck, Context()))
+
+    def test_pie_data_labels_and_custom_text_are_analyzed_only_when_displayed(self):
+        prs, chart = self._language_chart(XL_CHART_TYPE.PIE)
+        chart.has_legend = False
+        plot = chart.plots[0]
+        plot.has_data_labels = True
+        plot.data_labels.show_category_name = True
+        plot.data_labels.show_series_name = False
+        deck = self.work_dir / "pie-chart-labels.pptx"
+        policy = {
+            **language_policy.DEFAULT_KOREAN_POLICY,
+            "protectedTerms": ["Microsoft Foundry", "Azure AI Search"],
+        }
+        prs.save(deck)
+        report = language_policy.analyze_deck(deck, policy, footer_top_in=6.9)
+        self.assertEqual(report["missingProtectedTerms"], ["Microsoft Foundry"])
+
+        plot.data_labels.show_category_name = False
+        plot.series[0].points[0].data_label.text_frame.text = "GitHub Copilot"
+        prs.save(deck)
+        policy["protectedTerms"] = ["GitHub Copilot"]
+        report = language_policy.analyze_deck(deck, policy, footer_top_in=6.9)
+        self.assertEqual(report["missingProtectedTerms"], [])
 
     def test_core_only_notes_require_about_five_sentences_and_no_flow_sections(self):
         prs = Presentation()
@@ -672,6 +875,8 @@ class VerifyDeckTests(unittest.TestCase):
             run.text = text
             run.font.size = Pt(size)
             run.font.name = font
+            if text.startswith("Source:"):
+                run.hyperlink.address = "https://example.com/docs"
         deck = self.work_dir / "contract-deck.pptx"
         prs.save(deck)
 

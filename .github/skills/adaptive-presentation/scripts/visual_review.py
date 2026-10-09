@@ -121,7 +121,8 @@ def write_visual_review(
     resolved_output = output.expanduser().resolve()
     if resolved_output.exists() or resolved_output.is_symlink():
         raise FileExistsError(
-            f"Refusing to overwrite visual-review evidence: {resolved_output}"
+            f"Refusing to overwrite visual-review evidence: {resolved_output}. "
+            "Use a new revision-specific --out path, then pass it to --visual-review."
         )
     if len(reviewer.strip()) < 1 or len(notes.strip()) < 12:
         raise VisualReviewError("Reviewer and meaningful review notes are required")
@@ -149,7 +150,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="action", required=True)
     create = subparsers.add_parser("create")
     create.add_argument("deck", type=Path)
-    create.add_argument("--out", type=Path, required=True)
+    create.add_argument(
+        "--out", type=Path, required=True,
+        help="New evidence path for this revision, e.g. visual-review-r002.json.",
+    )
     create.add_argument("--reviewer", required=True)
     create.add_argument("--notes", required=True)
     create.add_argument(
