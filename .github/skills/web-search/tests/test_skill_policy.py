@@ -310,13 +310,16 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
     def test_setup_guide_examples_match_bundled_config_and_stay_generic(self):
         guide = SETUP_GUIDE.read_text(encoding="utf-8")
         cli_config = json.loads(CLI_MCP_CONFIG.read_text(encoding="utf-8"))
-        examples = re.findall(r"```json\n(.*?)\n```", guide, re.DOTALL)
+        examples = [
+            json.loads(block)
+            for block in re.findall(r"```json\n(.*?)\n```", guide, re.DOTALL)
+        ]
         self.assertTrue(examples)
         for example in examples:
-            self.assertEqual(
-                json.loads(example)["mcpServers"]["microsoft-learn"],
-                cli_config["mcpServers"]["microsoft-learn"],
-            )
+            self.assertTrue({"mcpServers", "servers"} & set(example))
+            learn = example.get("mcpServers", {}).get("microsoft-learn")
+            if learn:
+                self.assertEqual(learn, cli_config["mcpServers"]["microsoft-learn"])
         for local_detail in ("/Users/", "/home/", "ghp_", "github_pat_"):
             with self.subTest(local_detail=local_detail):
                 self.assertNotIn(local_detail, guide)

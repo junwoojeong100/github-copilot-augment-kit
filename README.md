@@ -26,7 +26,7 @@ Microsoft Learn MCP를 사용할 수 있습니다.
 |------|------|----------|------|
 | **Instructions** | `.github/copilot-instructions.md` | 매 대화 **자동 로드** | Straightforward 결과 · 페르소나 · 사고 · 소통 · 안전 · 코딩 · Git · MS/GitHub 가치 · 팩트체크 · 출처 |
 | **Skills** | `.github/skills/` | 관련 질문 시 **자동 활성화** 또는 `/skill-name` | 결론 우선 실시간 검색 · 적응형 PPTX 생성 |
-| **MCP (사전 번들)** | `.github/mcp.json` · `.vscode/mcp.json` | clone 후 신뢰/Start 승인 시 활성화 | Microsoft Learn MCP — 공식 문서·코드 샘플 검색 (Azure·사내 MCP는 선택 연결) |
+| **MCP (사전 번들)** | `.github/mcp.json` · `.vscode/mcp.json` | clone 후 신뢰/Start 승인 시 활성화 | Microsoft Learn MCP — 공식 문서·코드 샘플 검색 (Azure 실습용 MCP는 선택 연결) |
 
 > 상시 적용 원칙은 **단일 파일로 통합**해 중복을 줄이고, 상세 워크플로는 관련 작업에서만 스킬로 불러옵니다.
 
@@ -141,7 +141,7 @@ npm install -g @github/copilot
         └── tests/                       # 계약·adapter·검증 Runner 회귀/E2E 테스트
 .vscode/
 └── mcp.json                             # VS Code Copilot Agent용 MCP 번들
-SETUP-GUIDE.md                           # Copilot CLI·스킬·MCP 설치·사용 가이드
+SETUP-GUIDE.md                           # Copilot CLI·스킬·MCP 설치·사용 + Azure 실습용 MCP 가이드
 ```
 
 ---
@@ -321,8 +321,9 @@ Fact Ledger 계약을 맡고 검색 backend 자체는 제공하지 않습니다.
 | **GitHub MCP** | 이슈·PR·코드·릴리스 조회/작성 | GitHub 로그인 | **Copilot CLI에 내장** — 설정 불필요 |
 | **Microsoft Learn MCP** | `learn.microsoft.com` 공식 문서·코드 샘플 조회 | **불필요 · 무료 공개 엔드포인트** | **리포에 번들** — 클라이언트 승인 후 활성화 |
 
-활성화 확인, 다른 서버 추가, 선택 연결(Azure MCP·사내 EngHub MCP), 보안, 문제 해결은
-[설치·사용 가이드의 MCP 장](SETUP-GUIDE.md#mcp)에서 안내합니다.
+활성화 확인, 다른 서버 추가, 보안은 [설치·사용 가이드의 MCP 장](SETUP-GUIDE.md#mcp)에서,
+Azure 리소스 실습에 필요한 MCP(Azure MCP·Foundry MCP·AKS MCP·Playwright·Computer Use) 연결은
+[실습 장](SETUP-GUIDE.md#azure-lab)에서 안내합니다.
 
 ---
 
@@ -344,8 +345,8 @@ Fact Ledger 계약을 맡고 검색 backend 자체는 제공하지 않습니다.
 
 **Q. MCP 서버는 어떻게 붙이나요?**
 Microsoft Learn MCP는 이 킷에 번들되어 폴더 신뢰 또는 Start 승인 후 활성화되고, GitHub MCP는 Copilot CLI에
-내장돼 있습니다. 활성화 확인, 서버 추가, 선택 연결(Azure MCP·EngHub), 문제 해결은
-[설치·사용 가이드](SETUP-GUIDE.md#mcp)를 따르세요. 범용 최신 웹 검색은 GitHub Copilot의 web search 또는
+내장돼 있습니다. 활성화 확인과 서버 추가는 [설치·사용 가이드](SETUP-GUIDE.md#mcp)를, Azure 실습에 필요한
+MCP 연결은 [실습 장](SETUP-GUIDE.md#azure-lab)을 따르세요. 범용 최신 웹 검색은 GitHub Copilot의 web search 또는
 Research capability를 사용합니다.
 
 ---
