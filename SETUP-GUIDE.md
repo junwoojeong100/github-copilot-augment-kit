@@ -167,51 +167,13 @@ VS Code 사용자 프로필의 `mcp.json`(명령 팔레트 **MCP: Open User Conf
 | 끄기·켜기 | `/mcp disable <이름>` · `/mcp enable <이름>` | `copilot mcp disable <이름>` · `copilot mcp enable <이름>` |
 | 수정·삭제 | `/mcp edit <이름>` · `/mcp delete <이름>` | `copilot mcp remove <이름>` (개인 설정 서버만. 프로젝트 서버는 파일을 직접 수정) |
 
-### 선택 연결
-
-<a id="mcp-azure"></a>
-
-#### Azure MCP (Azure Skills 플러그인)
-
-Azure 리소스를 실제로 조회·진단·배포하려면 [Azure Skills 플러그인](https://github.com/microsoft/azure-skills)을 설치합니다.
-플러그인이 Azure 스킬과 함께 **Azure MCP Server**(와 Foundry MCP)를 연결하므로 이 킷의 MCP 파일에는 항목을 추가하지 않습니다.
-**같은 서버를 직접 다시 등록하지 마세요**(중복).
-
-1. 사전 조건: Node.js 18+(`npx`), Azure CLI `az login`(배포 워크플로는 `azd auth login`).
-2. Copilot CLI에서 `/plugin marketplace add microsoft/azure-skills` 다음 `/plugin install azure@azure-skills`를 실행합니다.
-   VS Code에서는 Marketplace의 [Azure MCP extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)을 설치합니다(스킬용 companion extension이 함께 설치됩니다).
-3. CLI를 재시작하고 `copilot mcp list`의 **Plugin servers**와 `azure-` 계열 도구(예: 리소스 그룹 조회)를 확인합니다.
-
-용도는 리소스 조회·모니터링·로그 질의·가격 확인·배포 진단입니다. 인증은 로컬 Azure 자격 증명을 쓰며 리포에 키를 저장하지 않습니다.
-쓰기 도구도 포함되므로 **조회 작업으로 시작**하고 Azure RBAC를 최소 권한으로 유지하세요.
-플러그인은 사용자 전역에 설치됩니다. 업데이트는 `/plugin update azure@azure-skills`, 끄려면 `/plugin`에서 비활성화하거나
-`~/.copilot/settings.json`의 `enabledPlugins`에서 해당 항목을 `false`로 설정합니다.
-
-<a id="mcp-enghub"></a>
-
-#### Microsoft 사내 EngHub MCP (임직원 전용)
-
-**EngHub MCP**(`https://mcp.eng.ms`)는 Microsoft **임직원**이 쓸 수 있는 사내 Engineering Hub MCP 서버입니다.
-corporate 계정과 사내 인증(필요 시 사내망·VPN)이 있어야 하며 외부 사용자는 사용할 수 없습니다(공개 문서는 Microsoft Learn MCP를 사용).
-외부 사용자가 clone했을 때 인증 실패와 시작 지연이 생기지 않도록 **기본 로드 대상에 넣지 않고**
-예시 파일 [`.github/mcp.enghub.example.json`](.github/mcp.enghub.example.json)만 제공합니다.
-
-1. 사내망·VPN에 연결하고 corporate 계정으로 로그인합니다.
-2. 예시 파일의 `EngHub` 항목을 `.github/mcp.json`의 `mcpServers`에 추가합니다(VS Code는 `.vscode/mcp.json`의 `servers`).
-3. CLI를 재시작하면 브라우저 OAuth가 진행됩니다. 승인 후 `/mcp show EngHub` 또는 `copilot mcp list`로 연결과 도구 목록을 확인합니다.
-
-되돌리기: 임시로는 `/mcp disable EngHub`, 파일은 `git checkout -- .github/mcp.json`(그 파일의 다른 로컬 변경도 함께 사라집니다).
-**이 변경은 공개 저장소에 커밋하지 마세요.** 외부 환경에서는 인증이 실패하고 시작만 느려집니다. 커밋 전 `git status`로 확인하세요.
-연결 실패는 다른 작업을 막지 않고 세션 시작만 지연시킵니다. 사내 데이터·식별자·내부 URL을 외부 서비스나 공개 산출물로 옮기지 마세요.
-
 ### 다른 서버를 추가하기 전에
 
 - **찾기**: [GitHub MCP Registry](https://github.com/mcp)에서 찾거나, 실험 기능인 CLI `/mcp search`(`copilot --experimental` 또는 `/experimental on`)를 사용합니다.
 - **출처 확인**: 공식 저장소·게시자의 서버인지, 어떤 명령을 실행하고 어떤 URL로 데이터를 보내는지 확인합니다.
 - **권한 최소화**: 쓰기·삭제·명령 실행 도구가 있으면 읽기 전용 옵션이나 `--tools` 목록으로 필요한 도구만 허용합니다.
 - **버전 고정**: `@latest`는 시간이 지나면 다른 버전이 실행됩니다. 검증한 버전을 쓰고 업데이트할 때 도구 목록을 다시 확인합니다.
-- 예: [Playwright MCP](https://github.com/microsoft/playwright-mcp)(브라우저 자동화), [AKS MCP](https://github.com/Azure/aks-mcp)(AKS 조회·진단, 로컬 전용).
-  각 공식 문서의 설치·권한 안내를 따르세요.
+- Azure 실습에 쓰는 서버(Azure MCP·Playwright·Foundry MCP·AKS MCP·Computer Use)의 연결 절차는 [5장](#azure-lab)에 있습니다.
 
 ### 보안·권한 원칙
 
@@ -223,9 +185,189 @@ corporate 계정과 사내 인증(필요 시 사내망·VPN)이 있어야 하며
 
 ---
 
+<a id="azure-lab"></a>
+
+## 5. 실습: LLM으로 Azure 리소스 만들고 관리하기
+
+**명령·API 경로(Azure CLI·Azure MCP)를 먼저 쓰고, 화면 경로(Azure Portal·Foundry portal 조작)는 명령으로 할 수 없는 작업에만 씁니다.**
+화면 조작은 UI가 바뀌면 어긋나기 쉽고 로그인한 계정의 권한으로 그대로 실행됩니다.
+공식 문서도 API·MCP 서버·터미널 명령·전용 브라우저 도구로 되는 작업은 그 도구가 더 구조화되고 예측 가능한 결과를 준다고 안내합니다.
+
+```text
+요청 → Copilot(LLM)
+├─ 명령·API 경로 (먼저)
+│  ├─ 셸 도구 → az → Azure 리소스
+│  └─ Azure MCP · AKS MCP · Foundry MCP → Azure·Foundry API
+├─ 화면 경로 (명령으로 안 될 때)
+│  ├─ Playwright MCP → 브라우저 → Azure Portal · Foundry portal
+│  └─ Computer Use → 데스크톱 앱
+└─ 근거 확인
+   └─ Learn MCP → 공식 문서
+```
+
+### 작업 방식별로 필요한 MCP
+
+| 하고 싶은 일 | 필요한 MCP·도구 | 서버 이름 · 등록 위치 (참고 구성) | 연결 |
+|---|---|---|---|
+| 명령·Bicep·설정의 공식 근거 확인 | Microsoft Learn MCP | `microsoft-learn` · Workspace | 이 리포에 번들 |
+| Azure CLI(`az`)로 생성·수정·삭제 | **MCP 없이 가능** — Copilot CLI의 셸 도구가 `az`를 실행하고, 변경 가능성이 있는 명령은 승인을 요청합니다 | — | [1장](#cli) + Azure CLI `az login` |
+| 구조화된 도구로 조회·진단·배포 | Azure MCP Server | `azure` · Plugin | [Azure MCP](#mcp-azure) |
+| Foundry 에이전트·모델 배포·평가 | Foundry MCP Server (미리보기) | `foundry-mcp-remote` · 필요 시 추가 | [Foundry MCP](#mcp-foundry) |
+| AKS 클러스터·Kubernetes 운영 | AKS MCP | `aks-mcp` · 필요 시 추가 | [AKS MCP](#mcp-aks) |
+| Azure Portal·Foundry portal 웹 화면 조작 | Playwright MCP | `playwright` · `playwright-headless` · User | [Playwright MCP](#mcp-playwright) |
+| 브라우저 밖 데스크톱 앱 조작 | Computer Use (미리보기) | `computer-use` · Builtin | [Computer Use](#mcp-computer-use) |
+| 저장소·PR·Actions 조회(IaC 코드 포함) | GitHub MCP | `github-mcp-server` · Builtin | Copilot CLI 내장 |
+
+참고 구성은 실습 기준 환경의 Copilot CLI 설정입니다. `copilot mcp list`는 서버를 **User**(개인 설정)·**Workspace**(프로젝트 설정)·**Plugin**·**Builtin** servers로 나눠 보여 주며, 표의 등록 위치가 이 구분입니다.
+서버 이름은 등록할 때 정하는 별칭이라 바꿔도 됩니다.
+
+### 예시 요청
+
+| 경로 | 요청 예시 |
+|---|---|
+| Learn MCP | "Azure Storage 계정을 만드는 `az` 명령 형식을 Microsoft Learn에서 확인해 원문 링크와 함께 알려줘." |
+| Azure CLI | "리소스 그룹 `rg-lab-<이름>`을 `<리전>`에 만드는 `az` 명령을 먼저 보여줘. 내가 승인하면 실행하고 결과를 확인해줘." |
+| Azure MCP | "`rg-lab-<이름>`의 리소스를 조회해줘. 만들거나 바꾸지 마." |
+| Foundry MCP | "내 Foundry 프로젝트의 모델 배포 목록을 조회만 해줘." |
+| Playwright MCP | "열려 있는 Azure Portal에서 `rg-lab-<이름>`의 리소스 목록을 읽기만 해줘. 만들기·삭제 버튼은 누르지 마." |
+
+### 서버별 연결
+
+<a id="mcp-azure"></a>
+
+#### Azure MCP (Azure Skills 플러그인)
+
+리소스 조회·모니터링·로그 질의·가격 확인·배포 진단, Bicep·Terraform·`azd` 지원, Foundry(`foundry`)·RBAC(`role`) 같은 서비스별 도구를 구조화된 형태로 제공합니다.
+도구 범위는 [Azure MCP 도구 목록](https://learn.microsoft.com/en-us/azure/developer/azure-mcp-server/tools/)에서 확인하세요.
+
+1. 사전 조건: Node.js 18+(`npx`), Azure CLI `az login`(배포 워크플로는 `azd auth login`).
+2. Copilot CLI에서 `/plugin marketplace add microsoft/azure-skills` 다음 `/plugin install azure@azure-skills`를 실행합니다.
+   VS Code에서는 Marketplace의 [Azure MCP extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)을 설치합니다(스킬용 companion extension이 함께 설치됩니다).
+3. CLI를 재시작하고 `copilot mcp list`의 **Plugin servers**에 `azure`가 보이는지, 리소스 그룹 조회 같은 읽기 요청이 되는지 확인합니다.
+
+- 플러그인이 연결하는 MCP 서버는 Azure MCP Server(`azure`) 하나이므로 이 킷의 MCP 파일에는 항목을 추가하지 않습니다. **같은 서버를 직접 다시 등록하지 마세요**(중복).
+- 배포 워크플로는 플러그인의 `azure-prepare` → `azure-validate` → `azure-deploy` 스킬이 안내합니다.
+- **Azure CLI와의 관계**: Azure MCP의 Azure CLI 도구(`extension`)는 `az` 명령을 찾고 설치 방법을 안내하는 용도입니다. `az`를 실제로 실행하는 것은 Copilot CLI의 셸 도구입니다.
+- 인증은 로컬 Azure 자격 증명(`az login`)과 Azure RBAC를 따릅니다. 구독을 지정하지 않으면 Azure CLI 프로필(`az account set`) 또는 `AZURE_SUBSCRIPTION_ID`의 구독을 쓰므로 실습 전에 대상 구독을 확인하세요.
+- 쓰기를 막으려면 시작 옵션 `--read-only`를 씁니다. 플러그인이 정의한 서버는 `server start`로 고정되어 있으므로, 필요하면 `/mcp disable azure`로 끄고
+  `copilot mcp add azure-readonly -- npx -y @azure/mcp@latest server start --read-only`로 따로 등록합니다(VS Code extension은 `azureMcp.readOnly` 설정).
+- 업데이트는 `/plugin update azure@azure-skills`, 끄려면 `/plugin`에서 비활성화하거나 `~/.copilot/settings.json`의 `enabledPlugins`에서 해당 항목을 `false`로 설정합니다.
+
+<a id="mcp-playwright"></a>
+
+#### Playwright MCP (Azure Portal·Foundry portal 화면 조작)
+
+웹 페이지를 접근성 스냅샷으로 읽고 클릭·입력합니다. Node.js 18+가 필요하며 같은 패키지를 두 프로필로 등록합니다.
+
+| 서버 이름 | 추가 인자 | 쓰는 때 |
+|---|---|---|
+| `playwright` | `--browser msedge` | 화면을 보며 포털을 조작합니다. **로그인 상태가 browser profile에 남습니다.** |
+| `playwright-headless` | `--browser msedge --headless --isolated` | 화면 없이 공개 페이지·문서를 점검합니다. 종료하면 profile이 사라집니다. |
+
+```bash
+copilot mcp add --timeout 180000 playwright -- npx @playwright/mcp@latest --browser msedge
+copilot mcp add --timeout 180000 playwright-headless -- npx @playwright/mcp@latest --browser msedge --headless --isolated
+```
+
+개인 설정(`~/.copilot/mcp-config.json`)에는 다음처럼 저장됩니다.
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "type": "local",
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--browser", "msedge"],
+      "tools": ["*"],
+      "timeout": 180000
+    },
+    "playwright-headless": {
+      "type": "local",
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--browser", "msedge", "--headless", "--isolated"],
+      "tools": ["*"],
+      "timeout": 180000
+    }
+  }
+}
+```
+
+- VS Code에서는 **MCP: Add Server**를 쓰거나 `code --add-mcp '{"name":"playwright","command":"npx","args":["@playwright/mcp@latest"]}'`를 실행합니다.
+- `--browser`는 설치된 브라우저에 맞게 `chrome`·`msedge`·`firefox`·`webkit` 중에서 고릅니다.
+- `--timeout`의 기본값(30000ms)은 Playwright의 페이지 이동 제한(기본 60초)보다 짧아 참고 구성은 180000ms(3분)로 늘렸습니다.
+
+포털 조작 순서와 주의:
+
+1. `playwright`가 연 브라우저에서 **Azure Portal 로그인(MFA 포함)은 직접** 합니다. 로그인 정보나 코드를 프롬프트에 붙여넣지 않습니다.
+2. 읽기 요청으로 시작하고, 만들기·삭제 같은 변경은 단계마다 내용을 확인한 뒤 승인합니다.
+3. Playwright MCP는 **보안 경계가 아닙니다**(공식 문서). 로그인한 세션은 그 계정이 포털에서 할 수 있는 모든 일을 할 수 있으므로 실습 전용 계정을 쓰고,
+   끝나면 profile(macOS 기본 위치 `~/Library/Caches/ms-playwright/mcp-{channel}-{workspace-hash}`)을 삭제합니다. `--allowed-origins`도 보안 경계가 아닙니다.
+4. profile은 한 번에 하나의 브라우저만 쓸 수 있습니다. 여러 client를 동시에 쓰려면 `--isolated`나 별도 `--user-data-dir`을 지정합니다.
+
+<a id="mcp-foundry"></a>
+
+#### Foundry MCP Server (미리보기)
+
+Foundry 프로젝트의 에이전트·세션·데이터셋·평가·모델 배포 등을 대화로 조회·관리합니다. 클라우드에서 호스팅되고 Microsoft Entra ID로 인증하므로 로컬 설치가 필요 없습니다.
+
+- 사전 조건: Azure 구독, Foundry 프로젝트, VS Code 1.99+와 GitHub Copilot. 모든 작업은 로그인한 사용자 권한으로 실행되며 프로젝트(또는 계정)에서 **읽기 도구는 Reader, 쓰기 도구는 Contributor** 역할이 필요합니다.
+- 연결(VS Code): 명령 팔레트 **MCP: Add Server** → **HTTP** → URL `https://mcp.ai.azure.com` → 이름 `foundry-mcp-remote` → **MCP: List Servers**에서 **Start** → Azure 로그인.
+  Agent mode의 도구 목록에서 `Foundry`를 검색해 서버를 확인합니다.
+- Copilot CLI: 공식 빠른 시작은 VS Code만 다룹니다. `copilot mcp add --transport http foundry-mcp-remote https://mcp.ai.azure.com`으로 등록해 볼 수 있지만 CLI에서의 인증은 공식 문서로 확인되지 않았습니다.
+
+```json
+{
+  "servers": {
+    "foundry-mcp-remote": { "type": "http", "url": "https://mcp.ai.azure.com" }
+  }
+}
+```
+
+- 공개 미리보기라 SLA가 없고 프로덕션 워크로드에는 권장되지 않습니다. 쓰기 도구는 배포·청구에 즉시 영향을 주므로 비프로덕션 프로젝트에서 파라미터를 확인하고 한 번에 하나씩 변경하세요([보안·모범 사례](https://learn.microsoft.com/en-us/azure/foundry/mcp/security-best-practices)).
+- 구형 `Azure AI Foundry` 서버(`uvx`로 실행하는 `mcp-foundry`)는 이 클라우드 서버로 이전되었고 저장소는 더는 갱신되지 않습니다. 새로 설정하지 마세요.
+- Foundry portal 화면 조작은 [Playwright MCP](#mcp-playwright)를 씁니다.
+
+<a id="mcp-aks"></a>
+
+#### AKS MCP
+
+AKS 클러스터와 Kubernetes 리소스를 `az`·`kubectl` 등으로 조회·진단·운영합니다(통합 도구 `call_az`·`call_kubectl`).
+
+- **로컬 stdio 전용**입니다. HTTP·SSE, 컨테이너 서비스, 프록시·게이트웨이로 노출하는 구성은 공식 지원 범위 밖입니다.
+- 설치(VS Code): **Azure Kubernetes Service** extension을 설치하고 명령 팔레트에서 **AKS: Setup AKS MCP Server**를 실행합니다.
+- 설치(Copilot CLI): [릴리스](https://github.com/Azure/aks-mcp/releases)에서 플랫폼에 맞는 실행 파일(macOS Apple Silicon `aks-mcp-darwin-arm64`, Intel `aks-mcp-darwin-amd64`)을 받아 실행 권한을 주고 등록합니다.
+
+```bash
+copilot mcp add aks-mcp -- <aks-mcp 실행 파일 경로> --access-level readonly
+```
+
+- 사전 조건: Azure CLI `az login`과 대상 클러스터의 Azure·Kubernetes 권한. `AZURE_CLIENT_ID` 같은 인증 환경변수가 있으면 `az login`보다 먼저 쓰이므로 의도한 신원인지 확인하세요.
+- `--access-level`(`readonly` 기본 · `readwrite` · `admin`)은 **실수를 줄이는 장치일 뿐 권한 경계가 아닙니다.** AKS MCP를 호출할 수 있으면 그 프로세스 신원의 Azure·Kubernetes 권한을 그대로 갖습니다. 본인 developer identity로 쓰고 필요한 권한만 부여하세요.
+
+<a id="mcp-computer-use"></a>
+
+#### Computer Use (Copilot CLI 내장, 공개 미리보기)
+
+접근성 정보와 화면으로 데스크톱 앱을 읽고 클릭·입력합니다(macOS·Windows 로컬 세션). **API·MCP·명령·브라우저 도구로 할 수 없는 앱 작업에만** 쓰세요. 웹인 Azure Portal은 Playwright MCP가 더 구조적입니다.
+
+- 기본은 꺼져 있습니다. `/computer show`로 상태를 보고 `/computer on`으로 켭니다(`/computer off`로 끔). macOS는 **손쉬운 사용(Accessibility)**과 **화면 기록(Screen Recording)** 권한 안내를 따릅니다.
+- 현재 권한 모드(`/permissions show`)를 따릅니다. 앱마다 요청되는 승인 내용을 읽고 허용하며, 오동작하면 <kbd>Esc</kbd>를 두 번 눌러 중단합니다. 민감한 정보가 있는 앱에는 **Always allow**를 쓰지 마세요.
+- 조직의 managed settings가 막으면 켤 수 없습니다.
+
+### 실습 안전 수칙
+
+- **실습 전용 구독·리소스 그룹**에서만 작업하고, 시작 전에 대상 구독을 확인합니다(`az account show`).
+- **조회 → 변경 순서**로 진행합니다. 변경 전에는 실행할 `az` 명령이나 도구 파라미터(리소스 ID·구독·리소스 그룹)를 읽고 승인합니다.
+- **권한은 최소로** 시작합니다(Reader → 필요한 범위의 Contributor). `--read-only`·`--access-level readonly`는 실수 방지 장치이며 권한 경계가 아닙니다.
+- **승인 단계를 끄지 않습니다.** `/yolo`·`--allow-all`·Always allow는 쓰지 말고, 삭제는 `copilot --deny-tool='shell(az group delete)'`처럼 막아 두고 직접 실행합니다.
+- **로그인·MFA·비밀번호·토큰은 사람이 직접** 입력하고 프롬프트에 붙여넣지 않습니다.
+- 끝나면 **리소스 그룹 단위로 정리**해 비용을 멈추고 Playwright profile도 삭제합니다.
+
+---
+
 <a id="troubleshooting"></a>
 
-## 5. 문제 해결
+## 6. 문제 해결
 
 | 증상 | 확인할 것 |
 |---|---|
@@ -237,9 +379,10 @@ corporate 계정과 사내 인증(필요 시 사내망·VPN)이 있어야 하며
 | 로컬 서버가 시작되지 않음 | 실행 파일·런타임(`node`, `npx`, `uvx` 등)이 PATH에 있는지, `/mcp show <이름>`의 오류 메시지 |
 | `401`·`403` | 로그인·토큰 만료, scope·RBAC 권한, 조직 정책. 토큰을 로그에 출력하지 마세요 |
 | 스킬이 보이지 않음 | `/skills list`, 새로 추가했다면 `/skills reload`, `SKILL.md`의 `name`과 폴더명 일치, 같은 이름의 프로젝트 스킬이 개인 스킬을 가리는지 |
-| EngHub 시작이 느리고 도구가 없음 | 사내망 밖에서 인증이 실패한 경우입니다. 사내망·VPN 연결 후 CLI를 재시작하세요 |
-| EngHub 로그에 `HTTP 403 Forbidden` · `Failed to discover authorization server metadata` | corporate 인증이 없거나 만료되었습니다. 재로그인 후 재시도하고 로그(`~/.copilot/logs/`)를 확인하세요 |
-| EngHub 재인증이 계속 실패 | 만료된 OAuth 캐시를 재사용 중일 수 있습니다. `~/.copilot/mcp-oauth-config/`의 해당 항목을 삭제하고 다시 인증하세요 |
+| Playwright가 시작하지 않거나 profile 오류 | Node.js 18+, `--browser`로 지정한 브라우저가 설치되어 있는지, 같은 profile을 다른 브라우저가 쓰고 있지 않은지(`--isolated` 또는 별도 `--user-data-dir`) |
+| Azure MCP가 의도하지 않은 구독을 조회함 | `az account show`로 기본 구독을 확인하고 요청에 구독을 명시합니다. `AZURE_SUBSCRIPTION_ID`가 설정되어 있는지도 확인하세요 |
+| Foundry MCP에서 `Access denied` | 프로젝트(또는 계정)의 역할을 확인합니다(읽기 Reader, 쓰기 Contributor). 구독에 접근 권한이 있는 Microsoft 계정으로 로그인했는지 확인하세요 |
+| Computer Use를 켤 수 없거나 동작하지 않음 | `/computer show`, 지원 OS의 로컬 세션인지, `/plugin`과 `/mcp list`에서 computer-use가 켜져 있는지, macOS의 손쉬운 사용·화면 기록 권한, 조직 정책 |
 
 ---
 
@@ -252,6 +395,13 @@ corporate 계정과 사내 인증(필요 시 사내망·VPN)이 있어야 하며
 - GitHub Docs — [Adding agent skills for GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills): 스킬 위치·`/skills`
 - GitHub Docs — [Copilot CLI command reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference): MCP 로딩 우선순위·신뢰·allowlist·`.vscode/mcp.json` 변환·스킬 위치
 - GitHub Docs — [Copilot CLI configuration directory](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference): 설정·로그·OAuth 캐시 위치, `enabledPlugins`
+- GitHub Docs — [Allowing and denying tool use](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/allowing-tools): 셸 명령 승인, `--allow-tool`·`--deny-tool` 패턴
+- GitHub Docs — [Computer use in Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/computer-use), [About computer use](https://docs.github.com/en/copilot/concepts/agents/computer-use): `/computer`, 권한, 한계
 - VS Code Docs — [MCP 서버 추가·관리](https://code.visualstudio.com/docs/agent-customization/mcp-servers), [MCP 설정 레퍼런스](https://code.visualstudio.com/docs/agents/reference/mcp-configuration), [Agent Skills](https://code.visualstudio.com/docs/agent-customization/agent-skills): 설정 형식·위치·Workspace Trust·스킬 위치
 - Microsoft Learn — [Learn MCP Server overview](https://learn.microsoft.com/en-us/training/support/mcp)
-- GitHub — [microsoft/azure-skills](https://github.com/microsoft/azure-skills): 플러그인 설치·사전 조건
+- Microsoft Learn — [Azure MCP Server 도구](https://learn.microsoft.com/en-us/azure/developer/azure-mcp-server/tools/): 시작 옵션(`--read-only`)·인증·도구 범주
+- Microsoft Learn — [Foundry MCP Server 시작](https://learn.microsoft.com/en-us/azure/foundry/mcp/get-started), [도구와 역할](https://learn.microsoft.com/en-us/azure/foundry/mcp/available-tools), [보안·모범 사례](https://learn.microsoft.com/en-us/azure/foundry/mcp/security-best-practices): 엔드포인트·인증·역할·쓰기 주의
+- GitHub — [microsoft/azure-skills](https://github.com/microsoft/azure-skills): 플러그인 설치·사전 조건·스킬
+- GitHub — [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp): 설치·옵션·profile·보안
+- GitHub — [Azure/aks-mcp](https://github.com/Azure/aks-mcp): 설치·접근 수준·신뢰 경계
+- GitHub — [azure-ai-foundry/mcp-foundry](https://github.com/azure-ai-foundry/mcp-foundry): 구형 서버의 이전 공지
