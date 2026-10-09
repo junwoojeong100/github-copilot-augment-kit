@@ -267,7 +267,7 @@ Fact Ledger 계약을 맡고 검색 backend 자체는 제공하지 않습니다.
 | **Microsoft Learn MCP** | `learn.microsoft.com` 공식 문서·코드 샘플 조회 | **불필요 · 무료 공개 엔드포인트** | **리포에 번들** — 클라이언트 승인 후 활성화 |
 
 활성화 확인, 다른 서버 추가, 보안은 [설치·사용 가이드의 MCP 장](SETUP-GUIDE.md#mcp)에서,
-Azure 리소스 실습에 필요한 MCP(Azure MCP·Foundry MCP·AKS MCP·Playwright·Computer Use) 연결은
+Azure 리소스 실습에 필요한 MCP(Azure MCP·AKS MCP·Playwright·Computer Use) 연결은
 [실습 장](SETUP-GUIDE.md#azure-lab)에서 안내합니다.
 
 ---
