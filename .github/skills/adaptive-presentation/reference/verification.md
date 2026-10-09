@@ -3,12 +3,13 @@
 생성 성공은 완료가 아니다. PPTX는 **구조 감사 + 전체 렌더 + 시각 확인**을 거친 뒤에야 완료다.
 목표는 **한 번의 전체 패스**로 결함을 찾아 일괄 수정하고, 변경이 있을 때만 다시 렌더하는 것이다.
 QA 실행 명령·렌더 캐시·revision별 시각 검토 증거의 상세 절차는 이 문서를 정본으로 따른다.
+명령의 `<skill>`·`<work>`·`python3`는 [`SKILL.md`](../SKILL.md)의 정의를 따른다.
 
 기본 실행:
 
 ```bash
-python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json --reuse-render
+python3 -B <skill>/scripts/verify_deck.py \
+  deck.pptx --out <work> --deck-spec <work>/deck-spec.json --reuse-render
 ```
 
 Runner가 구조 감사와 전체 렌더를 읽기 전용으로 병렬 실행하고, risk score가 높은 슬라이드를 같은 PDF로
@@ -53,13 +54,13 @@ chart·SmartArt처럼 자동 text mapping을 지원하지 않는 객체는 성�
 최초 실행 후 전체 contact sheet를 실제로 검토하고 다음과 같이 최종 증거를 작성·검사한다.
 
 ```bash
-python3 -B .github/skills/adaptive-presentation/scripts/visual_review.py create deck.pptx \
-  --out <work-dir>/visual-review-r001.json --render-cache <work-dir>/qa/render-cache.json \
+python3 -B <skill>/scripts/visual_review.py create deck.pptx \
+  --out <work>/visual-review-r001.json --render-cache <work>/qa/render-cache.json \
   --reviewer Copilot --notes "전체 contact sheet와 위험 슬라이드를 검토했습니다."
 
-python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json \
-  --reuse-render --visual-review <work-dir>/visual-review-r001.json
+python3 -B <skill>/scripts/verify_deck.py \
+  deck.pptx --out <work> --deck-spec <work>/deck-spec.json \
+  --reuse-render --visual-review <work>/visual-review-r001.json
 ```
 
 <a id="visual-review-revisions"></a>
@@ -75,17 +76,17 @@ python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
 새 증거를 만들고, **그 새 경로**를 verifier에 전달한다.
 
 ```bash
-python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json --reuse-render
+python3 -B <skill>/scripts/verify_deck.py \
+  deck.pptx --out <work> --deck-spec <work>/deck-spec.json --reuse-render
 
 # 위 실행의 전체 contact sheet와 위험 장을 검토한 뒤 실행
-python3 -B .github/skills/adaptive-presentation/scripts/visual_review.py create deck.pptx \
-  --out <work-dir>/visual-review-r002.json --render-cache <work-dir>/qa/render-cache.json \
+python3 -B <skill>/scripts/visual_review.py create deck.pptx \
+  --out <work>/visual-review-r002.json --render-cache <work>/qa/render-cache.json \
   --reviewer Copilot --notes "수정 revision의 전체 contact sheet와 위험 슬라이드를 검토했습니다."
 
-python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json \
-  --reuse-render --visual-review <work-dir>/visual-review-r002.json
+python3 -B <skill>/scripts/verify_deck.py \
+  deck.pptx --out <work> --deck-spec <work>/deck-spec.json \
+  --reuse-render --visual-review <work>/visual-review-r002.json
 ```
 
 PPTX 또는 캐시 해시가 달라진 기존 증거를 수정·삭제하거나 새 revision의 승인으로 재사용하지 않는다.
@@ -98,7 +99,7 @@ PPTX 또는 캐시 해시가 달라진 기존 증거를 수정·삭제하거나 
 `automated_passed=true`만으로 이 항목까지 통과했다고 주장하지 않는다.
 
 ```bash
-python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py deck.pptx
+python3 -B <skill>/scripts/audit_pptx.py deck.pptx
 ```
 
 검사 항목(임의 PPTX 대상, 생성 방식과 무관):
@@ -144,14 +145,14 @@ overflow·unmapped·unsupported finding은 수정하거나 전체 화면 검토 
 
 ## 2. 전체 렌더
 
-필요 도구: LibreOffice `soffice`, PyMuPDF `fitz`, Pillow.
+필요 도구: LibreOffice `soffice`, PyMuPDF(`pymupdf`), Pillow.
 `--out`에는 이 작업만 사용하는 빈 디렉터리나 Runner가 소유 표시한 기존 QA 디렉터리를 지정한다.
 비어 있지 않은 일반 디렉터리는 기존 파일 삭제를 막기 위해 거부한다.
 
 ```bash
 # 기본: 30장 단위 overview JPEG만 남김
-python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
-  deck.pptx --out <session>/<deck>-work/qa --keep-pdf
+python3 -B <skill>/scripts/render_pptx.py \
+  deck.pptx --out <work>/qa --keep-pdf
 ```
 
 결과:
@@ -187,10 +188,10 @@ python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
 의심 슬라이드만 기존 PDF를 재사용해 개별 JPEG로 다시 렌더한다.
 
 ```bash
-python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
-  deck.pptx --reuse-pdf <session>/<deck>-work/qa/<deck>.pdf \
+python3 -B <skill>/scripts/render_pptx.py \
+  deck.pptx --reuse-pdf <work>/qa/<deck>.pdf \
   --slides 8,16,22 --keep-slide-images \
-  --out <session>/<deck>-work/qa-detail
+  --out <work>/qa-detail
 ```
 
 이 상세 검사는 PPTX를 수정하기 전에 수행한다. `--reuse-pdf`는 manifest의 PPTX와 PDF SHA-256을 모두
@@ -288,7 +289,7 @@ Native chart의 제목·축 제목·표시된 범례·범주·data label도 언�
 정리는 작업이 만든 것으로 확인한 경로만 대상으로 하며, 다른 작업의 폴더나 기존 파일은 삭제하지 않는다.
 
 ```bash
-WORK_DIR="<session>/<deck>-work" python3 -B -c \
+WORK_DIR="<work>" python3 -B -c \
   'import os,shutil; from pathlib import Path; w=Path(os.environ["WORK_DIR"]).resolve(); [shutil.rmtree(w/n, ignore_errors=True) for n in ("qa","qa-detail")]'
 ```
 

@@ -126,6 +126,8 @@ npm install -g @github/copilot
 ├── copilot-instructions.md              # 단일 핵심 지침 (매 대화 자동 로드)
 ├── mcp.json                             # Microsoft Learn MCP 사전 번들 (CLI 워크스페이스 자동 로드)
 ├── mcp.enghub.example.json              # Microsoft 사내 EngHub MCP 예시 (임직원이 복사해서 사용)
+├── workflows/
+│   └── tests.yml                        # GitHub Actions: PR·main push에서 두 스킬의 테스트 실행
 └── skills/                              # 전문 스킬 (온디맨드)
     ├── web-search/                      # 실시간 웹·공식 문서 검색과 구조화 수집
     │   ├── SKILL.md
@@ -135,6 +137,7 @@ npm install -g @github/copilot
     │   └── tests/                       # 검색·수집 정책 계약 테스트
     └── adaptive-presentation/           # 주제·청중별 PPTX 생성기(조사·스토리라인 중심)
         ├── SKILL.md                     # 조사→Deck Spec→자유 제작→revision-bound 검증
+        ├── requirements.txt             # Python 의존성 (python-pptx·PyMuPDF·Pillow)
         ├── schema/                      # Deck Spec·template·finding 예외·시각 검토 계약
         ├── reference/                   # 스토리라인·제작·검증·Deck Spec 가이드
         ├── scripts/                     # template/font adapter·통합 QA·렌더링
@@ -179,60 +182,27 @@ JSON 검증 통과를 사실성의 증명으로 취급하지 않습니다.
 
 ## 적응형 PPT 스킬 (`adaptive-presentation`)
 
-임원 보고, 고객 제안, 제품 소개, 기술 아키텍처, 교육·세미나 등 다른 주제와 청중에도 실제 `.pptx`를
-생성합니다.
+임원 보고, 고객 제안, 제품 소개, 기술 아키텍처, 교육·세미나 등 주제와 청중에 맞는 편집 가능한 `.pptx`를 생성합니다.
+무게 중심은 **① 필요한 근거 수집(Fact Ledger)** 과 **② 목적에 맞는 스토리라인 설계**이며, 슬라이드는 고정 템플릿 없이
+요청마다 `python-pptx`로 직접 구성합니다. 표지와 첫 본문에서 결론·가치·다음 행동이 보이는 Straightforward 구성을 우선합니다.
 
-이 스킬의 무게 중심은 **① 필요한 근거 수집(Fact Ledger)** 과 **② 목적에 맞는 스토리라인 설계**입니다.
-슬라이드 시각화는 고정 템플릿이나 고정 생성 프레임워크에 의존하지 않고, 매 요청마다 주제에 맞게
-**자유롭고 다양하게** `python-pptx`로 직접 구성하되 제작·검증 시간은 최소화합니다. 표지와 첫 본문
-슬라이드에서 결론·가치·다음 행동이 보이고, 이후 장은 그 결론에 필요한 근거만 쌓는 Straightforward
-구성을 최우선으로 합니다.
+흐름: 도구·폰트 점검 → (필요 시) 조사·Fact Ledger → Deck Spec + Storyline → `python-pptx` 제작 → 통합 QA + 시각 검토.
+도구·권한 때문에 검증하지 못한 결과는 완료본이 아니라 초안으로 구분합니다.
 
-진행 순서: ① 신규/개선·조사 필요 여부 판단과 도구·폰트 사전 점검 → ② 필요한 공식 자료 조사·Fact Ledger →
-③ Deck Spec 검증과 Storyline 확정 → ④ 템플릿 profile·설치 폰트를 반영한 `python-pptx` 제작 →
-⑤ capability-aware QA와 revision-bound 시각 검토 순입니다. 도구·권한 때문에 검증하지 못한 결과는
-완료본이 아니라 초안으로 구분합니다.
+외부 사실 조사의 backend와 원문 검증은 `web-search` 계약을 따릅니다. 이전 Fact Ledger와 URL은 검색 출발점으로만 쓰고,
+기능 상태·가격·규제·고객 성과는 요청마다 현재 공식 원문으로 다시 확인합니다.
+사용자 제공 자료만 재구성하거나 외부 사실이 없는 창작형 덱에는 웹 조사를 강제하지 않습니다.
+복합 조사에서는 검증된 `fact-ledger.json`이 근거의 정본이며 Markdown은 이 JSON에서 생성하는 읽기용 뷰입니다.
 
-```text
-필요한 경우 Fact Ledger
-  → Deck Spec + Storyline(슬라이드별 결론·Fact ID·시각 형태)
-  → python-pptx 자유 제작(제공 템플릿은 master·layout·theme·canvas 보존)
-  → 편집 가능한 PPTX
-  → 통합 QA Runner + finding 단위 예외 + SHA-256 시각 검토 증거
-```
+세부 기준은 아래 문서가 한 곳에서 관리합니다.
 
-**슬라이드는 고정 생성 엔진 없이 `python-pptx`로 직접 만듭니다.** 정보 관계(숫자·흐름·비교·계층·사례)에
-맞는 시각 형태를 슬라이드마다 자유롭게 선택하고, 같은 구조를 기계적으로 반복하지 않습니다. 템플릿이
-있으면 profile을 추출해 원본 master와 theme을 보존하고, 없으면 환경에서 확인한 언어별 설치 폰트를
-선택합니다. [타이포그래피](.github/skills/adaptive-presentation/reference/pptx-production.md#typography)·
-[대비](.github/skills/adaptive-presentation/reference/pptx-production.md#contrast)·
-[발표 노트](.github/skills/adaptive-presentation/reference/pptx-production.md#speaker-notes)의 상세 기준은 제작 가이드에서 관리합니다.
-출처 footer는 발행자·문서명·원문 링크로 표시합니다. 내부 Fact ID와 원본 확인 날짜는 화면에서 기본
-생략하되 근거 기록과 해석에 필요한 날짜·버전은 보존합니다. 아이디어가 필요하면 `reference/slide-blueprints.md`의 관계형 패턴을
-선택적으로 참고하되 그대로 복제하지 않습니다.
-
-기존 덱 개선은 [refinement 가이드](.github/skills/adaptive-presentation/reference/refinement.md)에 따라
-내용 원본과 디자인 참고를 분리하고, 사례·수치·조건을 항목별로 대응시킨 뒤 원본을 보존한 새 버전으로
-전달합니다. 고객 사례는 공개 성과·협력 발표·미확인 후보를 구분하며 수치의 분모·기간·초기 결과 조건을
-함께 표시합니다. 대비·의미 보존·발표 시간은 자동 QA와 별도의 편집 검토로 확인합니다.
-
-외부 사실 조사의 backend와 원문 검증은 `web-search` 계약을 따릅니다. 이전 Fact Ledger와 URL은 검색
-출발점으로만 사용하며, 기능 상태·가격·규제·고객 성과는 발표 요청마다 현재 공식 원문으로 다시
-확인합니다. 사용자 제공 자료만 재구성하거나 외부 사실이 없는 창작형 덱에는 웹 조사를 강제하지
-않습니다.
-
-복합 조사에서는 검증된 `fact-ledger.json`이 근거의 정본이며, 읽기용 Markdown을 별도로 다시 작성하지 않습니다.
-
-```bash
-python3 -B .github/skills/web-search/scripts/validate_fact_ledger.py \
-  <session>/<deck>-work/fact-ledger.json \
-  --markdown-output <session>/<deck>-work/fact-ledger.md
-```
-
-재생성 Python 스크립트와 QA 파일은 세션 작업 폴더에 격리하며 저장소와 최종 출력 폴더에는 사용자가
-요청한 최종 파일 외 중간 자산을 남기지 않습니다. 중간 PDF는 manifest의 PPTX·PDF SHA-256이 모두
-일치할 때만 상세 슬라이드 렌더에 재사용합니다. 수정 후에는 변경 부분을 먼저 확인하되 완료 전 요구되는
-구조·시각 검증을 다시 수행합니다.
+- [SKILL.md](.github/skills/adaptive-presentation/SKILL.md): 실행 순서와 완료 조건
+- 제작 가이드의 [타이포그래피](.github/skills/adaptive-presentation/reference/pptx-production.md#typography)·
+  [대비](.github/skills/adaptive-presentation/reference/pptx-production.md#contrast)·
+  [발표 노트](.github/skills/adaptive-presentation/reference/pptx-production.md#speaker-notes): 글꼴·가독성·노트 기준
+- [refinement 가이드](.github/skills/adaptive-presentation/reference/refinement.md): 기존 덱 개선(원본 보존·새 버전 전달)
+- [검증 가이드](.github/skills/adaptive-presentation/reference/verification.md): 통합 QA Runner·finding ID별 검토·SHA-256에 묶인 시각 검토 증거
+- [Fact Ledger 계약](.github/skills/web-search/SKILL.md#fact-ledger-계약): 근거 기록과 검증 명령
 
 ```text
 > 병원 경영진 대상 의료 AI 전략 발표자료 20장 만들어줘.
@@ -240,53 +210,26 @@ python3 -B .github/skills/web-search/scripts/validate_fact_ledger.py \
 > 이 기존 PPT는 내용은 유지하고, 투자위원회 대상의 절제된 디자인으로 재구성해줘.
 ```
 
-슬라이드 시각화는 주제·내용에 따라 매번 다르게 구성하며 **정해진 템플릿·색상·카드 스타일을 복제하지
-않습니다.**
-
-통합 검증:
+통합 검증 예시입니다. `<skill>`은 `SKILL.md`가 있는 스킬 폴더(프로젝트 설치는 `.github/skills/adaptive-presentation`,
+개인 설치는 `~/.copilot/skills/adaptive-presentation`), `<work>`는 세션 작업 폴더이며 Windows에서는 `python3` 대신 `py -3`을 씁니다.
 
 ```bash
-python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  deck.pptx --out <session>/<deck>-work \
-  --deck-spec <session>/<deck>-work/deck-spec.json --reuse-render
+python3 -B <skill>/scripts/verify_deck.py deck.pptx --out <work> \
+  --deck-spec <work>/deck-spec.json --reuse-render
 ```
 
-Runner는 구조 감사와 전체 렌더를 병렬 실행하고 그룹 자식·표 셀을 semantic frame으로 매핑합니다.
-chart·SmartArt·unmapped text·overflow는 성공으로 숨기지 않고 finding ID를 발급합니다. 확대 검토한
-의도적 예외만 ID와 이유를 manifest에 남기며, 최종 contact sheet 검토는 현재 PPTX SHA-256과 연결된
-`visual-review-rNNN.json`으로 증명합니다. 수정마다 기존 증거를 보존하고
-[revision별 새 파일](.github/skills/adaptive-presentation/reference/verification.md#visual-review-revisions)의
-경로를 `--visual-review`로 지정합니다. QA Runner는 비어 있지 않은 일반 출력 디렉터리를 덮어쓰지 않습니다.
-
-`--reuse-render`는 같은 입력·렌더 환경·옵션과 검증된 산출물 해시가 일치할 때 전체 PDF·contact sheet를
-재사용합니다. 입력이 달라지면 새로 렌더하고, 손상된 캐시는 오류로 처리합니다. 구조·근거·언어·notes·
-시각 검토 판단은 매번 다시 검사합니다. 옵션 없는 기존 CLI 동작은 유지합니다.
-
 모든 프로젝트에서 쓰는 개인 설치는 [설치·사용 가이드](SETUP-GUIDE.md#skills-personal)를 따르세요.
-`adaptive-presentation`은 `web-search`의 검증 스크립트를 참조하므로 두 스킬을 함께 설치해야 합니다.
+Fact Ledger 검증이 `web-search/scripts`를 사용하므로 두 스킬을 함께 설치합니다.
 
 ---
 
 ## PPT 제작 시간을 줄이는 실행 구조
 
-`adaptive-presentation`은 기본적으로 **FULL-OPTIMIZED** 정책을 사용합니다. 조사·스토리라인·제작·전체 QA를
-생략하는 대신, 안전한 병렬화·캐시·중간 산출물 재사용과 결함 일괄 수정으로 중복 작업과 wall-clock
-time을 줄입니다.
-
-| 최적화 | `adaptive-presentation` |
-|---|---|
-| **생성 메커니즘 재사용** | 고정 생성 엔진 대신 python-pptx로 직접 제작하고 조사·검증·렌더 스크립트만 재사용 |
-| **요청별 변경 surface 축소** | 외부 조사가 필요하면 Fact Ledger를 만들고, 스토리라인을 먼저 확정한 뒤 슬라이드는 주제에 맞게 자유 제작 |
-| **안전한 병렬 실행** | 동일 PPTX의 감사·렌더를 읽기 전용 병렬 실행. 파일별 위임을 요청받으면 공통 근거를 공유하고 덱마다 단일 담당자가 제작·QA, 메인이 전달 |
-| **도구 캐시** | 저장소 밖 Python·렌더링 도구·폰트 탐색 캐시를 재사용 |
-| **중간 산출물 재사용** | `--reuse-render`로 입력·환경·옵션·산출물 해시가 일치하는 전체 렌더 재사용; QA 판단은 항상 새로 검사 |
-| **수정 루프 단축** | 결함을 모아 일괄 수정 → 위험 슬라이드 확인 → 변경 시에만 최종 전체 render |
-| **측정(선택)** | 성능 비교를 요청받거나 병목을 분석할 때만 단계별 시간·PDF reuse·cache hit·repair cycle을 세션 `metrics.json`에 기록 |
-
-공용 캐시에는 고객 데이터·시크릿·생성 결과를 넣지 않으며, 검증 스크립트와 QA 파일은 세션 작업
-폴더에 격리합니다. 최종 산출물 폴더에는 사용자가 요청한 최종 파일만 남깁니다.
-여기서 `<session>`은 클라이언트가 제공하는 세션 artifact 경로를 뜻합니다. 그런 경로가 없는
-VS Code 환경에서는 저장소와 최종 출력 폴더 밖의 OS 임시 디렉터리를 사용합니다.
+단계를 생략하지 않고 중복 작업만 줄입니다. 동일 PPTX의 구조 감사·렌더를 읽기 전용으로 병렬 실행하고, 저장소 밖의
+도구·폰트 탐색 캐시와 입력·환경·옵션·산출물 해시가 같은 전체 렌더(`--reuse-render`)를 재사용하며, 결함은 모아서
+일괄 수정합니다. QA 판단은 매번 새로 검사합니다. 파일별 위임·공통 근거 공유는 요청한 경우에만, 시간 측정(`metrics.json`)은
+성능 비교·병목 분석에서만 [다중 덱 조율 가이드](.github/skills/adaptive-presentation/reference/full-optimized.md)를 따릅니다.
+중간 산출물은 세션 작업 폴더에 격리하고 최종 출력 폴더에는 요청한 파일만 남기며, 공용 캐시에는 고객 데이터·시크릿·생성 결과를 넣지 않습니다.
 
 ### 지침·스킬 변경 검증
 
@@ -296,7 +239,9 @@ python3 -B -m unittest discover -s .github/skills/adaptive-presentation/tests -p
 ```
 
 정책 테스트는 스킬별 경계·길이·트리거·참조 링크와 문서화된 CLI 연결을 검사합니다.
-동작 회귀는 각 스킬의 전체 테스트로 확인합니다. authoring schema 검사는 `jsonschema`가 설치되어
+동작 회귀는 각 스킬의 전체 테스트로 확인합니다. pull request와 `main` push에서는 GitHub Actions
+(`.github/workflows/tests.yml`)가 두 스킬의 전체 테스트를 실행하며, `adaptive-presentation`의 Python 의존성은
+`.github/skills/adaptive-presentation/requirements.txt`에 있습니다. authoring schema 검사는 `jsonschema`가 설치되어
 있을 때 실행하며, 없으면 skip을 명시합니다. 런타임의 `deck_spec.py` 검증은 이 패키지에 의존하지 않습니다.
 모델 성능이나 실제 웹 조사·PPTX 품질을 평가하는 테스트는 아닙니다. 그런 개선은 같은 입력·환경·완료
 조건으로 별도 비교해야 하며, 테스트 통과만으로 더 빠르거나 정확해졌다고 주장하지 않습니다.
