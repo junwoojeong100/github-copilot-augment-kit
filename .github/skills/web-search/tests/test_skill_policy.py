@@ -324,6 +324,30 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
             with self.subTest(local_detail=local_detail):
                 self.assertNotIn(local_detail, guide)
 
+    def test_skill_frontmatter_is_loadable_by_copilot(self):
+        allowed = {
+            "name", "description", "license", "argument-hint",
+            "allowed-tools", "user-invocable", "disable-model-invocation",
+        }
+        for path in sorted(SKILL.parents[1].glob("*/SKILL.md")):
+            frontmatter = path.read_text(encoding="utf-8").split("---", 2)[1]
+            fields = dict(re.findall(r"^([a-z-]+):\s*(.*)$", frontmatter, re.MULTILINE))
+            with self.subTest(skill=path.parent.name):
+                self.assertEqual(fields["name"], path.parent.name)
+                self.assertRegex(fields["name"], r"^[a-z0-9][a-z0-9-]{0,63}$")
+                self.assertLessEqual(len(fields["description"].strip('"')), 1024)
+                self.assertLessEqual(set(fields), allowed)
+
+    def test_documented_script_commands_do_not_depend_on_repository_layout(self):
+        skills_root = SKILL.parents[1]
+        docs = [*skills_root.glob("*/SKILL.md"), *skills_root.glob("*/reference/*.md")]
+        self.assertGreaterEqual(len(docs), 10)
+        for path in docs:
+            content = path.read_text(encoding="utf-8")
+            with self.subTest(doc=f"{path.parent.name}/{path.name}"):
+                self.assertNotRegex(content, r"(?m)^\s*(?:python3?|py -3)\b[^\n]*\.github/skills/")
+                self.assertNotIn("<absolute-skill-dir>", content)
+
 
 if __name__ == "__main__":
     unittest.main()

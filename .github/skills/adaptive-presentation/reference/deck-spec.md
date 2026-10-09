@@ -58,9 +58,10 @@
 `deck_spec.py`는 생략한 정책 값을 채운 뒤 임계치 순서·mode별 필드·출처 참조·장수를 검사한다.
 schema 통과만으로 완료하거나 semantic validation을 생략하지 않는다.
 기본값 전체를 spec에 복사하지 말고 바꾸거나 덱별로 지정해야 하는 값만 쓴다.
+명령의 `<skill>`·`<work>`·`python3`는 [`SKILL.md`](../SKILL.md)의 정의를 따른다.
 
 ```bash
-python3 -B .github/skills/adaptive-presentation/scripts/deck_spec.py <work>/deck-spec.json --json
+python3 -B <skill>/scripts/deck_spec.py <work>/deck-spec.json --json
 ```
 
 | 조건 | 기록할 값 |
@@ -110,7 +111,7 @@ schema에 없는 필드를 추가하거나 canonical verifier가 자동 검증�
 PPTX/POTX 템플릿이 있으면 먼저 profile을 만든다.
 
 ```bash
-python3 -B .github/skills/adaptive-presentation/scripts/inspect_template.py template.pptx \
+python3 -B <skill>/scripts/inspect_template.py template.pptx \
   --out <work>/template-profile.json
 ```
 

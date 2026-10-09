@@ -5,24 +5,29 @@ from __future__ import annotations
 
 import argparse
 import copy
+import importlib
 import json
 import math
 import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
+import language_policy
+import speaker_notes
+import toolcheck
 from tooling import paths_collide
 
 WEB_SEARCH_SCRIPTS = (
     Path(__file__).resolve().parents[2] / "web-search" / "scripts"
 )
-sys.path.insert(0, str(WEB_SEARCH_SCRIPTS))
-import validate_fact_ledger as fact_ledger_validator  # noqa: E402
-import language_policy  # noqa: E402
-import speaker_notes  # noqa: E402
-import toolcheck  # noqa: E402
+FACT_LEDGER_MODULE = "validate_fact_ledger"
+FACT_LEDGER_UNAVAILABLE = (
+    "Fact Ledger 검증에는 같은 skills 폴더의 `web-search` 스킬"
+    "(scripts/validate_fact_ledger.py)이 필요합니다. 두 스킬을 함께 설치하세요."
+)
 
 
 STATE_LABELS = {"GA", "PARTIAL GA", "PREVIEW", "ASSUMPTION", "DEMO DATA"}
@@ -149,10 +154,36 @@ def resolve_optional_file(
     return resolved, load_json_object(resolved, label)
 
 
-def validate_fact_ledger(ledger: dict[str, Any]) -> dict[str, dict[str, Any]]:
+def load_fact_ledger_validator() -> ModuleType:
+    """Import the sibling web-search validator on first use (sys.modules caches it)."""
+    cached = sys.modules.get(FACT_LEDGER_MODULE)
+    if cached is not None:
+        return cached
+    scripts_dir = str(WEB_SEARCH_SCRIPTS)
+    if WEB_SEARCH_SCRIPTS.is_dir() and scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
     try:
-        normalized = fact_ledger_validator.validate_ledger(ledger)
-    except fact_ledger_validator.LedgerValidationError as error:
+        return importlib.import_module(FACT_LEDGER_MODULE)
+    except ModuleNotFoundError as error:
+        if error.name != FACT_LEDGER_MODULE:
+            raise
+        raise DeckSpecError(
+            f"{FACT_LEDGER_UNAVAILABLE} (확인한 경로: {WEB_SEARCH_SCRIPTS})"
+        ) from error
+
+
+def __getattr__(name: str) -> ModuleType:
+    # PEP 562: keep `deck_spec.fact_ledger_validator` working without importing it eagerly.
+    if name == "fact_ledger_validator":
+        return load_fact_ledger_validator()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def validate_fact_ledger(ledger: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    validator = load_fact_ledger_validator()
+    try:
+        normalized = validator.validate_ledger(ledger)
+    except validator.LedgerValidationError as error:
         raise DeckSpecError(f"Fact Ledger is invalid: {error}") from error
     return {fact["id"]: fact for fact in normalized["facts"]}
 

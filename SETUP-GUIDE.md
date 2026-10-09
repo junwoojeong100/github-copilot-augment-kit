@@ -76,7 +76,9 @@ VS Code도 같은 프로젝트·개인 위치를 사용합니다. Copilot은 프
 
 ### 개인 환경(모든 프로젝트)에 설치
 
-**두 스킬을 함께** 설치하세요. `adaptive-presentation`은 같은 `skills` 폴더의 `web-search/scripts`를 참조합니다.
+**두 스킬을 함께** 설치하세요. `adaptive-presentation`은 외부 조사에 `web-search` 스킬을 호출하고, Fact Ledger 검증에는
+같은 `skills` 폴더의 `web-search/scripts`를 사용합니다. `web-search`가 없어도 나머지 스크립트는 실행되지만,
+Fact Ledger 검증 단계에서 두 스킬을 설치하라는 메시지와 함께 멈춥니다.
 
 **방법 A — 복사**. 같은 이름의 스킬이 이미 있으면 덮어쓰지 말고 내용을 비교해 병합하세요.
 
@@ -96,11 +98,14 @@ export COPILOT_SKILLS_DIRS="<clone 경로>/.github/skills"   # ~/.zshrc 등에 �
 설치 후 `copilot skill list`에 두 스킬이 보이면 성공입니다. 세션 중에 추가했다면 `/skills reload`,
 로드 위치는 `/skills info <이름>`으로 확인합니다.
 
-- `adaptive-presentation`은 PPTX 생성·검증에 LibreOffice(`soffice`)와 Python 패키지(`python-pptx`·PyMuPDF·Pillow)가 필요하고,
-  한국어 덱은 한글 폰트도 필요합니다. 스킬이 실행 전에 `toolcheck.py --strict`로 점검하며 누락된 항목만 안내합니다.
+- 스킬 문서의 스크립트 명령은 `<skill>/scripts/...` 형태입니다. `<skill>`은 해당 스킬의 `SKILL.md`가 있는 폴더이므로
+  프로젝트 설치, 개인 설치, `COPILOT_SKILLS_DIRS` 등록에서 같은 명령을 씁니다(경로는 `copilot skill list --json`의 `path`).
+  `<work>`는 세션 작업 폴더, `python3`는 환경의 Python 3입니다(Windows는 `py -3`).
+- `adaptive-presentation`에는 Python 패키지(`python-pptx`·PyMuPDF·Pillow)가 필요합니다.
+  `python3 -m pip install -r <skill>/requirements.txt`(`<skill>`은 `adaptive-presentation` 폴더)로 설치하세요.
+  LibreOffice(`soffice`)와 한국어 덱용 한글 폰트는 pip 패키지가 아니므로 OS 패키지 관리자로 따로 설치합니다.
+  스킬이 실행 전에 `toolcheck.py --strict`로 점검하고, 누락된 항목은 설치 방법을 출력합니다.
   자세한 내용은 [도구 캐시와 사전 준비](.github/skills/adaptive-presentation/reference/pptx-production.md#tool-cache)를 참고하세요.
-- 스킬 문서의 스크립트 명령은 `.github/skills/...` 경로 기준입니다. 개인 설치에서 스크립트를 찾지 못하면
-  해당 프로젝트에 `.github/`를 적용하세요([README 빠른 시작](README.md#5분-빠른-시작)).
 
 ---
 

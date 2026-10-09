@@ -1,0 +1,46 @@
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-search:
+    name: web-search and repository policy tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Run web-search suite
+        run: python3 -B -m unittest discover -s .github/skills/web-search/tests -q
+
+  adaptive-presentation:
+    name: adaptive-presentation tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: .github/skills/adaptive-presentation/requirements.txt
+      - name: Install LibreOffice and fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libreoffice-impress fonts-liberation fonts-noto-cjk
+      - name: Install Python packages
+        run: python3 -m pip install -r .github/skills/adaptive-presentation/requirements.txt jsonschema
+      - name: Run adaptive-presentation suite
+        run: python3 -B -m unittest discover -s .github/skills/adaptive-presentation/tests -q

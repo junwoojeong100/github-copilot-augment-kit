@@ -8,13 +8,15 @@
 참조하며 수치를 따로 유지하지 않는다. machine contract의 필드·정규화·검사는 기존 schema와 validator를
 따른다. 명시적인 브랜드·템플릿 override도 deck spec에 기록하고 같은 검사를 적용한다.
 
+명령의 `<skill>`·`<work>`·`python3`는 [`SKILL.md`](../SKILL.md)의 정의를 따른다.
+
 ## 1. 도구
 
 1. Python 환경에서 `python-pptx`를 기본으로 사용한다.
 2. 대량 데이터 처리·차트 계산에는 pandas/matplotlib를 쓸 수 있으나, 발표에 들어가는 핵심 도표는
    가능하면 PowerPoint 도형/네이티브 차트로 만들어 편집 가능하게 한다.
 3. 외부 이미지가 필요하면 사용권과 원본 URL을 기록한다.
-4. 도구 탐색·의존성 준비는 `scripts/toolcheck.py`와 아래 사전 준비 규칙을 따른다.
+4. 도구 탐색·의존성 준비는 `<skill>/scripts/toolcheck.py`와 아래 사전 준비 규칙을 따른다.
 5. [글꼴](#fonts)과 [타이포그래피](#typography)를 먼저 확정하고 deck spec의 `fontPolicy`와 일치시킨다.
 
 <a id="tool-cache"></a>
@@ -66,7 +68,7 @@ OUT = Path(os.environ["PPTX_OUT"])
 TEMPLATE = os.environ.get("PPTX_TEMPLATE")
 
 import sys
-sys.path.insert(0, os.environ["ADAPTIVE_PRESENTATION_DIR"])
+sys.path.insert(0, os.environ["ADAPTIVE_PRESENTATION_DIR"])  # <skill>의 절대 경로
 import pptx_helpers as H
 
 # 주제·브랜드에 맞게 자유롭게 정하는 값 (고정 팔레트 아님)
@@ -133,7 +135,7 @@ soft_shadow)만 제공한다. 팔레트·테마·슬라이드 유형이 없으�
 ```python
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path("<absolute-skill-dir>")))
+sys.path.insert(0, str(Path("<skill>")))  # Python 코드에서는 <skill>에 절대 경로를 넣는다
 import pptx_helpers as H
 
 prs, blank = H.new_deck()                              # 16:9 치수(디자인 아님)
@@ -313,7 +315,7 @@ Latin·East Asian·complex-script typeface를 명시하고 `fontPolicy.requireAl
 실행 환경에서 설치 여부를 확인하되 임의의 slide별 글꼴 변경은 허용하지 않는다.
 
 ```bash
-python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
+python3 -B <skill>/scripts/toolcheck.py \
   --strict --require-korean-font
 
 (fc-list 2>/dev/null || true) | grep -Ei 'Noto Sans|Apple SD Gothic|Malgun|Aptos|Segoe'
@@ -329,6 +331,11 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 폰트를 PPTX에 임베드할 수 있다고 가정하지 않으며 verifier에서 PDF 렌더 폰트와 다시 대조한다.
 렌더 전용 fallback이 필요하면 격리된 렌더 profile에만 적용하고 사용한 글꼴을 기록한다.
 전달 PPTX의 typeface나 사용자 전역 앱 설정을 바꾸는 방법으로 렌더 문제를 숨기지 않는다.
+
+PPTX는 글꼴을 임베드하지 않으므로 발표·수신 환경이 생성 환경과 다르면(예: macOS 제작, Windows
+PowerPoint 발표) 미설치 글꼴이 대체되어 줄바꿈·overflow가 달라질 수 있다. 대상 OS를 알고 그 환경의
+후보가 검증 환경에도 설치되어 있으면 그 글꼴을 `fontPolicy.selected`로 고른다. 그렇지 않거나 대상을
+모르면 글꼴 선택이 생성 환경 기준이라는 가정을 최종 응답에 명시하고 전달 PPTX의 typeface는 바꾸지 않는다.
 
 <a id="contrast"></a>
 
@@ -435,15 +442,15 @@ Source: Organization · Document title
 
 ```bash
 # 문법 검사 (.pyc를 만들지 않도록 py_compile 대신 ast.parse 사용)
-python3 -B -c 'import ast,pathlib; ast.parse(pathlib.Path("<work-dir>/build_<deck>.py").read_text(encoding="utf-8"))'
+python3 -B -c 'import ast,pathlib; ast.parse(pathlib.Path("<work>/build_<deck>.py").read_text(encoding="utf-8"))'
 
-# 생성
-PPTX_OUT="<absolute-output>/<deck>.pptx" python3 -B <work-dir>/build_<deck>.py
+# 생성 (ADAPTIVE_PRESENTATION_DIR에는 <skill>의 절대 경로를 지정)
+PPTX_OUT="<absolute-output>/<deck>.pptx" ADAPTIVE_PRESENTATION_DIR="<skill>" python3 -B <work>/build_<deck>.py
 
 # canonical QA: 구조 감사, 전체 렌더, rendered overlap, 위험 슬라이드, ZIP 검사를 통합 실행
-python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  <absolute-output>/<deck>.pptx --out <work-dir>/verify \
-  --deck-spec <work-dir>/deck-spec.json --reuse-render
+python3 -B <skill>/scripts/verify_deck.py \
+  <absolute-output>/<deck>.pptx --out <work>/verify \
+  --deck-spec <work>/deck-spec.json --reuse-render
 
 ```
 
