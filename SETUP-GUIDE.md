@@ -178,7 +178,7 @@ VS Code 사용자 프로필의 `mcp.json`(명령 팔레트 **MCP: Open User Conf
 - **출처 확인**: 공식 저장소·게시자의 서버인지, 어떤 명령을 실행하고 어떤 URL로 데이터를 보내는지 확인합니다.
 - **권한 최소화**: 쓰기·삭제·명령 실행 도구가 있으면 읽기 전용 옵션이나 `--tools` 목록으로 필요한 도구만 허용합니다.
 - **버전 고정**: `@latest`는 시간이 지나면 다른 버전이 실행됩니다. 검증한 버전을 쓰고 업데이트할 때 도구 목록을 다시 확인합니다.
-- Azure 실습에 쓰는 서버(Azure MCP·Playwright·Foundry MCP·AKS MCP·Computer Use)의 연결 절차는 [5장](#azure-lab)에 있습니다.
+- Azure 실습에 쓰는 서버(Azure MCP·Playwright·AKS MCP·Computer Use)의 연결 절차는 [5장](#azure-lab)에 있습니다.
 
 ### 보안·권한 원칙
 
@@ -202,7 +202,7 @@ VS Code 사용자 프로필의 `mcp.json`(명령 팔레트 **MCP: Open User Conf
 요청 → Copilot(LLM)
 ├─ 명령·API 경로 (먼저)
 │  ├─ 셸 도구 → az → Azure 리소스
-│  └─ Azure MCP · AKS MCP · Foundry MCP → Azure·Foundry API
+│  └─ Azure MCP · AKS MCP → Azure·Foundry API
 ├─ 화면 경로 (명령으로 안 될 때)
 │  ├─ Playwright MCP → 브라우저 → Azure Portal · Foundry portal
 │  └─ Computer Use → 데스크톱 앱
@@ -217,7 +217,7 @@ VS Code 사용자 프로필의 `mcp.json`(명령 팔레트 **MCP: Open User Conf
 | 명령·Bicep·설정의 공식 근거 확인 | Microsoft Learn MCP | `microsoft-learn` · Workspace | 이 리포에 번들 |
 | Azure CLI(`az`)로 생성·수정·삭제 | **MCP 없이 가능** — Copilot CLI의 셸 도구가 `az`를 실행하고, 변경 가능성이 있는 명령은 승인을 요청합니다 | — | [1장](#cli) + Azure CLI `az login` |
 | 구조화된 도구로 조회·진단·배포 | Azure MCP Server | `azure` · Plugin | [Azure MCP](#mcp-azure) |
-| Foundry 에이전트·모델 배포·평가 | Foundry MCP Server (미리보기) | `foundry-mcp-remote` · 필요 시 추가 | [Foundry MCP](#mcp-foundry) |
+| Foundry 에이전트·모델 배포·평가·지식 인덱스 조회 | Azure MCP Server (`foundry`·`foundryextensions` 도구) | `azure` · Plugin | [Azure MCP](#mcp-azure) |
 | AKS 클러스터·Kubernetes 운영 | AKS MCP | `aks-mcp` · 필요 시 추가 | [AKS MCP](#mcp-aks) |
 | Azure Portal·Foundry portal 웹 화면 조작 | Playwright MCP | `playwright` · `playwright-headless` · User | [Playwright MCP](#mcp-playwright) |
 | 브라우저 밖 데스크톱 앱 조작 | Computer Use (미리보기) | `computer-use` · Builtin | [Computer Use](#mcp-computer-use) |
@@ -233,7 +233,7 @@ VS Code 사용자 프로필의 `mcp.json`(명령 팔레트 **MCP: Open User Conf
 | Learn MCP | "Azure Storage 계정을 만드는 `az` 명령 형식을 Microsoft Learn에서 확인해 원문 링크와 함께 알려줘." |
 | Azure CLI | "리소스 그룹 `rg-lab-<이름>`을 `<리전>`에 만드는 `az` 명령을 먼저 보여줘. 내가 승인하면 실행하고 결과를 확인해줘." |
 | Azure MCP | "`rg-lab-<이름>`의 리소스를 조회해줘. 만들거나 바꾸지 마." |
-| Foundry MCP | "내 Foundry 프로젝트의 모델 배포 목록을 조회만 해줘." |
+| Azure MCP (Foundry) | "내 Foundry 프로젝트의 모델 배포 목록을 조회만 해줘." |
 | Playwright MCP | "열려 있는 Azure Portal에서 `rg-lab-<이름>`의 리소스 목록을 읽기만 해줘. 만들기·삭제 버튼은 누르지 마." |
 
 ### 서버별 연결
@@ -253,6 +253,9 @@ VS Code 사용자 프로필의 `mcp.json`(명령 팔레트 **MCP: Open User Conf
 - 플러그인이 연결하는 MCP 서버는 Azure MCP Server(`azure`) 하나이므로 이 킷의 MCP 파일에는 항목을 추가하지 않습니다. **같은 서버를 직접 다시 등록하지 마세요**(중복).
 - 배포 워크플로는 플러그인의 `azure-prepare` → `azure-validate` → `azure-deploy` 스킬이 안내합니다.
 - **Azure CLI와의 관계**: Azure MCP의 Azure CLI 도구(`extension`)는 `az` 명령을 찾고 설치 방법을 안내하는 용도입니다. `az`를 실제로 실행하는 것은 Copilot CLI의 셸 도구입니다.
+- **Foundry 작업**은 이 서버의 `foundry`(모델 카탈로그·배포·쿼터, 에이전트, 평가, 세션, project connection, 모니터링)와 `foundryextensions`(지식 인덱스 조회, OpenAI 호환 호출, Foundry 리소스 조회) 도구로 합니다.
+  2026-10-09 기준 이 도구에 없는 작업(Foundry 리소스·프로젝트 생성, 파인튜닝, AI Search 인덱스 생성·수정 — `search` 도구는 조회·질의만 지원)은 플러그인에 포함된 `microsoft-foundry` 스킬의 `az`·스크립트 워크플로나 Azure Portal로 합니다.
+  각 도구의 명령 목록은 도구를 `learn` 모드로 호출해 확인합니다.
 - 인증은 로컬 Azure 자격 증명(`az login`)과 Azure RBAC를 따릅니다. 구독을 지정하지 않으면 Azure CLI 프로필(`az account set`) 또는 `AZURE_SUBSCRIPTION_ID`의 구독을 쓰므로 실습 전에 대상 구독을 확인하세요.
 - 쓰기를 막으려면 시작 옵션 `--read-only`를 씁니다. 플러그인이 정의한 서버는 `server start`로 고정되어 있으므로, 필요하면 `/mcp disable azure`로 끄고
   `copilot mcp add azure-readonly -- npx -y @azure/mcp@latest server start --read-only`로 따로 등록합니다(VS Code extension은 `azureMcp.readOnly` 설정).
@@ -309,29 +312,6 @@ copilot mcp add --timeout 180000 playwright-headless -- npx @playwright/mcp@late
    끝나면 profile(macOS 기본 위치 `~/Library/Caches/ms-playwright/mcp-{channel}-{workspace-hash}`)을 삭제합니다. `--allowed-origins`도 보안 경계가 아닙니다.
 4. profile은 한 번에 하나의 브라우저만 쓸 수 있습니다. 여러 client를 동시에 쓰려면 `--isolated`나 별도 `--user-data-dir`을 지정합니다.
 
-<a id="mcp-foundry"></a>
-
-#### Foundry MCP Server (미리보기)
-
-Foundry 프로젝트의 에이전트·세션·데이터셋·평가·모델 배포 등을 대화로 조회·관리합니다. 클라우드에서 호스팅되고 Microsoft Entra ID로 인증하므로 로컬 설치가 필요 없습니다.
-
-- 사전 조건: Azure 구독, Foundry 프로젝트, VS Code 1.99+와 GitHub Copilot. 모든 작업은 로그인한 사용자 권한으로 실행되며 프로젝트(또는 계정)에서 **읽기 도구는 Reader, 쓰기 도구는 Contributor** 역할이 필요합니다.
-- 연결(VS Code): 명령 팔레트 **MCP: Add Server** → **HTTP** → URL `https://mcp.ai.azure.com` → 이름 `foundry-mcp-remote` → **MCP: List Servers**에서 **Start** → Azure 로그인.
-  Agent mode의 도구 목록에서 `Foundry`를 검색해 서버를 확인합니다.
-- Copilot CLI: 공식 빠른 시작은 VS Code만 다룹니다. `copilot mcp add --transport http foundry-mcp-remote https://mcp.ai.azure.com`으로 등록해 볼 수 있지만 CLI에서의 인증은 공식 문서로 확인되지 않았습니다.
-
-```json
-{
-  "servers": {
-    "foundry-mcp-remote": { "type": "http", "url": "https://mcp.ai.azure.com" }
-  }
-}
-```
-
-- 공개 미리보기라 SLA가 없고 프로덕션 워크로드에는 권장되지 않습니다. 쓰기 도구는 배포·청구에 즉시 영향을 주므로 비프로덕션 프로젝트에서 파라미터를 확인하고 한 번에 하나씩 변경하세요([보안·모범 사례](https://learn.microsoft.com/en-us/azure/foundry/mcp/security-best-practices)).
-- 구형 `Azure AI Foundry` 서버(`uvx`로 실행하는 `mcp-foundry`)는 이 클라우드 서버로 이전되었고 저장소는 더는 갱신되지 않습니다. 새로 설정하지 마세요.
-- Foundry portal 화면 조작은 [Playwright MCP](#mcp-playwright)를 씁니다.
-
 <a id="mcp-aks"></a>
 
 #### AKS MCP
@@ -386,7 +366,6 @@ copilot mcp add aks-mcp -- <aks-mcp 실행 파일 경로> --access-level readonl
 | 스킬이 보이지 않음 | `/skills list`, 새로 추가했다면 `/skills reload`, `SKILL.md`의 `name`과 폴더명 일치, 같은 이름의 프로젝트 스킬이 개인 스킬을 가리는지 |
 | Playwright가 시작하지 않거나 profile 오류 | Node.js 18+, `--browser`로 지정한 브라우저가 설치되어 있는지, 같은 profile을 다른 브라우저가 쓰고 있지 않은지(`--isolated` 또는 별도 `--user-data-dir`) |
 | Azure MCP가 의도하지 않은 구독을 조회함 | `az account show`로 기본 구독을 확인하고 요청에 구독을 명시합니다. `AZURE_SUBSCRIPTION_ID`가 설정되어 있는지도 확인하세요 |
-| Foundry MCP에서 `Access denied` | 프로젝트(또는 계정)의 역할을 확인합니다(읽기 Reader, 쓰기 Contributor). 구독에 접근 권한이 있는 Microsoft 계정으로 로그인했는지 확인하세요 |
 | Computer Use를 켤 수 없거나 동작하지 않음 | `/computer show`, 지원 OS의 로컬 세션인지, `/plugin`과 `/mcp list`에서 computer-use가 켜져 있는지, macOS의 손쉬운 사용·화면 기록 권한, 조직 정책 |
 
 ---
@@ -405,8 +384,6 @@ copilot mcp add aks-mcp -- <aks-mcp 실행 파일 경로> --access-level readonl
 - VS Code Docs — [MCP 서버 추가·관리](https://code.visualstudio.com/docs/agent-customization/mcp-servers), [MCP 설정 레퍼런스](https://code.visualstudio.com/docs/agents/reference/mcp-configuration), [Agent Skills](https://code.visualstudio.com/docs/agent-customization/agent-skills): 설정 형식·위치·Workspace Trust·스킬 위치
 - Microsoft Learn — [Learn MCP Server overview](https://learn.microsoft.com/en-us/training/support/mcp)
 - Microsoft Learn — [Azure MCP Server 도구](https://learn.microsoft.com/en-us/azure/developer/azure-mcp-server/tools/): 시작 옵션(`--read-only`)·인증·도구 범주
-- Microsoft Learn — [Foundry MCP Server 시작](https://learn.microsoft.com/en-us/azure/foundry/mcp/get-started), [도구와 역할](https://learn.microsoft.com/en-us/azure/foundry/mcp/available-tools), [보안·모범 사례](https://learn.microsoft.com/en-us/azure/foundry/mcp/security-best-practices): 엔드포인트·인증·역할·쓰기 주의
 - GitHub — [microsoft/azure-skills](https://github.com/microsoft/azure-skills): 플러그인 설치·사전 조건·스킬
 - GitHub — [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp): 설치·옵션·profile·보안
 - GitHub — [Azure/aks-mcp](https://github.com/Azure/aks-mcp): 설치·접근 수준·신뢰 경계
-- GitHub — [azure-ai-foundry/mcp-foundry](https://github.com/azure-ai-foundry/mcp-foundry): 구형 서버의 이전 공지
