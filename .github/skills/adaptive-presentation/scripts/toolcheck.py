@@ -371,9 +371,12 @@ def _pip_hint(
         if requirements is not None
         else " ".join(packages)
     )
+    interpreter = _shell_quote(python, platform)
+    if platform == "win32" and interpreter != python:
+        interpreter = f"& {interpreter}"  # PowerShell needs the call operator for a quoted path
     return (
         "Python packages (same interpreter): "
-        f"{_shell_quote(python, platform)} -m pip install {target}"
+        f"{interpreter} -m pip install {target}"
     )
 
 

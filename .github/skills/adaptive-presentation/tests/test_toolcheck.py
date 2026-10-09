@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import io
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -59,6 +60,18 @@ class ToolcheckTests(unittest.TestCase):
         self.assertTrue(toolcheck.cache_matches_runtime(info))
         changed = dict(info, python_executable="/different/python")
         self.assertFalse(toolcheck.cache_matches_runtime(changed))
+
+    def test_requirements_file_is_ascii_and_lists_the_probed_packages(self):
+        # pip before 25.0 decodes requirements files with the locale encoding
+        text = toolcheck.REQUIREMENTS_FILE.read_bytes().decode("ascii")
+        listed = {
+            re.split(r"[<>=!~ ]", line.strip(), maxsplit=1)[0].casefold()
+            for line in text.splitlines()
+            if line.strip() and not line.startswith("#")
+        }
+        self.assertEqual(
+            listed, {name.casefold() for name in toolcheck.PIP_PACKAGES.values()}
+        )
 
     def test_pymupdf_is_detected_under_either_import_name(self):
         real_import = __import__
@@ -282,7 +295,7 @@ class ToolcheckTests(unittest.TestCase):
         )
         self.assertTrue(
             windows[0].endswith(
-                r'"C:\Program Files\Python312\python.exe" -m pip install -r '
+                r'& "C:\Program Files\Python312\python.exe" -m pip install -r '
                 f'"{requirements}"'
             ),
             windows[0],

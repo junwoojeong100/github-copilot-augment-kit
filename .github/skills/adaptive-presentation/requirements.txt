@@ -1,5 +1,5 @@
-# adaptive-presentation Python 의존성 (검증한 버전 이상)
-# LibreOffice(soffice)와 한글 폰트는 pip 대상이 아닙니다. scripts/toolcheck.py --strict가 누락 시 설치 방법을 안내합니다.
+# adaptive-presentation Python dependencies (tested versions or newer).
+# LibreOffice (soffice) and Korean fonts are not pip packages; scripts/toolcheck.py --strict prints install hints.
 python-pptx>=1.0.2
 PyMuPDF>=1.27
 Pillow>=12
