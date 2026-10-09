@@ -11,7 +11,11 @@ import zipfile
 from pathlib import Path
 from xml.etree import ElementTree
 
+from lxml import etree
 from pptx import Presentation
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from pptx_helpers import load_presentation  # noqa: E402
 
 EMU_PER_INCH = 914400
 SCHEMA_VERSION = 1
@@ -34,6 +38,12 @@ def _theme_part(archive: zipfile.ZipFile) -> bytes | None:
         if name.startswith("ppt/theme/") and name.endswith(".xml")
     )
     return archive.read(names[0]) if names else None
+
+
+def _canonical_xml(content: bytes) -> bytes:
+    parser = etree.XMLParser(remove_blank_text=True, resolve_entities=False)
+    root = etree.fromstring(content, parser)
+    return etree.tostring(root, method="c14n", with_comments=False)
 
 
 def _template_fingerprint(archive: zipfile.ZipFile) -> str:
@@ -77,7 +87,10 @@ def _template_fingerprint(archive: zipfile.ZipFile) -> str:
     for name in sorted(included):
         digest.update(name.encode("utf-8"))
         digest.update(b"\0")
-        digest.update(archive.read(name))
+        content = archive.read(name)
+        digest.update(
+            _canonical_xml(content) if name.endswith((".xml", ".rels")) else content
+        )
         digest.update(b"\0")
     return digest.hexdigest()
 
@@ -144,7 +157,7 @@ def inspect_template(path: str | Path) -> dict:
     if not source.is_file():
         raise ValueError(f"Template path is not a file: {source}")
 
-    prs = Presentation(source)
+    prs = load_presentation(source)
     with zipfile.ZipFile(source) as archive:
         theme_xml = _theme_part(archive)
         template_fingerprint = _template_fingerprint(archive)
@@ -158,7 +171,8 @@ def inspect_template(path: str | Path) -> dict:
         "heightIn": round(height_emu / EMU_PER_INCH, 6),
         "aspectRatio": round(width_emu / height_emu, 6),
         "themeFingerprint": (
-            hashlib.sha256(theme_xml).hexdigest() if theme_xml is not None else None
+            hashlib.sha256(_canonical_xml(theme_xml)).hexdigest()
+            if theme_xml is not None else None
         ),
         "templateFingerprint": template_fingerprint,
         "masterCount": len(prs.slide_masters),

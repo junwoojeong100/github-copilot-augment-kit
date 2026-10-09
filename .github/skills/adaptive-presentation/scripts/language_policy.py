@@ -10,7 +10,8 @@ from pathlib import Path
 from typing import Any
 
 from pptx import Presentation
-from pptx.enum.shapes import MSO_SHAPE_TYPE
+
+from pptx_text import iter_slide_texts
 
 
 HANGUL_RE = re.compile(r"[가-힣]")
@@ -148,22 +149,6 @@ def normalize_policy(
     return policy
 
 
-def _shape_texts(shape, *, inherited_top: int | None = None):
-    top = inherited_top if inherited_top is not None else getattr(shape, "top", None)
-    if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
-        for child in shape.shapes:
-            yield from _shape_texts(child, inherited_top=top)
-        return
-    if getattr(shape, "has_table", False):
-        for row in shape.table.rows:
-            for cell in row.cells:
-                if cell.text.strip():
-                    yield top, cell.text
-        return
-    if getattr(shape, "has_text_frame", False) and shape.text.strip():
-        yield top, shape.text
-
-
 def _analyzable_text(text: str) -> str:
     lines = []
     for line in text.splitlines():
@@ -212,13 +197,12 @@ def analyze_deck(
     unexplained_technical_slides: list[dict[str, Any]] = []
     for number, slide in enumerate(prs.slides, 1):
         parts = []
-        for shape in slide.shapes:
-            for top, text in _shape_texts(shape):
-                if top is not None and top >= footer_top:
-                    continue
-                cleaned = _analyzable_text(text)
-                if cleaned:
-                    parts.append(cleaned)
+        for top, text in iter_slide_texts(slide):
+            if top is not None and top >= footer_top:
+                continue
+            cleaned = _analyzable_text(text)
+            if cleaned:
+                parts.append(cleaned)
         visible = " ".join(parts)
         all_text.append(visible)
         raw_latin, raw_hangul, raw_ratio = _counts(visible)

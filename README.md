@@ -250,7 +250,9 @@ python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
 Runner는 구조 감사와 전체 렌더를 병렬 실행하고 그룹 자식·표 셀을 semantic frame으로 매핑합니다.
 chart·SmartArt·unmapped text·overflow는 성공으로 숨기지 않고 finding ID를 발급합니다. 확대 검토한
 의도적 예외만 ID와 이유를 manifest에 남기며, 최종 contact sheet 검토는 현재 PPTX SHA-256과 연결된
-`visual-review.json`으로 증명합니다. QA Runner는 비어 있지 않은 일반 출력 디렉터리를 덮어쓰지 않습니다.
+`visual-review-rNNN.json`으로 증명합니다. 수정마다 기존 증거를 보존하고
+[revision별 새 파일](.github/skills/adaptive-presentation/reference/verification.md#visual-review-revisions)의
+경로를 `--visual-review`로 지정합니다. QA Runner는 비어 있지 않은 일반 출력 디렉터리를 덮어쓰지 않습니다.
 
 `--reuse-render`는 같은 입력·렌더 환경·옵션과 검증된 산출물 해시가 일치할 때 전체 PDF·contact sheet를
 재사용합니다. 입력이 달라지면 새로 렌더하고, 손상된 캐시는 오류로 처리합니다. 구조·근거·언어·notes·
@@ -293,9 +295,12 @@ VS Code 환경에서는 저장소와 최종 출력 폴더 밖의 OS 임시 디�
 
 ```bash
 python3 -B -m unittest discover -s .github/skills/web-search/tests -p 'test_skill_policy.py' -q
+python3 -B -m unittest discover -s .github/skills/adaptive-presentation/tests -p 'test_presentation_policy.py' -q
 ```
 
-정책 테스트는 지침의 경계·길이·트리거·참조 링크와 기존 machine contract의 유지 여부를 검사합니다.
+정책 테스트는 스킬별 경계·길이·트리거·참조 링크와 문서화된 CLI 연결을 검사합니다.
+동작 회귀는 각 스킬의 전체 테스트로 확인합니다. authoring schema 검사는 `jsonschema`가 설치되어
+있을 때 실행하며, 없으면 skip을 명시합니다. 런타임의 `deck_spec.py` 검증은 이 패키지에 의존하지 않습니다.
 모델 성능이나 실제 웹 조사·PPTX 품질을 평가하는 테스트는 아닙니다. 그런 개선은 같은 입력·환경·완료
 조건으로 별도 비교해야 하며, 테스트 통과만으로 더 빠르거나 정확해졌다고 주장하지 않습니다.
 

@@ -4,6 +4,7 @@ import json
 import shutil
 import sys
 import unittest
+import zipfile
 from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
@@ -14,6 +15,8 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 from pptx import Presentation  # noqa: E402
 from pptx.util import Inches  # noqa: E402
 from PIL import Image  # noqa: E402
+from lxml import etree  # noqa: E402
+from pptx.opc.constants import CONTENT_TYPE  # noqa: E402
 
 import inspect_template as inspector  # noqa: E402
 import pptx_helpers as H  # noqa: E402
@@ -36,6 +39,105 @@ class TemplateAdapterTests(unittest.TestCase):
         slide.shapes.title.text = "SECRET_MARKER"
         prs.save(path)
         return path
+
+    def _rewrite_parts(self, path: Path, replacements: dict[str, bytes]) -> None:
+        with zipfile.ZipFile(path) as archive:
+            parts = [
+                (item, replacements.get(item.filename, archive.read(item)))
+                for item in archive.infolist()
+            ]
+        with zipfile.ZipFile(path, "w") as archive:
+            for item, content in parts:
+                archive.writestr(item, content)
+
+    def test_potx_inspection_and_initialization_preserve_the_source_template(self):
+        source = self._template()
+        template = self.work_dir / "template.potx"
+        with zipfile.ZipFile(source) as original, zipfile.ZipFile(template, "w") as archive:
+            for item in original.infolist():
+                content = original.read(item)
+                if item.filename == "[Content_Types].xml":
+                    content = content.replace(
+                        CONTENT_TYPE.PML_PRESENTATION_MAIN.encode(),
+                        CONTENT_TYPE.PML_TEMPLATE_MAIN.encode(),
+                    )
+                archive.writestr(item, content)
+        original_bytes = template.read_bytes()
+
+        before = inspector.inspect_template(template)
+        prs, layout = H.init_deck(template, clear_existing_slides=True)
+        self.assertEqual(len(prs.slides), 0)
+        prs.slides.add_slide(layout)
+        output = self.work_dir / "from-template.pptx"
+        prs.save(output)
+        after = inspector.inspect_template(output)
+
+        self.assertEqual(len(Presentation(output).slides), 1)
+        for key in (
+            "widthIn", "heightIn", "masterCount", "layouts",
+            "themeFingerprint", "templateFingerprint",
+        ):
+            with self.subTest(key=key):
+                self.assertEqual(after[key], before[key])
+        self.assertEqual(template.read_bytes(), original_bytes)
+
+    def test_xml_indentation_does_not_change_template_preservation(self):
+        path = self._template()
+        with zipfile.ZipFile(path) as archive:
+            replacements = {
+                name: etree.tostring(
+                    etree.fromstring(archive.read(name)),
+                    pretty_print=True,
+                    xml_declaration=True,
+                    encoding="UTF-8",
+                )
+                for name in archive.namelist()
+                if name.startswith(("ppt/slideMasters/", "ppt/slideLayouts/", "ppt/theme/"))
+                and name.endswith((".xml", ".rels"))
+            }
+        self._rewrite_parts(path, replacements)
+        before = inspector.inspect_template(path)
+
+        prs, _ = H.init_deck(path, clear_existing_slides=True)
+        output = self.work_dir / "reserialized.pptx"
+        prs.save(output)
+        after = inspector.inspect_template(output)
+
+        self.assertEqual(after["templateFingerprint"], before["templateFingerprint"])
+        self.assertEqual(after["themeFingerprint"], before["themeFingerprint"])
+
+    def test_template_fingerprint_preserves_meaningful_xml_text_and_theme_changes(self):
+        path = self._template()
+        before = inspector.inspect_template(path)
+        with zipfile.ZipFile(path) as archive:
+            master_name = "ppt/slideMasters/slideMaster1.xml"
+            master = etree.fromstring(archive.read(master_name))
+            text = master.find(f".//{{{inspector.DRAWINGML_NS}}}t")
+            self.assertIsNotNone(text)
+            text.text = " "
+            master_xml = etree.tostring(master)
+            theme_name = "ppt/theme/theme1.xml"
+            theme = etree.fromstring(archive.read(theme_name))
+            accent = theme.find(f".//{{{inspector.DRAWINGML_NS}}}accent1")
+            self.assertIsNotNone(accent)
+            accent[0].set("val", "112233")
+            theme_xml = etree.tostring(theme)
+        self._rewrite_parts(path, {master_name: master_xml})
+        whitespace_text = inspector.inspect_template(path)
+        self.assertNotEqual(
+            whitespace_text["templateFingerprint"], before["templateFingerprint"]
+        )
+        master.find(f".//{{{inspector.DRAWINGML_NS}}}t").text = ""
+        self._rewrite_parts(path, {master_name: etree.tostring(master)})
+        self.assertNotEqual(
+            inspector.inspect_template(path)["templateFingerprint"],
+            whitespace_text["templateFingerprint"],
+        )
+        self._rewrite_parts(path, {theme_name: theme_xml})
+        self.assertNotEqual(
+            inspector.inspect_template(path)["themeFingerprint"],
+            before["themeFingerprint"],
+        )
 
     def test_profile_is_deterministic_and_has_contract_fields(self):
         path = self._template()

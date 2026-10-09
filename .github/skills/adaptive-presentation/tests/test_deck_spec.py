@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import copy
+import importlib.util
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -176,6 +178,91 @@ class DeckSpecTests(unittest.TestCase):
         value["slides"][1]["number"] = 3
         with self.assertRaises(deck_spec.DeckSpecError):
             deck_spec.load_deck_spec(self.write_spec(value))
+
+    def test_documented_minimum_and_optional_overrides_validate(self):
+        from verify_deck import build_parser, resolve_contract
+
+        guide = (SKILL_ROOT / "reference" / "deck-spec.md").read_text(encoding="utf-8")
+        examples = [
+            json.loads(value)
+            for value in re.findall(r"```json\n(.*?)\n```", guide, re.DOTALL)
+        ]
+        self.assertTrue(examples)
+        minimum = examples[0]
+        path = self.write_spec(copy.deepcopy(minimum))
+        context = deck_spec.load_deck_spec(path)
+        self.assertTrue(context.spec["qa"]["strict"])
+        self.assertTrue(context.spec["qa"]["requireVisualReview"])
+        args = build_parser().parse_args([
+            str(self.work / "deck.pptx"), "--out", str(self.work / "verify"),
+            "--deck-spec", str(path),
+        ])
+        resolve_contract(args)
+        self.assertEqual(args.expected_slides, minimum["request"]["slideCount"])
+        self.assertTrue(args.strict)
+        self.assertTrue(args.require_visual_review)
+        for override in examples[1:]:
+            value = {**copy.deepcopy(minimum), **override}
+            with self.subTest(override=override):
+                deck_spec.load_deck_spec(self.write_spec(value))
+
+    @unittest.skipUnless(
+        importlib.util.find_spec("jsonschema"),
+        "jsonschema is required for authoring-schema checks",
+    )
+    def test_authoring_schema_accepts_compact_policies_and_normalized_contracts(self):
+        from jsonschema import Draft202012Validator, ValidationError
+
+        schema = json.loads(
+            (SKILL_ROOT / "schema" / "deck-spec.schema.json").read_text(encoding="utf-8")
+        )
+        Draft202012Validator.check_schema(schema)
+        validator = Draft202012Validator(schema)
+        for overrides, mode in (
+            ({"languagePolicy": {"protectedTerms": ["GitHub Copilot"]}}, "core-only"),
+            ({"speakerNotesPolicy": {"mode": "core-only"}}, "core-only"),
+            ({"speakerNotesPolicy": {"mode": "guided-flow"}}, "guided-flow"),
+            ({"speakerNotesPolicy": {"questionSection": "질문"}}, "guided-flow"),
+        ):
+            value = {**copy.deepcopy(BASE), **overrides}
+            with self.subTest(overrides=overrides):
+                validator.validate(value)
+                context = deck_spec.load_deck_spec(self.write_spec(value))
+                validator.validate(context.spec)
+                self.assertEqual(context.spec["speakerNotesPolicy"]["mode"], mode)
+                self.assertTrue(context.spec["speakerNotesPolicy"]["required"])
+                self.assertTrue(context.spec["speakerNotesPolicy"]["forbidSourceReferences"])
+                self.assertTrue(context.spec["languagePolicy"]["preserveOfficialTerms"])
+                self.assertTrue(
+                    context.spec["languagePolicy"]["requireKoreanExplanationForProtectedTerms"]
+                )
+        for overrides in (
+            {"languagePolicy": {"protectedTerms": "GitHub Copilot"}},
+            {"languagePolicy": {"preserveOfficialTerms": False}},
+            {"speakerNotesPolicy": {"mode": "free-form"}},
+            {"speakerNotesPolicy": {"unknown": True}},
+        ):
+            value = {**copy.deepcopy(BASE), **overrides}
+            with self.subTest(invalid=overrides):
+                with self.assertRaises(ValidationError):
+                    validator.validate(value)
+                with self.assertRaises(deck_spec.DeckSpecError):
+                    deck_spec.load_deck_spec(self.write_spec(value))
+
+    def test_compact_policies_still_enforce_default_limits_and_mode_fields(self):
+        for overrides, error in (
+            ({"languagePolicy": {"maxLatinRatio": 0.1}}, "maxLatinRatio"),
+            ({"languagePolicy": {"preserveOfficialTerms": False}}, "preserveOfficialTerms"),
+            ({"speakerNotesPolicy": {"maxCharacters": 60}}, "maxCharacters"),
+            (
+                {"speakerNotesPolicy": {"mode": "core-only", "questionSection": "질문"}},
+                "unsupported field",
+            ),
+        ):
+            value = {**copy.deepcopy(BASE), **overrides}
+            with self.subTest(overrides=overrides):
+                with self.assertRaisesRegex(deck_spec.DeckSpecError, error):
+                    deck_spec.load_deck_spec(self.write_spec(value))
 
     def test_claim_ids_require_matching_fact_ledger_entries(self):
         value = copy.deepcopy(BASE)

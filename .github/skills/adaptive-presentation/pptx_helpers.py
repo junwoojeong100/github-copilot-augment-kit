@@ -13,10 +13,14 @@
 """
 from __future__ import annotations
 
+import zipfile
+from io import BytesIO
 from pathlib import Path
 from typing import Sequence
+from xml.etree import ElementTree
 
 from pptx import Presentation
+from pptx.opc.constants import CONTENT_TYPE
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
@@ -25,7 +29,7 @@ from pptx.oxml.ns import qn
 
 __all__ = [
     "PP_ALIGN", "MSO_ANCHOR", "MSO_AUTO_SIZE", "MSO_SHAPE", "RGBColor", "Inches", "Pt",
-    "hexc", "new_deck", "init_deck", "initialize_deck", "add_slide", "soft_shadow", "box", "text",
+    "hexc", "new_deck", "load_presentation", "init_deck", "initialize_deck", "add_slide", "soft_shadow", "box", "text",
     "bullets", "chip", "hline", "vline", "chevron", "grid_table", "set_run_font",
 ]
 
@@ -111,6 +115,33 @@ def _remove_existing_slides(prs) -> None:
         slide_ids.remove(slide_id)
 
 
+def load_presentation(path: str | Path):
+    """Load PPTX/POTX, normalizing the POTX main content type only in memory."""
+    source = Path(path).expanduser()
+    with zipfile.ZipFile(source) as archive:
+        content_types = ElementTree.fromstring(archive.read("[Content_Types].xml"))
+        template_parts = [
+            part
+            for part in content_types
+            if part.get("ContentType") == CONTENT_TYPE.PML_TEMPLATE_MAIN
+        ]
+        if not template_parts:
+            return Presentation(source)
+        for part in template_parts:
+            part.set("ContentType", CONTENT_TYPE.PML_PRESENTATION_MAIN)
+        converted = BytesIO()
+        with zipfile.ZipFile(converted, "w") as package:
+            for item in archive.infolist():
+                content = (
+                    ElementTree.tostring(content_types, encoding="UTF-8", xml_declaration=True)
+                    if item.filename == "[Content_Types].xml"
+                    else archive.read(item)
+                )
+                package.writestr(item, content)
+    converted.seek(0)
+    return Presentation(converted)
+
+
 def init_deck(
     template_path: str | Path | None = None,
     *,
@@ -121,7 +152,7 @@ def init_deck(
 ):
     """Initialize a deck and return ``(presentation, selected_layout)``.
 
-    A provided template retains its canvas, masters, layouts, and theme. Existing
+    A provided PPTX/POTX retains its canvas, masters, layouts, and theme. Existing
     slides are removed only when ``clear_existing_slides`` is true.
     """
     if template_path is None:
@@ -129,7 +160,7 @@ def init_deck(
         prs.slide_width = Inches(width_in)
         prs.slide_height = Inches(height_in)
     else:
-        prs = Presentation(Path(template_path).expanduser())
+        prs = load_presentation(template_path)
         if clear_existing_slides:
             _remove_existing_slides(prs)
     return prs, _select_layout(prs, layout_name)

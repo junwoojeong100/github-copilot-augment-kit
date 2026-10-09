@@ -13,20 +13,7 @@ ADAPTIVE_SKILL = SKILL.parents[1] / "adaptive-presentation" / "SKILL.md"
 ADAPTIVE_FULL_OPTIMIZED = (
     ADAPTIVE_SKILL.parent / "reference" / "full-optimized.md"
 )
-ADAPTIVE_VERIFICATION = ADAPTIVE_SKILL.parent / "reference" / "verification.md"
-ADAPTIVE_DECK_SPEC = ADAPTIVE_SKILL.parent / "reference" / "deck-spec.md"
-ADAPTIVE_PRODUCTION = ADAPTIVE_SKILL.parent / "reference" / "pptx-production.md"
-ADAPTIVE_REFINEMENT = ADAPTIVE_SKILL.parent / "reference" / "refinement.md"
-ADAPTIVE_EDITORIAL = ADAPTIVE_SKILL.parent / "reference" / "editorial-business-style.md"
-ADAPTIVE_BLUEPRINTS = ADAPTIVE_SKILL.parent / "reference" / "slide-blueprints.md"
 CUSTOMER_EVIDENCE = SKILL.parent / "reference" / "customer-evidence.md"
-ADAPTIVE_DECK_SCHEMA = ADAPTIVE_SKILL.parent / "schema" / "deck-spec.schema.json"
-ADAPTIVE_EXCEPTION_SCHEMA = (
-    ADAPTIVE_SKILL.parent / "schema" / "qa-exceptions.schema.json"
-)
-ADAPTIVE_VISUAL_SCHEMA = (
-    ADAPTIVE_SKILL.parent / "schema" / "visual-review.schema.json"
-)
 REPOSITORY_ROOT = SKILL.parents[3]
 COPILOT_INSTRUCTIONS = REPOSITORY_ROOT / ".github" / "copilot-instructions.md"
 README = REPOSITORY_ROOT / "README.md"
@@ -50,16 +37,13 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         cls.description = description_line.split(":", 1)[1].strip().strip('"')
 
     def test_search_routing_prefers_shortest_official_path(self):
-        canonical = self.skill.index("알려진 canonical URL·공식 index")
-        domain_search = self.skill.index("도메인 공식 검색")
-        web_search = self.skill.index("general web search tool")
-        research_agent = self.skill.index(
-            "여러 독립 조사 축을 병렬 수집할 때만 `/research`"
-        )
-
-        self.assertLess(canonical, domain_search)
-        self.assertLess(domain_search, web_search)
-        self.assertLess(web_search, research_agent)
+        routing = self.skill.split("## 도구 선택", 1)[1].split("\n## ", 1)[0]
+        choices = re.findall(r"^\d+\.\s+(.+)$", routing, re.MULTILINE)
+        expected = ("canonical URL", "MCP", "web_search", "/research")
+        self.assertGreaterEqual(len(choices), len(expected))
+        for choice, capability in zip(choices, expected):
+            with self.subTest(capability=capability):
+                self.assertIn(capability, choice)
         self.assertIn("GitHub Copilot CLI와 VS Code Copilot Chat/Agent", self.skill)
 
     def test_public_serp_scraping_is_forbidden(self):
@@ -176,20 +160,13 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertIn("고객/기업 조사", self.description)
         self.assertIn("시장 규모", self.description)
 
-    def test_skill_contracts_are_concise_and_bounded(self):
-        limits = {
-            SKILL: 100,
-            ADAPTIVE_SKILL: 120,
-        }
-        for skill, limit in limits.items():
-            content = skill.read_text(encoding="utf-8")
-            with self.subTest(skill=skill.parent.name):
-                self.assertLessEqual(len(content.splitlines()), limit)
-                self.assertIn("NOT WHEN:", content.split("---", 2)[1])
-                workflow_headings = re.findall(
-                    r"^## .*워크플로.*$", content, flags=re.MULTILINE
-                )
-                self.assertEqual(len(workflow_headings), 1)
+    def test_skill_contract_is_concise_and_bounded(self):
+        self.assertLessEqual(len(self.skill.splitlines()), 100)
+        self.assertIn("NOT WHEN:", self.skill.split("---", 2)[1])
+        workflow_headings = re.findall(
+            r"^## .*워크플로.*$", self.skill, flags=re.MULTILINE
+        )
+        self.assertEqual(len(workflow_headings), 1)
 
     def test_skill_catalog_matches_available_skills(self):
         available = {
@@ -214,11 +191,6 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertNotIn("Research agent", combined)
         self.assertNotIn("/research", combined)
         self.assertNotIn("/fleet", combined)
-
-    def test_performance_metrics_are_optional(self):
-        content = ADAPTIVE_FULL_OPTIMIZED.read_text(encoding="utf-8")
-        self.assertIn("선택적 시간 측정", content)
-        self.assertIn("완료 조건", content)
 
     def test_downstream_skill_keeps_mapping_outside_common_ledger(self):
         content = ADAPTIVE_SKILL.read_text(encoding="utf-8")
@@ -272,32 +244,6 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
             with self.subTest(term=term):
                 self.assertIn(term, content)
 
-    def test_presentation_preflight_and_spec_validation_precede_building(self):
-        content = ADAPTIVE_SKILL.read_text(encoding="utf-8")
-        preflight = content.split("### 0. 실행 준비", 1)[1].split("### 1.", 1)[0]
-        storyline = content.split("### 2. 스토리라인", 1)[1].split("### 3.", 1)[0]
-        self.assertIn("scripts/toolcheck.py --strict", preflight)
-        self.assertIn("--require-korean-font", preflight)
-        self.assertIn("scripts/inspect_template.py", preflight)
-        self.assertNotIn(
-            "scripts/inspect_template.py", content.split("### 3. 제작·가독성", 1)[1]
-        )
-        self.assertIn("누락이 확인된 의존성만", preflight)
-        self.assertIn("초안과 미검증 범위", preflight)
-        self.assertIn("완료로 처리하지 않는다", preflight)
-        self.assertIn("scripts/deck_spec.py <work>/deck-spec.json", storyline)
-        self.assertIn("해당 단계에 필요한 문서만", content)
-
-    def test_partial_renders_cannot_replace_final_revision_evidence(self):
-        for path in (ADAPTIVE_FULL_OPTIMIZED, ADAPTIVE_VERIFICATION):
-            content = " ".join(path.read_text(encoding="utf-8").split())
-            with self.subTest(path=path.name):
-                self.assertIn("중간 확인이 필요", content)
-                self.assertIn("부분 렌더는 최종 전체 QA나 시각 검토 증거를 대체하지 않는다", content)
-                self.assertIn("최종 revision의 전체 contact sheet", content)
-                self.assertIn("--reuse-render", content)
-                self.assertNotIn("전체 contact sheet는 다시 만들지 않는다", content)
-
     def test_policy_checks_do_not_claim_model_benchmark_results(self):
         content = README.read_text(encoding="utf-8")
         self.assertIn("GPT-6 Astra", content)
@@ -306,142 +252,17 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertIn("모델 성능이나 실제 웹 조사·PPTX 품질을 평가하는 테스트는 아닙니다", content)
         self.assertNotIn("현재 검증 기준(2026-07-15)", content)
 
-    def test_adaptive_skill_exposes_canonical_session_and_qa_contract(self):
-        content = ADAPTIVE_SKILL.read_text(encoding="utf-8")
-        verification = ADAPTIVE_VERIFICATION.read_text(encoding="utf-8")
-        self.assertIn("client가 제공한 artifact 디렉터리", content)
-        self.assertIn("scripts/verify_deck.py", content)
-        self.assertIn("--deck-spec", content)
-        self.assertIn("내부 Fact ID는 노출하지 않는다", content)
-        self.assertIn("finding ID", verification)
-        self.assertIn("visual-review.json", verification)
-
-        deck_schema = json.loads(ADAPTIVE_DECK_SCHEMA.read_text(encoding="utf-8"))
-        exception_schema = json.loads(
-            ADAPTIVE_EXCEPTION_SCHEMA.read_text(encoding="utf-8")
-        )
-        visual_schema = json.loads(
-            ADAPTIVE_VISUAL_SCHEMA.read_text(encoding="utf-8")
-        )
-        deck_contract = ADAPTIVE_DECK_SPEC.read_text(encoding="utf-8")
-        self.assertEqual(deck_schema["properties"]["schemaVersion"]["const"], 1)
-        self.assertEqual(
-            exception_schema["properties"]["schemaVersion"]["const"], 1
-        )
-        self.assertEqual(visual_schema["properties"]["schemaVersion"]["const"], 1)
-        self.assertIn("claimIds", deck_contract)
-        self.assertIn("template-profile.json", deck_contract)
-        self.assertIn("findingId", deck_contract)
-
-    def test_existing_deck_refinement_preserves_meaning_and_originals(self):
-        content = ADAPTIVE_REFINEMENT.read_text(encoding="utf-8")
-        skill = ADAPTIVE_SKILL.read_text(encoding="utf-8")
-        self.assertIn("reference/refinement.md", skill)
-        for term in (
-            "내용 원본", "디자인 참고", "source-inventory.json",
-            "content-coverage.json", "원본 항목", "의미 단위의 보존",
-            "기존 파일을 덮어쓰지 않고", "SHA-256",
-            "발표 시간", "명시적 덮어쓰기 대상 외",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, content)
-        self.assertIn("모든 덱의 완료 상태를 구분한다", content)
-        self.assertIn("작업 소유 임시 PDF·QA 이미지 경로만 정리한다", content)
-
-    def test_readability_targets_do_not_imply_automated_coverage(self):
-        skill = ADAPTIVE_SKILL.read_text(encoding="utf-8")
-        guide = ADAPTIVE_REFINEMENT.read_text(encoding="utf-8")
-        verification = " ".join(
-            ADAPTIVE_VERIFICATION.read_text(encoding="utf-8").split()
-        )
-        for term in ("7:1", "4.5:1", "18~23pt", "15pt"):
-            with self.subTest(term=term):
-                self.assertIn(term, ADAPTIVE_PRODUCTION.read_text(encoding="utf-8"))
-        for content in (skill, guide):
-            self.assertIn("pptx-production.md#typography", content)
-            self.assertIn("pptx-production.md#contrast", content)
-        self.assertIn("미측정 조합", guide)
-        self.assertIn("canonical runner의 자동 검사 범위가 아니다", verification)
-        self.assertIn("키워드 일치만으로 의미 보존을 판정하지 않음", verification)
-        self.assertIn("실제 발표 시간 보장 아님", verification)
-
-    def test_detailed_style_rules_are_centralized_without_changing_contracts(self):
-        production = ADAPTIVE_PRODUCTION.read_text(encoding="utf-8")
-        self.assertIn("상세 편집 기준의 정본", production)
-        self.assertIn("Apple SD Gothic Neo · 27pt · Bold", production)
-        self.assertIn("120~600자·4~6문장", production)
-        schema = json.loads(ADAPTIVE_DECK_SCHEMA.read_text(encoding="utf-8"))
-        default = schema["properties"]["fontPolicy"]["properties"]["leadingMessage"]["default"]
-        self.assertEqual(default, {
-            "fontFamily": "Apple SD Gothic Neo", "sizePt": 27, "bold": True,
-        })
-        for path in (
-            ADAPTIVE_SKILL, ADAPTIVE_REFINEMENT, ADAPTIVE_EDITORIAL,
-            ADAPTIVE_BLUEPRINTS, ADAPTIVE_DECK_SPEC, ADAPTIVE_VERIFICATION, README,
-        ):
-            content = path.read_text(encoding="utf-8")
-            with self.subTest(path=path.name):
-                self.assertIn("pptx-production.md#typography", content)
-                for repeated_rule in ("18~23pt", "4.5:1", "120~600자"):
-                    self.assertNotIn(repeated_rule, content)
-
     def test_ledger_json_is_the_source_of_the_generated_markdown_view(self):
         for path in (SKILL, ADAPTIVE_SKILL, ADAPTIVE_FULL_OPTIMIZED, README):
             content = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
                 self.assertIn("정본", content)
-                self.assertIn("--markdown-output", content)
+                self.assertIn("fact-ledger.json", content)
+        self.assertIn("--markdown-output", self.skill)
         self.assertIn("두 파일을 독립적으로 수정하지 않는다", self.skill)
 
-    def test_render_reuse_preserves_fresh_qa_and_exposes_cache_failures(self):
-        verification = ADAPTIVE_VERIFICATION.read_text(encoding="utf-8")
-        self.assertIn("과거 PASS를 현재 판단으로 재사용하지 않는다", verification)
-        self.assertIn("renderCacheSha256", verification)
-        schema = json.loads(ADAPTIVE_VISUAL_SCHEMA.read_text(encoding="utf-8"))
-        self.assertEqual(
-            schema["properties"]["renderCacheSha256"]["pattern"], "^[0-9a-f]{64}$",
-        )
-        self.assertNotIn("renderCacheSha256", schema["required"])
-        self.assertIn("해시 불일치는", verification)
-        self.assertIn("옵션 없는 기존 CLI는 항상 새로 렌더한다", verification)
-        for path in (ADAPTIVE_SKILL, ADAPTIVE_PRODUCTION, ADAPTIVE_FULL_OPTIMIZED, README):
-            with self.subTest(path=path.name):
-                self.assertIn("--reuse-render", path.read_text(encoding="utf-8"))
-
-    def test_source_dates_remain_in_evidence_not_default_footers(self):
-        for path in (
-            ADAPTIVE_SKILL, ADAPTIVE_PRODUCTION, ADAPTIVE_DECK_SPEC,
-            ADAPTIVE_REFINEMENT, CUSTOMER_EVIDENCE,
-        ):
-            content = path.read_text(encoding="utf-8")
-            with self.subTest(path=path.name):
-                self.assertIn("원본 확인 날짜", content)
-                self.assertIn("발행 연도", content)
-                self.assertNotIn("(accessed YYYY-MM-DD)", content)
-                self.assertNotIn("(YYYY-MM-DD 확인)", content)
-        self.assertIn("`accessed`", ADAPTIVE_PRODUCTION.read_text(encoding="utf-8"))
-
-    def test_parallel_decks_have_requested_exclusive_ownership(self):
-        content = " ".join(
-            ADAPTIVE_FULL_OPTIMIZED.read_text(encoding="utf-8").split()
-        )
-        for term in (
-            "사용자가 파일별 subagent를 요청한 경우에만",
-            "공통 근거와 helper는 읽기 전용으로 공유",
-            "담당자는 자기 덱의 계획·spec·생성 스크립트·QA만 수정",
-            "최종 출력 폴더 복사와 전체 완료 선언은 메인 에이전트만",
-            "한 파일의 PASS를 다른 파일에 재사용하지 않는다",
-            "담당자의 계획을 덮어쓰지 않는다",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, content)
-
-    def test_refinement_and_customer_guides_are_reachable(self):
-        for path in (
-            SKILL, ADAPTIVE_SKILL, ADAPTIVE_REFINEMENT, CUSTOMER_EVIDENCE,
-            ADAPTIVE_PRODUCTION, ADAPTIVE_EDITORIAL, ADAPTIVE_BLUEPRINTS,
-            ADAPTIVE_DECK_SPEC, ADAPTIVE_VERIFICATION, ADAPTIVE_FULL_OPTIMIZED, README,
-        ):
+    def test_research_guides_and_catalog_links_are_reachable(self):
+        for path in (SKILL, CUSTOMER_EVIDENCE, README):
             content = path.read_text(encoding="utf-8")
             for target in re.findall(r"\[[^\]]+\]\(([^)\s]+)\)", content):
                 if target.startswith(("https://", "http://")):

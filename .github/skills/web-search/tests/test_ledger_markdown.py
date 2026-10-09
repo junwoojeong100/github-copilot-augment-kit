@@ -104,6 +104,17 @@ class LedgerMarkdownTests(unittest.TestCase):
         self.assertEqual(html.unescape(destination), url)
         self.assertIn("&amp;amp;literal=2&amp;other=3", destination)
 
+    def test_markdown_export_preserves_source_path_parameters(self):
+        url = "https://example.com/report;version=2026?lang=en"
+        self.value["facts"][0]["sources"][0]["url"] = url
+        self.source.write_text(json.dumps(self.value), encoding="utf-8")
+        output = self.root / "fact-ledger.md"
+
+        status, _, stderr = self.run_cli(output)
+
+        self.assertEqual(status, 0, stderr)
+        self.assertIn(f"](<{url}>)", output.read_text(encoding="utf-8"))
+
     def test_export_is_atomic_and_never_changes_the_json_source(self):
         original = self.source.read_bytes()
         output = self.root / "nested" / "fact-ledger.md"

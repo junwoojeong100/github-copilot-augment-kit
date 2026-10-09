@@ -135,6 +135,20 @@ def shape_has_visible_text(shape) -> bool:
     return getattr(shape, "has_text_frame", False) and bool(shape.text.strip())
 
 
+def source_hyperlinks(paragraph) -> list[dict[str, str]]:
+    links: list[dict[str, str]] = []
+    previous_url = None
+    for run in paragraph.runs:
+        url = run.hyperlink.address
+        if url and run.text:
+            if links and previous_url == url:
+                links[-1]["text"] += run.text
+            else:
+                links.append({"text": run.text, "url": url})
+        previous_url = url
+    return links
+
+
 def shape_text_content(shape) -> str:
     if getattr(shape, "has_table", False):
         return " ".join(
@@ -616,6 +630,7 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
     slides_with_sources: list[int] = []
     slides_with_footer_sources: list[int] = []
     footer_source_texts: dict[int, list[str]] = {}
+    footer_source_citations: dict[int, list[dict]] = {}
     overlap_candidates = detect_geometry_overlap_candidates(
         prs, tolerance, args.allow_overlap
     )
@@ -672,6 +687,18 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
                 if top is not None and top >= footer_top:
                     has_footer_source = True
                     footer_source_texts.setdefault(slide_number, []).append(text)
+            if top is not None and top >= footer_top and text:
+                hyperlinks = [
+                    link
+                    for paragraph in text_frame.paragraphs
+                    for link in source_hyperlinks(paragraph)
+                ]
+                action = getattr(text_frame._parent, "click_action", None)
+                if action is not None and action.hyperlink.address:
+                    hyperlinks.append({"text": text, "url": action.hyperlink.address})
+                footer_source_citations.setdefault(slide_number, []).append(
+                    {"text": text, "hyperlinks": hyperlinks}
+                )
 
             for paragraph in text_frame.paragraphs:
                 paragraph_text = paragraph.text.strip()
@@ -813,6 +840,10 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
         "slides_with_footer_sources": slides_with_footer_sources,
         "footer_source_texts_by_slide": {
             str(slide): texts for slide, texts in sorted(footer_source_texts.items())
+        },
+        "footer_source_citations_by_slide": {
+            str(slide): citations
+            for slide, citations in sorted(footer_source_citations.items())
         },
         "required_source_slides": required_source_slides,
         "missing_required_source_slides": missing_required_source_slides,

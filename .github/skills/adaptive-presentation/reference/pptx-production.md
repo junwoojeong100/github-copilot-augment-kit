@@ -14,10 +14,20 @@
 2. 대량 데이터 처리·차트 계산에는 pandas/matplotlib를 쓸 수 있으나, 발표에 들어가는 핵심 도표는
    가능하면 PowerPoint 도형/네이티브 차트로 만들어 편집 가능하게 한다.
 3. 외부 이미지가 필요하면 사용권과 원본 URL을 기록한다.
-4. 도구 탐색·의존성 준비는 `scripts/toolcheck.py`(soffice·PyMuPDF·Pillow·python-pptx·한글 폰트 1회
-   탐지·캐시)와
-   `reference/full-optimized.md`의 캐시 규칙을 따른다.
+4. 도구 탐색·의존성 준비는 `scripts/toolcheck.py`와 아래 사전 준비 규칙을 따른다.
 5. [글꼴](#fonts)과 [타이포그래피](#typography)를 먼저 확정하고 deck spec의 `fontPolicy`와 일치시킨다.
+
+<a id="tool-cache"></a>
+
+### 도구 캐시와 사전 준비
+
+strict 사전 점검은 Python·`soffice`·PyMuPDF·Pillow·python-pptx·폰트를 탐지한다.
+캐시는 `${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/`의 `toolchain.json`·
+`fonts.txt`에 저장하며, hit에서도 interpreter·PATH·필수 import·실행 파일을 재확인한다.
+비용이 큰 폰트 목록 탐색만 재사용한다. 검증된 `.venv/`는 필요한 경우에만 준비한다.
+
+설치는 import 실패나 도구 부재가 확인된 의존성만 대상으로 한다. 도구 준비는 콘텐츠를 만들지 않으므로
+조사와 병렬 실행할 수 있다. 고객 자료·시크릿·생성 산출물은 공용 캐시에 넣지 않는다.
 
 ## 2. 파일 구조
 
@@ -217,6 +227,8 @@ row가 슬라이드마다 31/32/34pt로 달라지면 위계가 흔들린다. 긴
 1~2개 보강한다. 이미 밀도가 높은 슬라이드는 내용을 늘리지 않으며, 표/부록은 필요하면 명확히
 Appendix로 구분한다.
 
+<a id="language"></a>
+
 ### 한국어 덱의 영문 유지 기준
 
 - 설명 문장·결론·KPI 해설·행동 문구는 한국어 우선이다.
@@ -399,7 +411,8 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 Source: Organization · Document title
 ```
 
-- 긴 URL은 제목에 hyperlink를 걸거나 짧은 경로로 표시
+- 출처별 footer 항목에 Fact Ledger의 발행자·문서명을 표시하고, 문서명 또는 표시한 URL에 해당 원문의
+  실제 PPTX hyperlink를 건다. 긴 URL은 표시만 줄이고 hyperlink 대상은 원문 URL을 유지한다.
 - 원본 확인 날짜는 화면에서 기본 생략하고 Fact Ledger의 `accessed`에 보존한다.
   사용자가 요구한 확인일과 해석에 필요한 발행 연도·측정 기간·가격 기준일·버전·시행일은 유지한다.
 - 수치의 분모·기간·업무 범위·초기 내부 결과 같은 조건은 해당 수치 가까이에 표시한다.
@@ -432,21 +445,9 @@ python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
   <absolute-output>/<deck>.pptx --out <work-dir>/verify \
   --deck-spec <work-dir>/deck-spec.json --reuse-render
 
-# 추가 확대가 필요할 때만 canonical QA의 PDF를 재사용
-python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
-  <absolute-output>/<deck>.pptx --reuse-pdf <work-dir>/verify/qa/<deck>.pdf \
-  --slides 8,16 --keep-slide-images --out <work-dir>/qa-detail
-
-unzip -t <absolute-output>/<deck>.pptx
 ```
 
 첫 실행 후 contact sheet와 위험 슬라이드를 확인하고 finding 단위 exception과
-`visual-review.json`을 작성한 뒤 같은 `--out`·`--reuse-render`에 `--visual-review`를 추가해 다시 실행한다.
-증거 생성기의 `--render-cache <work-dir>/verify/qa/render-cache.json`으로 검토한 렌더 환경도 연결한다.
-전체 렌더는 검증된 입력·환경·산출물이 같을 때만 재사용하고, 구조·계약·시각 검토 판단은 다시 검사한다.
-캐시 범위와 오류 처리는 [검증 가이드](./verification.md#render-reuse)를 따른다.
-`--reuse-pdf`는 sibling manifest의 PPTX·PDF SHA-256과 현재 파일이 모두 일치할 때만 PDF를 재사용한다.
-PPTX를 수정하거나 PDF가 달라진 뒤에는 기존 PDF를 재사용하지 않는다. 새 PDF로 변환한 뒤 수정 영향에
-맞는 범위를 다시 렌더한다.
-렌더러는 비어 있지 않은 일반 `--out` 디렉터리를 덮어쓰지 않는다. 각 QA 단계에는 전용 디렉터리를
-사용하고, 기존 Runner 소유 디렉터리만 안전하게 초기화한다.
+현재 revision의 증거를 작성한다. 기존 증거는 보존하고
+[검증 가이드의 revision별 절차](./verification.md#visual-review-revisions)로 완료한다.
+렌더·PDF 재사용 조건과 실패 복구는 [렌더 재사용](./verification.md#render-reuse)을 따른다.
