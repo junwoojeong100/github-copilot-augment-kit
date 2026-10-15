@@ -4,7 +4,7 @@
 이 문서는 설치 → 확인 → 추가 연결 → 문제 해결 순서로 안내합니다. 킷에 무엇이 들어 있고 왜 그렇게
 설계했는지는 [README](README.md)가 설명하므로 여기서는 반복하지 않습니다.
 
-기준: 2026-10-09 · GitHub Copilot CLI 1.0.94. [출처](#sources)의 공식 문서와 실제 명령 출력으로 확인했습니다.
+기준: 2026-10-09 · GitHub Copilot CLI 1.0.94(Work IQ MCP 절은 2026-10-15 · 1.0.98). [출처](#sources)의 공식 문서와 실제 명령 출력으로 확인했습니다.
 버전·미리보기 기능은 바뀔 수 있으니 차이가 있으면 공식 문서를 따르세요. 명령은 macOS/Linux(bash·zsh) 기준입니다.
 처음이라면 1 → 2장을 순서대로, 이후에는 필요한 장만 보세요.
 
@@ -179,6 +179,42 @@ VS Code 사용자 프로필의 `mcp.json`(명령 팔레트 **MCP: Open User Conf
 - **권한 최소화**: 쓰기·삭제·명령 실행 도구가 있으면 읽기 전용 옵션이나 `--tools` 목록으로 필요한 도구만 허용합니다.
 - **버전 고정**: `@latest`는 시간이 지나면 다른 버전이 실행됩니다. 검증한 버전을 쓰고 업데이트할 때 도구 목록을 다시 확인합니다.
 - Azure 실습에 쓰는 서버(Azure MCP·Playwright·AKS MCP·Computer Use)의 연결 절차는 [5장](#azure-lab)에 있습니다.
+- Microsoft 365 업무 데이터용 [Work IQ MCP](#mcp-workiq)의 연결 절차는 바로 아래에 있습니다.
+
+<a id="mcp-workiq"></a>
+
+### 선택 연결: Work IQ MCP (Microsoft 365 업무 데이터)
+
+**번들하지 않는 선택 서버입니다. 플러그인으로 설치하면 로그인한 사용자의 Microsoft 365 권한 범위에서 메일·회의·Teams 메시지·OneDrive/SharePoint 문서·사람 정보를 조회하며, 쓰기 도구도 함께 노출됩니다(아래 주의 참고).**
+2026-10-15 기준 Copilot CLI 1.0.98에서 설치·등록까지 확인했으며, 로그인 후 질의 결과는 계정·테넌트 설정에 따라 달라집니다.
+
+| 항목 | 내용 |
+|---|---|
+| 서버 | 원격 HTTP MCP `https://workiq.svc.cloud.microsoft/mcp` (플러그인이 등록) |
+| 인증 | Microsoft Entra ID 위임 인증 — 로그인한 사용자의 권한으로만 접근하며 GitHub 로그인(`/login`)과 별개입니다 |
+| 등록 위치 | Plugin — `copilot mcp list`의 **Plugin servers**에 `workiq`로 표시됩니다 |
+
+1. Copilot CLI에서 `/plugin marketplace add microsoft/work-iq`(최초 1회) 다음 `/plugin install workiq@work-iq`를 실행합니다.
+   터미널에서는 `copilot plugin marketplace add microsoft/work-iq`와 `copilot plugin install workiq@work-iq`를 씁니다.
+2. CLI를 재시작하고 브라우저의 Microsoft Entra 인증 창에서 **사용할 업무 계정으로 직접 로그인**합니다(첫 요청에서 인증을 요구할 수도 있습니다).
+   로그인·MFA·동의는 사람이 직접 하고 프롬프트에 붙여넣지 않습니다.
+3. `copilot mcp get workiq`(대화형 `/mcp show workiq`)에서 `Enabled`·`http`·`Source: Plugin`을 확인하고 읽기 요청으로 시험합니다.
+
+```text
+> 오늘 내 회의를 요약해줘. 읽기만 하고 만들거나 보내지는 마.
+> 최근 Contoso 계정 관련 Teams 메시지와 메일에서 결정 사항만 뽑아줘.
+```
+
+- **조직 쪽 사전 조건**: 테넌트에서 Work IQ가 활성화되고 관리자 동의가 있어야 합니다(관리자 절차는 [Enable your tenant for Work IQ](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/enable-work-iq)).
+  2026-10-15 기준 Microsoft Learn은 Work IQ API 접근을 Microsoft 365 Copilot 라이선스와 별개의 **사용량 기반(Copilot Credits) 과금**으로 안내하며, 사용자는 과금 플랜에 할당돼 있어야 합니다. 요건은 조직 정책에 따라 다르니 막히면 관리자에게 문의하세요.
+- **쓰기는 즉시 반영됩니다**: 이 서버는 조회뿐 아니라 메일 전송·일정 생성·삭제 같은 쓰기 도구도 노출하며, 쓰기는 다른 사람에게 보이거나 되돌릴 수 없을 수 있습니다(플러그인 README).
+  처음에는 요청에 "읽기만"을 명시하고, 쓰기 승인 요청은 대상·내용을 읽은 뒤 허용하며 Always allow는 쓰지 마세요.
+  쓰기를 아예 막으려면 `copilot --deny-tool='workiq(create_entity), workiq(update_entity), workiq(delete_entity), workiq(do_action)'`처럼 시작합니다(`서버(도구)` 형식의 쉼표 구분 목록). 도구 이름은 바뀔 수 있으니 로그인 후 `/mcp show workiq`로 확인하세요.
+- **데이터 취급**: 응답에는 조직 내부 정보가 담깁니다. 리포 파일·커밋·이슈·PR에는 필요한 요약만 남기고 원문을 붙여넣지 마세요.
+- **다른 설치 방식**: 로컬 stdio 서버(`@microsoft/workiq`, Node.js 필요)·VS Code 설치 링크·최초 1회 `workiq accept-eula`는 [Microsoft Work IQ CLI](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/cli) 문서를 따릅니다.
+  설정 파일에 직접 등록하려면 [`workiq` 플러그인 README](https://github.com/microsoft/work-iq/tree/main/plugins/workiq)의 MCP 설정을 참고하되, OAuth 필드는 클라이언트마다 다르다는 Work IQ 안내에 따라 그대로 복사하지 말고 해당 클라이언트의 지원 여부를 확인하세요.
+- 이 킷의 `.github/mcp.json`·`.vscode/mcp.json`에는 추가하지 않습니다. 플러그인과 같은 서버를 `copilot mcp add`로 다시 등록하지 마세요(중복).
+- 업데이트는 `/plugin update workiq@work-iq`, 제거는 `copilot plugin uninstall workiq`입니다.
 
 ### 보안·권한 원칙
 
@@ -367,6 +403,7 @@ copilot mcp add aks-mcp -- <aks-mcp 실행 파일 경로> --access-level readonl
 | Playwright가 시작하지 않거나 profile 오류 | Node.js 18+, `--browser`로 지정한 브라우저가 설치되어 있는지, 같은 profile을 다른 브라우저가 쓰고 있지 않은지(`--isolated` 또는 별도 `--user-data-dir`) |
 | Azure MCP가 의도하지 않은 구독을 조회함 | `az account show`로 기본 구독을 확인하고 요청에 구독을 명시합니다. `AZURE_SUBSCRIPTION_ID`가 설정되어 있는지도 확인하세요 |
 | Computer Use를 켤 수 없거나 동작하지 않음 | `/computer show`, 지원 OS의 로컬 세션인지, `/plugin`과 `/mcp list`에서 computer-use가 켜져 있는지, macOS의 손쉬운 사용·화면 기록 권한, 조직 정책 |
+| Work IQ가 **Plugin servers**에 없거나 로그인·요청이 거부됨 | `copilot plugin list`에 `workiq@work-iq`가 있는지, 설치 후 CLI를 재시작했는지, 로그인한 계정이 의도한 업무 계정인지, 테넌트의 Work IQ 활성화·관리자 동의, 과금 플랜 할당, 조직 정책 ([절차](#mcp-workiq)) |
 
 ---
 
@@ -379,7 +416,7 @@ copilot mcp add aks-mcp -- <aks-mcp 실행 파일 경로> --access-level readonl
 - GitHub Docs — [Adding agent skills for GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills): 스킬 위치·`/skills`
 - GitHub Docs — [Copilot CLI command reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference): MCP 로딩 우선순위·신뢰·allowlist·`.vscode/mcp.json` 변환·스킬 위치
 - GitHub Docs — [Copilot CLI configuration directory](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference): 설정·로그·OAuth 캐시 위치, `enabledPlugins`
-- GitHub Docs — [Allowing and denying tool use](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/allowing-tools): 셸 명령 승인, `--allow-tool`·`--deny-tool` 패턴
+- GitHub Docs — [Allowing and denying tool use](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/allowing-tools): 셸 명령 승인, `--allow-tool`·`--deny-tool` 패턴(MCP 도구는 `서버(도구)` 형식)
 - GitHub Docs — [Computer use in Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/computer-use), [About computer use](https://docs.github.com/en/copilot/concepts/agents/computer-use): `/computer`, 권한, 한계
 - VS Code Docs — [MCP 서버 추가·관리](https://code.visualstudio.com/docs/agent-customization/mcp-servers), [MCP 설정 레퍼런스](https://code.visualstudio.com/docs/agents/reference/mcp-configuration), [Agent Skills](https://code.visualstudio.com/docs/agent-customization/agent-skills): 설정 형식·위치·Workspace Trust·스킬 위치
 - Microsoft Learn — [Learn MCP Server overview](https://learn.microsoft.com/en-us/training/support/mcp)
@@ -387,3 +424,7 @@ copilot mcp add aks-mcp -- <aks-mcp 실행 파일 경로> --access-level readonl
 - GitHub — [microsoft/azure-skills](https://github.com/microsoft/azure-skills): 플러그인 설치·사전 조건·스킬
 - GitHub — [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp): 설치·옵션·profile·보안
 - GitHub — [Azure/aks-mcp](https://github.com/Azure/aks-mcp): 설치·접근 수준·신뢰 경계
+- Microsoft Learn — [Connect GitHub Copilot CLI to the Work IQ MCP server](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/mcp/quickstart/github-copilot-cli): 플러그인 설치·원격 엔드포인트·검증
+- Microsoft Learn — [Microsoft Work IQ CLI](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/cli): 로컬 stdio·VS Code 설치·EULA
+- Microsoft Learn — [Work IQ overview](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/), [Enable your tenant for Work IQ](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/enable-work-iq), [Work IQ API overview](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/api-overview), [Work IQ MCP overview](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/work-iq/mcp/overview): 과금 모델·관리자 활성화·Entra 위임 인증·도구 범주
+- GitHub — [microsoft/work-iq](https://github.com/microsoft/work-iq): 플러그인 마켓플레이스·`workiq` 플러그인 구성·쓰기 도구 주의
